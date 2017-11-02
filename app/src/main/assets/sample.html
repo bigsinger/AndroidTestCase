@@ -1,0 +1,115 @@
+﻿<html>
+  
+  <head>
+    <h1>
+      This is a HTML Page
+    </h1>
+    <!-- JavaScript脚本，主要包括了按钮要执行的函数，显示对话框等 -->
+    <script type="text/javascript">
+      //JavaScript方法，弹出对话框显示信息
+      function getDeviceInfo() {
+		//plus.device.vibrate(500);
+		//        var str = "IMEI: " + plus.device.imei + "\n";
+		//        str += "IMSI: " + plus.device.imsi + "\n";
+		//        str += "Model: " + plus.device.model + "\n";
+		//        str += "Vendor: " + plus.device.vendor + "\n";
+		//        str += "uuid: "+plus.device.uuid + "\n";
+		//        str += "Screen height: " + plus.screen.resolutionHeight*plus.screen.scale + "px" + "\n";
+		//        str += "Screen width: " + plus.screen.resolutionWidth*plus.screen.scale + "px" + "\n";
+		//        str += "Screen resolution: " + plus.screen.resolutionWidth*plus.screen.scale + " x " + plus.screen.resolutionHeight*plus.screen.scale + "\n";
+		//
+		//        var types = {};
+		//        types[plus.networkinfo.CONNECTION_UNKNOW] = "Unknown connection";
+		//        types[plus.networkinfo.CONNECTION_NONE] = "None connection";
+		//        types[plus.networkinfo.CONNECTION_ETHERNET] = "Ethernet connection";
+		//        types[plus.networkinfo.CONNECTION_WIFI] = "WiFi connection";
+		//        types[plus.networkinfo.CONNECTION_CELL2G] = "Cellular 2G connection";
+		//        types[plus.networkinfo.CONNECTION_CELL3G] = "Cellular 3G connection";
+		//        types[plus.networkinfo.CONNECTION_CELL4G] = "Cellular 4G connection";
+		//        str += "Network: " + types[plus.networkinfo.getCurrentType()] + "\n";
+		//        str += "OS language: " + plus.os.language + "\n";
+		//        str += "OS version: " + plus.os.version + "\n";
+		//        str += "OS name: " + plus.os.name + "\n";
+		//        str += "OS vendor: " + plus.os.vendor + "\n";
+		//        alert(str);
+
+			alert("Hello World");
+      }
+
+      function onAlert() {
+        console.log("onAlert method"); //显示调试信息
+        alert("This is a alert sample from html");
+      }
+
+      //调用绑定的Java对象的方法，即调用Android代码显示对话框
+      function showAndroidToast(toast) {
+        console.log("showAndroidToast method");
+        Android.showToast(toast); //注意此处的Android要和外部传入的名字一致，大小写正确
+      }
+
+      //调用绑定的Java对象的方法，同步显示android返回的内容
+      function showAndroidSyncMsg() {
+        console.log("showAndroiHello method");
+        var str = Android.syncExec();
+        alert(str);
+      }
+
+      //调用绑定的Java对象的方法，异步显示android返回的内容
+      function showAndroidAsyncMsg() {
+        console.log("showAndroidAsyncMsg method");
+        //异步回调方法
+        //调用android 异步接口
+        Android.asyncExec("异步消息", "onCallback");
+      }
+
+      // 定义回调方法
+      function onCallback(msg) {
+        alert(msg);
+      }　
+      
+      //异步方法
+      function asyncFun() {
+        console.log("asyncFun method");　　　　
+        setTimeout(function() {
+          console.log("异步执行");　　　　　　
+          Android.callBack("来自JavaScript的异步消息");　　　　
+        },
+        5000);　　
+      }
+    </script>
+  </head>
+  
+  <body>
+    <p>
+      <!-- 前两个按钮调用JS函数 -->
+      JavaScript函数调用
+      <br />
+      <br />
+      <button onclick="getDeviceInfo()">
+        getDeviceInfo
+      </button>
+      <br />
+      <br />
+      <input type="button" value="alert" onclick="onAlert()" />
+      <br />
+    </p>
+    <p>
+      <!-- 这个Say hello 按钮调用Android代码中的方法 -->
+      用JavaScript按钮调用Android代码
+      <br />
+      <input type="button" value="showAndroidToast" onClick="showAndroidToast('Hello Android!')"
+      />
+    </p>
+    <p>
+      <!-- 这个Say Android hello 按钮调用Android代码中的方法 -->
+      <input type="button" value="这个按钮调用Android同步方法" onClick="showAndroidSyncMsg()"
+      />
+    </p>
+    <p>
+      <!-- 这个按钮调用Android异步方法 -->
+      <input type="button" value="这个按钮调用Android异步方法" onClick="showAndroidAsyncMsg()"
+      />
+    </p>
+  </body>
+
+</html>
