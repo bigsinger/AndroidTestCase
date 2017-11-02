@@ -27,7 +27,7 @@ import com.netease.neteasesafekeyboard.PopwinSoftkeyboard;
 
 import java.io.InputStream;
 
-public class MainActivity extends NESecureActivity {
+public class MainActivity extends AppCompatActivity {
     public static final String TAG = "HOOKTEST";
     private SQLiteDatabase m_db;
 

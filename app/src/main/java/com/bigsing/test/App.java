@@ -12,7 +12,7 @@ import com.netease.antihijack.safe.NESecureApplication;
  * Created by sing on 2017/10/20.
  */
 
-public class App extends NESecureApplication {
+public class App extends Application {
     public static Context mContext;
     private static Application mApp;
     //程序通用的配置文件
