@@ -17,3 +17,5 @@ app/app-release.apk
 /app/src/jni/*.ncb
 /app/src/jni/*.suo
 /app/src/obj
+app/src/libs/armeabi-v7a/libtest.so
+app/src/libs/armeabi-v7a/libtest.so

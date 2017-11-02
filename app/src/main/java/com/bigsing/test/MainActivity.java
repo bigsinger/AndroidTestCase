@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -17,7 +16,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bigsing.NativeHandler;
 
@@ -46,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 //        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         tv_text = (TextView) findViewById(R.id.tv_text);
-        btn_hello = (Button) findViewById(R.id.btn_hello);
+        btn_hello = (Button) findViewById(R.id.btn_getstr_native1);
         btn_enumui = (Button) findViewById(R.id.btn_enumui);
         btn_dbAddData = (Button) findViewById(R.id.btn_dbAddData);
         btn_dbQueryData = (Button) findViewById(R.id.btn_dbQueryData);
@@ -57,6 +55,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String text = NativeHandler.getString(getApplicationContext(), 100, "java string");
+                tv_text.setText(text);
+            }
+        });
+        findViewById(R.id.btn_getstr_native2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String text = NativeHandler.getStr(getApplicationContext(), 1, null);
+                tv_text.setText(text);
+            }
+        });
+        findViewById(R.id.btn_getmac).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String text = NativeHandler.getStr(getApplicationContext(), 3, null);
+                tv_text.setText(text);
+            }
+        });
+        findViewById(R.id.btn_build_prop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String text = NativeHandler.getStr(getApplicationContext(), 2, "/system/build.prop");
                 tv_text.setText(text);
             }
         });

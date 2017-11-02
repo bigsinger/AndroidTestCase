@@ -7,21 +7,27 @@
     android:layout_height="match_parent"
     tools:context="com.bigsing.test.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/tv_text"
-        android:text="Test Case -- by bigsing"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btn_hello"
-        android:text="Say Hello"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+        <Button style="@style/normal_button"
+            android:id="@+id/btn_getstr_native1"
+            android:text="getstr_native1"
+            android:layout_weight="1"/>
+        <Button style="@style/normal_button"
+            android:id="@+id/btn_getstr_native2"
+            android:text="getstr_native2"
+            android:layout_weight="1"/>
+        <Button style="@style/normal_button"
+            android:id="@+id/btn_getmac"
+            android:text="MAC"
+            android:layout_weight="1"/>
+        <Button style="@style/normal_button"
+            android:id="@+id/btn_build_prop"
+            android:text="build.prop"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
     <Button
         android:id="@+id/btn_enumui"
         android:text="Enum UI"
@@ -82,4 +88,16 @@
     <Button style="@style/normal_button"
         android:id="@+id/btn_h5"
         android:text="H5" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_text"
+            android:text="Test Case -- by bigsing"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:enabled="true"/>
+    </ScrollView>
 </LinearLayout>

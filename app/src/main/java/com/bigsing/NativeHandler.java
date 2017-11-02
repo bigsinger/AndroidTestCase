@@ -17,5 +17,6 @@ public class NativeHandler {
     }
 
     native static public String getString(Context context, int cmdId, String paramStr);
-    native static public String getInfo(Context context, int cmdId, String paramStr);
+    native static public String getStr(Context context, int cmdId, String paramStr);
+    native static public int getInt(Context context, int cmdId, String paramStr);
 }
