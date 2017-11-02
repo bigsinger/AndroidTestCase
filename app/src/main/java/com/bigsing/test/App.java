@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.netease.antihijack.safe.NESecureApplication;
-
 
 /**
  * Created by sing on 2017/10/20.

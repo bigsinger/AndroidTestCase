@@ -20,10 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigsing.NativeHandler;
-import com.netease.antihijack.safe.NEAntiHijack;
-import com.netease.antihijack.safe.NEHijackListener;
-import com.netease.antihijack.safe.NESecureActivity;
-import com.netease.neteasesafekeyboard.PopwinSoftkeyboard;
 
 import java.io.InputStream;
 
@@ -56,18 +52,6 @@ public class MainActivity extends AppCompatActivity {
         btn_dbQueryData = (Button) findViewById(R.id.btn_dbQueryData);
         etUsername = (EditText) findViewById(R.id.etUsername);
         etPwd = (EditText) findViewById(R.id.etPwd);
-        PopwinSoftkeyboard.getInstance(this).initEditText(etUsername, false);
-        PopwinSoftkeyboard.getInstance(this).initEditText(etPwd, true);
-
-        NEAntiHijack.setHijackListener(new NEHijackListener() {
-            @Override
-            public void onHijackCallBack(Context ctx, int reason) {
-                Toast toast = Toast.makeText(ctx, "App被劫持，请检查当前手机坏境", Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-                toast.setDuration(Toast.LENGTH_LONG);
-                toast.show();
-            }
-        });
 
         btn_hello.setOnClickListener(new View.OnClickListener() {
             @Override
