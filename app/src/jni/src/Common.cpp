@@ -12,6 +12,18 @@ jstring str2jstr(JNIEnv* env, string s, const char* encoding)
 	return str2jstr(env, s.c_str(), s.length(), encoding);
 }
 
+
+#if 1
+jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding)
+{
+	jstring jstrResult;
+	if ( szText != NULL ) {
+		jstrResult = env->NewStringUTF(szText);
+	}
+
+	return jstrResult;
+}
+#else
 jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding)
 {
 	jstring jstrResult;
@@ -38,6 +50,7 @@ jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* en
 
 	return jstrResult;
 }
+#endif
 
 
 //½«jstring×ª»»Îªstring
@@ -46,30 +59,38 @@ string jstr2str(JNIEnv* env, jstring jstr, const char *encoding)
 	string strResult;
 
 	if(env != NULL){
-		char* rtn = NULL;
-		jstring jencoding;
-		if ( encoding==NULL ) {
-			jencoding = env->NewStringUTF("GB2312");
-		}else{
-			jencoding = env->NewStringUTF(encoding);	//"utf-8"
+
+		if ( jstr != NULL ) {
+			const char *key = NULL;
+			key = env->GetStringUTFChars(jstr, NULL);
+			strResult.assign(key);
+			env->ReleaseStringUTFChars(jstr, key);
 		}
 
-		jclass strClass = (env)->FindClass("java/lang/String");
-		jmethodID getBytes= env->GetMethodID(strClass, "getBytes", "(Ljava/lang/String;)[B");
-		jbyteArray arr = (jbyteArray)env->CallObjectMethod(jstr, getBytes, jencoding);
-		jsize arrLen = env->GetArrayLength(arr);
-		jbyte* ba = env->GetByteArrayElements(arr, JNI_FALSE);
+		//char* rtn = NULL;
+		//jstring jencoding;
+		//if ( encoding==NULL ) {
+		//	jencoding = env->NewStringUTF("GB2312");
+		//}else{
+		//	jencoding = env->NewStringUTF(encoding);	//"utf-8"
+		//}
 
-		if( arrLen > 0 ){
-			strResult.assign((const char*)ba, arrLen);
-		}else{
-			LOGE("[%s] error GetArrayLength: %d", arrLen);
-		}
+		//jclass strClass = (env)->FindClass("java/lang/String");
+		//jmethodID getBytes= env->GetMethodID(strClass, "getBytes", "(Ljava/lang/String;)[B");
+		//jbyteArray arr = (jbyteArray)env->CallObjectMethod(jstr, getBytes, jencoding);
+		//jsize arrLen = env->GetArrayLength(arr);
+		//jbyte* ba = env->GetByteArrayElements(arr, JNI_FALSE);
 
-		env->ReleaseByteArrayElements(arr, ba, 0);
-		env->DeleteLocalRef(arr);
-		env->DeleteLocalRef(strClass);
-		env->DeleteLocalRef(jencoding);
+		//if( arrLen > 0 ){
+		//	strResult.assign((const char*)ba, arrLen);
+		//}else{
+		//	LOGE("[%s] error GetArrayLength: %d", arrLen);
+		//}
+
+		//env->ReleaseByteArrayElements(arr, ba, 0);
+		//env->DeleteLocalRef(arr);
+		//env->DeleteLocalRef(strClass);
+		//env->DeleteLocalRef(jencoding);
 	}else{
 		LOGE("[%s] failed: env is null", __FUNCTION__);
 	}
