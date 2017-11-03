@@ -1,8 +1,8 @@
 package com.bigsing.test;
 
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JsResult;
@@ -79,10 +79,6 @@ public class H5Activity extends AppCompatActivity {
 
         protected static final String TAG = Async.class.getSimpleName();
 
-        public interface Callback {
-            void onResult(String result);
-        }
-
         public void asyncFun(final Callback callback) {
             new Thread() {
                 @Override
@@ -101,6 +97,10 @@ public class H5Activity extends AppCompatActivity {
                     Log.d(TAG, "result == " + result);
                 }
             });
+        }
+
+        public interface Callback {
+            void onResult(String result);
         }
     }
 

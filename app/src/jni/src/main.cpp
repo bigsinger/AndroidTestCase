@@ -1,6 +1,6 @@
-
+ï»¿
 /*
-ÕâÊÇÒ»¸ö²âÊÔso£¬Ä£ÄâÊ¹ÓÃ·½µÄso¼¯³Éanep»·¾³
+è¿™æ˜¯ä¸€ä¸ªæµ‹è¯•soï¼Œæ¨¡æ‹Ÿä½¿ç”¨æ–¹çš„soé›†æˆanepçŽ¯å¢ƒ
 */
 
 
@@ -18,33 +18,30 @@ using namespace std;
 #include "Common.h"
 
 
-//È«¾ÖµÄvmÖ¸Õë
+//å…¨å±€çš„vmæŒ‡é’ˆ
 JavaVM* g_vm = NULL;
 
-/*¿¼ÂÇµ½À©Õ¹ÐÔ£¬Èç¹ûÓÐÐÂµÄ¹¦ÄÜÒªÌí¼Ó£¬¾Í°´ÕÕparamIntÀ´ÅÉ·¢£¬ÒÔºó²»ÔÙÔö¼Ó½Ó¿Ú¡£
-**²ÎÊýint Îª1Ê±£º¶ÁÈ¡Build.propµÄÏà¹ØÐÅÏ¢
-**²ÎÊýstring Îª±¸ÓÃ½Ó¿Ú£¬¿ÉÎªNull,½ö¹©Ìí¼ÓÐÂ¹¦ÄÜÊ±Ê¹ÓÃ£¬µ÷ÓÃgetDeviceInfo¹¦ÄÜÊ±Ã»ÓÐÊ¹ÓÃ
-**
-*/
+
 extern "C" {
 	JNIEXPORT jstring	JNICALL  getStr(JNIEnv *, jclass, jobject, jint , jstring);
 	JNIEXPORT jint		JNICALL  getInt(JNIEnv *, jclass, jobject, jint , jstring);
 	JNIEXPORT jstring	JNICALL  Java_com_bigsing_NativeHandler_getString(JNIEnv *, jclass, jobject, jint , jstring);
 }
 
-//¸Ãº¯Êý²»ÐèÒª¶¯Ì¬×¢²á
+
+//è¯¥å‡½æ•°ä¸éœ€è¦åŠ¨æ€æ³¨å†Œ
 JNIEXPORT jstring JNICALL Java_com_bigsing_NativeHandler_getString(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr)
 {
-	return env->NewStringUTF(__FUNCTION__);
+	return getStr(env, arg, jCtxObj, paramInt, paramStr);
 }
 
 
 /*
-**¿¼ÂÇµ½À©Õ¹ÐÔ£¬Èç¹ûÓÐÐÂµÄ¹¦ÄÜÒªÌí¼Ó£¬¾Í°´ÕÕparamIntÀ´ÅÉ·¢£¬ÒÔºó²»ÔÙÔö¼Ó½Ó¿Ú¡£
-**²ÎÊýËµÃ÷£º
-**jobject jCtxObj£º´«ÈëµÄConetent 
-**jint paramInt£ºint Îª1Ê±£¬µ÷ÓÃgetDeviceInfoº¯Êý,Îª2Ê±µ÷ÓÃisRootº¯Êý
-** jstring paramStr£º¿ÉÎªnull,½ö¹©ÒÔºóÌí¼ÓÐÂ¹¦ÄÜÊ±Ê¹ÓÃ£¬×¢²ÎÊýÎª1Ê±µ÷ÓÃgetDeviceInfo¹¦ÄÜÊ±Ã»ÓÐÊ¹ÓÃ
+**jobject	jCtxObjï¼š	ä¼ å…¥çš„Context 
+**jint		paramIntï¼š	ä½œä¸ºå‘½ä»¤IDï¼Œä¸åŒçš„å‘½ä»¤IDæ‰§è¡Œä¸åŒçš„åŠŸèƒ½
+**string	paramStrï¼š	å‚æ•°å­—ç¬¦ä¸²
+
+è¿”å›žå€¼ï¼šJavaå±‚è¿”å›žstring
 */
 JNIEXPORT jstring JNICALL getStr(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr)
 {
@@ -83,6 +80,13 @@ JNIEXPORT jstring JNICALL getStr(JNIEnv *env, jclass arg, jobject jCtxObj, jint 
 	return jstrResult;
 }
 
+/*
+**jobject	jCtxObjï¼š	ä¼ å…¥çš„Context 
+**jint		paramIntï¼š	ä½œä¸ºå‘½ä»¤IDï¼Œä¸åŒçš„å‘½ä»¤IDæ‰§è¡Œä¸åŒçš„åŠŸèƒ½
+**string	paramStrï¼š	å‚æ•°å­—ç¬¦ä¸²
+
+è¿”å›žå€¼ï¼šJavaå±‚è¿”å›žint
+*/
 JNIEXPORT jint JNICALL getInt(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr)
 {
 	int result = -1;
@@ -102,11 +106,6 @@ JNIEXPORT jint JNICALL getInt(JNIEnv *env, jclass arg, jobject jCtxObj, jint par
 /**
 * Register native methods for all classes we know about.
 * Table of methods associated with a single class.
-//static JNINativeMethod gMethods[] = {
-//	{ "start", "(Landroid/content/Context;)V", (void*)start},
-//	{ "stop", "()V", (void*)stop},
-//};
-/*
 */
 static int regNativeMethods(JNIEnv* env)
 {
@@ -114,7 +113,7 @@ static int regNativeMethods(JNIEnv* env)
 	int		nError = 0;
 	jclass	clazz = NULL;
 
-	//²éÕÒJava²ã¶ÔÓ¦µÄ½Ó¿ÚÀà
+	//æŸ¥æ‰¾Javaå±‚å¯¹åº”çš„æŽ¥å£ç±»
 	clazz = env->FindClass(Java_Interface_Class_Name);
 	if (clazz != NULL) {
 		JNINativeMethod methods[] = { 

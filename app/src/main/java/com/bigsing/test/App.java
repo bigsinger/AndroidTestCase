@@ -16,17 +16,17 @@ public class App extends Application {
     //程序通用的配置文件
     private static SharedPreferences mSP;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.d("MyApplication", "onCreate");
-    }
-
     public static Application getApplication() {
         return mApp;
     }
 
     public static SharedPreferences getSharedPreferences() {
         return mSP;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d("MyApplication", "onCreate");
     }
 }

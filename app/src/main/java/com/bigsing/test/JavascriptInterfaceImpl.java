@@ -20,14 +20,18 @@ public class JavascriptInterfaceImpl {
     private WebView mWebView;
     private Handler mHandler;
 
-    /** Instantiate the interface and set the context */
+    /**
+     * Instantiate the interface and set the context
+     */
     JavascriptInterfaceImpl(Context c, WebView webView) {
         mContext = c;
         mWebView = webView;
         mHandler = new Handler(Looper.getMainLooper());
     }
 
-    /** Show a toast from the web page */
+    /**
+     * Show a toast from the web page
+     */
     // 如果target 大于等于API 17，则需要加上如下注解
     @JavascriptInterface
     public void showToast(String toast) {
@@ -36,6 +40,7 @@ public class JavascriptInterfaceImpl {
 
     /**
      * 同步方法
+     *
      * @return
      */
     @JavascriptInterface
@@ -45,6 +50,7 @@ public class JavascriptInterfaceImpl {
 
     /**
      * 异步方法
+     *
      * @param msg
      * @param callbackId
      */
@@ -68,6 +74,7 @@ public class JavascriptInterfaceImpl {
 
     /**
      * 接收JavaScript的异步消息
+     *
      * @param msg
      */
     @JavascriptInterface

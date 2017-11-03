@@ -6,28 +6,28 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
+import com.bigsing.util.Utils;
+import com.bigsing.view.BaseActivity;
 
 import java.io.InputStream;
 
-public class MainActivity extends AppCompatActivity {
-    public static final String TAG = "HOOKTEST";
-    private SQLiteDatabase m_db;
+public class MainActivity extends BaseActivity {
+    public static final String TAG = "MainActivity";
 
     static {
         System.loadLibrary("test");
-        Log.e("a","test");
     }
 
     TextView tv_text;
@@ -37,12 +37,17 @@ public class MainActivity extends AppCompatActivity {
     Button btn_dbQueryData;
     EditText etUsername;
     EditText etPwd;
+    private SQLiteDatabase m_db;
+
+    public String setActName(){
+        return TAG;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         tv_text = (TextView) findViewById(R.id.tv_text);
         btn_hello = (Button) findViewById(R.id.btn_getstr_native1);
         btn_enumui = (Button) findViewById(R.id.btn_enumui);
@@ -54,28 +59,28 @@ public class MainActivity extends AppCompatActivity {
         btn_hello.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = NativeHandler.getString(getApplicationContext(), 100, "java string");
+                String text = NativeHandler.getString(getApplicationContext(), NativeCommand.CMD_GET_TEST_STR, null);
                 tv_text.setText(text);
             }
         });
         findViewById(R.id.btn_getstr_native2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = NativeHandler.getStr(getApplicationContext(), 1, null);
+                String text = NativeHandler.getStr(getApplicationContext(), NativeCommand.CMD_GET_TEST_STR, null);
                 tv_text.setText(text);
             }
         });
         findViewById(R.id.btn_getmac).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = NativeHandler.getStr(getApplicationContext(), 3, null);
+                String text = NativeHandler.getStr(getApplicationContext(), NativeCommand.CMD_GET_MAC, null);
                 tv_text.setText(text);
             }
         });
         findViewById(R.id.btn_build_prop).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = NativeHandler.getStr(getApplicationContext(), 2, "/system/build.prop");
+                String text = NativeHandler.getStr(getApplicationContext(), NativeCommand.CMD_GET_FILE_TEXT, "/system/build.prop");
                 tv_text.setText(text);
             }
         });
@@ -110,23 +115,23 @@ public class MainActivity extends AppCompatActivity {
                     while (cursor.moveToNext()) {
                         String name = cursor.getString(cursor.getColumnIndex("name"));
                         int pages = cursor.getInt(cursor.getColumnIndex("pages"));
-                        Log.d("TAG", "book name is " + name);
-                        Log.d("TAG", "book pages is " + pages);
+                        Utils.logd("book name is " + name);
+                        Utils.logd("book pages is " + pages);
                     }
                 }
                 cursor.close();
 
                 SharedPreferences sp = getSharedPreferences("test", Context.MODE_PRIVATE);
                 String val = sp.getString("strkey", "default");
-                Log.d("hhf", "get strkey , value=" + val);
+                Utils.logd("get strkey , value=" + val);
 
-                try{
+                try {
                     InputStream fstm = getAssets().open("test.txt");
                     byte[] content = new byte[1];
                     fstm.read(content);
-                    Log.e("hhf", "content is " + new String(content));
-                } catch(Exception e) {
-                    Log.e("hhf", "e="+e.toString());
+                    Utils.loge("content is " + new String(content));
+                } catch (Exception e) {
+                    Utils.loge("e=" + e.toString());
                 }
             }
         });
@@ -146,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public String getChildrenInfo(View parent){
+    public String getChildrenInfo(View parent) {
         String text = parent.toString() + "\n";
 
         if (parent instanceof ViewGroup) {
@@ -156,9 +161,9 @@ public class MainActivity extends AppCompatActivity {
                 if (v instanceof ViewGroup) {
                     text += getChildrenInfo(v) + "\n";
                 } else {
-                    if (v instanceof TextView){
-                        text += "\t" + v.toString() + "【" + ((TextView)v).getText() + "】\n";
-                    }else {
+                    if (v instanceof TextView) {
+                        text += "\t" + v.toString() + "【" + ((TextView) v).getText() + "】\n";
+                    } else {
                         text += "\t" + v.toString() + "\n";
                     }
                 }

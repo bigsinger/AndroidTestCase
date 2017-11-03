@@ -18,5 +18,5 @@ enum {
 };
 
 namespace Constant{
-		
+
 }
