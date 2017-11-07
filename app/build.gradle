@@ -29,4 +29,8 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:recyclerview-v7:25.0.1'
     compile 'com.getkeepsafe.relinker:relinker:1.2.3'
+
+    provided 'de.robv.android.xposed:api:82'
+    //如果需要引入文档，方便查看的话
+    compile 'de.robv.android.xposed:api:82:sources'
 }
