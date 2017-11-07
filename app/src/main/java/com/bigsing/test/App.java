@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.getkeepsafe.relinker.ReLinker;
+
 
 /**
  * Created by sing on 2017/10/20.
@@ -28,5 +30,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         Log.d("MyApplication", "onCreate");
+        ReLinker.loadLibrary(getApplicationContext(), "test");
     }
 }

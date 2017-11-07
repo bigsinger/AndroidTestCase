@@ -27,7 +27,7 @@ public class MainActivity extends BaseActivity {
     public static final String TAG = "MainActivity";
 
     static {
-        System.loadLibrary("test");
+        //System.loadLibrary("test");
     }
 
     TextView tv_text;
@@ -48,13 +48,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        tv_text = (TextView) findViewById(R.id.tv_text);
-        btn_hello = (Button) findViewById(R.id.btn_getstr_native1);
-        btn_enumui = (Button) findViewById(R.id.btn_enumui);
-        btn_dbAddData = (Button) findViewById(R.id.btn_dbAddData);
-        btn_dbQueryData = (Button) findViewById(R.id.btn_dbQueryData);
-        etUsername = (EditText) findViewById(R.id.etUsername);
-        etPwd = (EditText) findViewById(R.id.etPwd);
+        initView();
 
         btn_hello.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,7 +113,6 @@ public class MainActivity extends BaseActivity {
                         Utils.logd("book pages is " + pages);
                     }
                 }
-                cursor.close();
 
                 SharedPreferences sp = getSharedPreferences("test", Context.MODE_PRIVATE);
                 String val = sp.getString("strkey", "default");
@@ -148,6 +141,16 @@ public class MainActivity extends BaseActivity {
                 startActivity(new Intent(MainActivity.this, H5Activity.class));
             }
         });
+    }
+
+    private void initView() {
+        tv_text = (TextView) findViewById(R.id.tv_text);
+        btn_hello = (Button) findViewById(R.id.btn_getstr_native1);
+        btn_enumui = (Button) findViewById(R.id.btn_enumui);
+        btn_dbAddData = (Button) findViewById(R.id.btn_dbAddData);
+        btn_dbQueryData = (Button) findViewById(R.id.btn_dbQueryData);
+        etUsername = (EditText) findViewById(R.id.etUsername);
+        etPwd = (EditText) findViewById(R.id.etPwd);
     }
 
 
