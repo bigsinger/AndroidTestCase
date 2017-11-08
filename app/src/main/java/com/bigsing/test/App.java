@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.bigsing.util.Constant;
 import com.getkeepsafe.relinker.ReLinker;
 
 
@@ -18,7 +19,10 @@ public class App extends Application {
     //程序通用的配置文件
     private static SharedPreferences mSP;
 
-    public static Application getApplication() {
+    public static Application getInstance() {
+        return mApp;
+    }
+    public static Context getContext() {
         return mApp;
     }
 
@@ -30,6 +34,9 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         Log.d("MyApplication", "onCreate");
+        mApp = this;
+        mContext = this;
+        mSP = getSharedPreferences(Constant.PACKAGE_THIS, Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
         ReLinker.loadLibrary(getApplicationContext(), "test");
     }
 }
