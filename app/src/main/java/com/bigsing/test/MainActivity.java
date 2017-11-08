@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -78,6 +79,15 @@ public class MainActivity extends BaseActivity {
                 tv_text.setText(text);
             }
         });
+        findViewById(R.id.btn_get_android_id).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String text =Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+                tv_text.setText(text);
+            }
+        });
+
+
         btn_enumui.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
