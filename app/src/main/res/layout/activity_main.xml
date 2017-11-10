@@ -33,6 +33,10 @@
             android:id="@+id/btn_get_android_id"
             android:text="AndroidId"
             android:layout_weight="1"/>
+        <Button style="@style/normal_button"
+            android:id="@+id/btn_get_IMEI"
+            android:text="IMEI"
+            android:layout_weight="1"/>
     </LinearLayout>
     <Button
         android:id="@+id/btn_enumui"

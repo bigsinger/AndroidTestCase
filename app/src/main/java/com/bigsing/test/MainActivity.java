@@ -6,8 +6,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.provider.Settings;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -86,6 +90,23 @@ public class MainActivity extends BaseActivity {
                 tv_text.setText(text);
             }
         });
+        findViewById(R.id.btn_get_IMEI).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+                String str = telephonyManager.getDeviceId();
+                if (TextUtils.isEmpty(str)) {
+                    //it works, ref: https://stackoverflow.com/questions/3802644/will-telephonymanger-getdeviceid-return-device-id-for-tablets-like-galaxy-tab
+                    str = SystemProperties.get("gsm.sim.imei");
+                    if (TextUtils.isEmpty(str)) {
+                        str = android.os.SystemProperties.get("ro.gsm.imei");
+                    }
+                }
+                tv_text.setText(str);
+            }
+        });
 
 
         btn_enumui.setOnClickListener(new View.OnClickListener() {
@@ -106,36 +127,24 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 ContentValues values = new ContentValues();
-                values.put("name", "达芬奇密码");
-                values.put("pages", 566);
-                m_db.insert("Book", null, values);
+                values.put("name", "张三abc");
+                values.put("age", 20);
+                m_db.insert("student", null, values);
             }
         });
         btn_dbQueryData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Cursor cursor = m_db.query("Book", null, null, null, null, null, null);
+                String text = "";
+                Cursor cursor = m_db.query("student", null, null, null, null, null, null);
                 if (cursor != null) {
                     while (cursor.moveToNext()) {
                         String name = cursor.getString(cursor.getColumnIndex("name"));
-                        int pages = cursor.getInt(cursor.getColumnIndex("pages"));
-                        Utils.logd("book name is " + name);
-                        Utils.logd("book pages is " + pages);
+                        int age = cursor.getInt(cursor.getColumnIndex("age"));
+                        text += "name: " + name + " age: " + age + "\n";
                     }
                 }
-
-                SharedPreferences sp = getSharedPreferences("test", Context.MODE_PRIVATE);
-                String val = sp.getString("strkey", "default");
-                Utils.logd("get strkey , value=" + val);
-
-                try {
-                    InputStream fstm = getAssets().open("test.txt");
-                    byte[] content = new byte[1];
-                    fstm.read(content);
-                    Utils.loge("content is " + new String(content));
-                } catch (Exception e) {
-                    Utils.loge("e=" + e.toString());
-                }
+                tv_text.setText(text);
             }
         });
 
