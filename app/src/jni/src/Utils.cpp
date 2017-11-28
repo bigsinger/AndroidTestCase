@@ -101,7 +101,7 @@ string Utils::jstr2str(JNIEnv* env, jstring jstr, const char *encoding) {
 		//	jencoding = env->NewStringUTF(encoding);	//"utf-8"
 		//}
 
-		//jclass strClass = (env)->FindClass("java/lang/String");
+		//jclass strClass = env->FindClass("java/lang/String");
 		//jmethodID getBytes= env->GetMethodID(strClass, "getBytes", "(Ljava/lang/String;)[B");
 		//jbyteArray arr = (jbyteArray)env->CallObjectMethod(jstr, getBytes, jencoding);
 		//jsize arrLen = env->GetArrayLength(arr);
@@ -357,4 +357,165 @@ std::string Utils::GetCurrentTimeStr(const char* lpszFormat/* = NULL*/) {
 		strftime(tmp, sizeof(tmp), "%Y-%m-%d_%H:%M:%S", localtime(&t));
 	}
 	return tmp;
+}
+
+
+//清除异常
+bool clearException(JNIEnv *env) {
+	jthrowable exception = env->ExceptionOccurred();
+	if (exception != NULL) {
+		env->ExceptionDescribe();
+		env->ExceptionClear();
+		return true;
+	}
+	return false;
+}
+
+
+//类查找
+jclass findAppClass(JNIEnv *env, const char *apn) {
+	jclass clazzApplicationLoaders = env->FindClass("android/app/ApplicationLoaders");
+	jthrowable exception = env->ExceptionOccurred();
+	if (clearException(env)) {
+		LOGE("No class : %s", "android/app/ApplicationLoaders");
+		return NULL;
+	}
+	jfieldID fieldApplicationLoaders = env->GetStaticFieldID(clazzApplicationLoaders, "gApplicationLoaders", "Landroid/app/ApplicationLoaders;");
+	if (clearException(env)) {
+		LOGE("No Static Field :%s", "gApplicationLoaders");
+		return NULL;
+	}
+	jobject objApplicationLoaders = env->GetStaticObjectField(clazzApplicationLoaders, fieldApplicationLoaders);
+	if (clearException(env)) {
+		LOGE("GetStaticObjectField is failed [%s", "gApplicationLoaders");
+		return NULL;
+	}
+	jfieldID fieldLoaders = env->GetFieldID(clazzApplicationLoaders, "mLoaders", "Landroid/util/ArrayMap;");
+	if (clearException(env)) {
+		LOGE("No Field :%s", "mLoaders");
+		return NULL;
+	}
+	jobject objLoaders = env->GetObjectField(objApplicationLoaders, fieldLoaders);
+	if (clearException(env)) {
+		LOGE("No object :%s", "mLoaders");
+		return NULL;
+	}
+	//??map??alues
+	jclass clazzHashMap = env->GetObjectClass(objLoaders);
+	jmethodID methodValues = env->GetMethodID(clazzHashMap, "values", "()Ljava/util/Collection;");
+	jobject values = env->CallObjectMethod(objLoaders, methodValues);
+
+	jclass clazzValues = env->GetObjectClass(values);
+	jmethodID methodToArray = env->GetMethodID(clazzValues, "toArray", "()[Ljava/lang/Object;");
+	if (clearException(env)) {
+		LOGE("No Method:%s", "toArray");
+		return NULL;
+	}
+
+	jobjectArray classLoaders = (jobjectArray)env->CallObjectMethod(values, methodToArray);
+	if (clearException(env)) {
+		LOGE("CallObjectMethod failed :%s", "toArray");
+		return NULL;
+	}
+
+	int size = env->GetArrayLength(classLoaders);
+	int i = 0;
+	for (i = 0; i < size; i++) {
+		jobject classLoader = env->GetObjectArrayElement(classLoaders, i);
+		jclass clazzCL = env->GetObjectClass(classLoader);
+		jmethodID loadClass = env->GetMethodID(clazzCL, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+		jstring param = env->NewStringUTF(apn);
+		jclass tClazz = (jclass)env->CallObjectMethod(classLoader, loadClass, param);
+		if (clearException(env)) {
+			LOGE("No");
+			continue;
+		}
+		return tClazz;
+	}
+	LOGE("No");
+	return NULL;
+}
+
+/*
+*
+*/
+jclass dvmFindJNIClass(JNIEnv *env, const char *classDesc) {
+	jclass classObj = env->FindClass(classDesc);
+
+	if (env->ExceptionCheck() == JNI_TRUE) {
+		env->ExceptionClear();
+	}
+	jclass  clazzHashMap = env->FindClass("android/util/ArrayMap");
+
+	if (env->ExceptionCheck() == JNI_TRUE) {
+		env->ExceptionClear();
+	}
+
+	if (classObj == NULL) {
+		jclass clazzApplicationLoaders = env->FindClass("android/app/ApplicationLoaders");
+		ASSERT(clazzApplicationLoaders);
+
+		jfieldID fieldApplicationLoaders = env->GetStaticFieldID(
+			clazzApplicationLoaders, "gApplicationLoaders",
+			"Landroid/app/ApplicationLoaders;");
+		ASSERT(fieldApplicationLoaders);
+
+		jobject objApplicationLoaders = env->GetStaticObjectField(
+			clazzApplicationLoaders, fieldApplicationLoaders);
+		ASSERT(objApplicationLoaders);
+
+		jfieldID fieldLoaders = NULL; //env->GetFieldID(clazzApplicationLoaders, "mLoaders", "Ljava/util/Map;");
+
+		if (NULL == clazzHashMap) {
+			fieldLoaders = env->GetFieldID(clazzApplicationLoaders, "mLoaders", "Ljava/util/Map;");
+		} else {
+			fieldLoaders = env->GetFieldID(clazzApplicationLoaders, "mLoaders", "Landroid/util/ArrayMap;");
+		}
+
+		ASSERT(fieldLoaders);
+
+		jobject objLoaders = env->GetObjectField(objApplicationLoaders, fieldLoaders);
+		ASSERT(objLoaders);
+
+		if (NULL == clazzHashMap) {
+			clazzHashMap = env->GetObjectClass(objLoaders);
+		}
+		assert(clazzHashMap);
+		jmethodID methodValues = env->GetMethodID(clazzHashMap, "values", "()Ljava/util/Collection;");
+		assert(methodValues);
+		jobject values = env->CallObjectMethod(objLoaders, methodValues);
+
+
+		assert(values);
+		jclass clazzValues = env->GetObjectClass(values);
+		assert(clazzValues);
+		jmethodID methodToArray = env->GetMethodID(clazzValues, "toArray", "()[Ljava/lang/Object;");
+		jobjectArray classLoaders = (jobjectArray)env->CallObjectMethod(values,
+			methodToArray);
+		assert(classLoaders);
+
+		int size = env->GetArrayLength(classLoaders);
+		int i = 0;
+		jstring param = env->NewStringUTF(classDesc);
+
+		for (i = 0; i < size; i++) {
+			jobject classLoader = env->GetObjectArrayElement(classLoaders, i);
+			jclass clazzCL = env->GetObjectClass(classLoader);
+			jmethodID loadClass = env->GetMethodID(clazzCL, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+			classObj = (jclass)env->CallObjectMethod(classLoader, loadClass, param);
+
+			if (env->ExceptionCheck() == JNI_TRUE) {
+				env->ExceptionDescribe();
+				env->ExceptionClear();
+				continue;
+			} else {
+				break;
+			}
+		}
+		if (i == size) {
+			return NULL;
+		}
+	}
+
+	return (jclass)env->NewGlobalRef(classObj);
 }

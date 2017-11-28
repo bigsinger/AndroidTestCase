@@ -17,6 +17,15 @@ extern jclass  g_clsJNI;		//×¢²áNativeº¯ÊýµÄÀà
 ///////////////////////////////////////////////////////
 
 
+#define ASSERT(V) 				\
+	if(V == NULL){					\
+		LOGE("%s is null.", #V);	\
+		exit(-1);					\
+	}else{							\
+		LOGD("%s is %p.", #V, V);	\
+	}
+
+
 namespace Utils {
 	void setJavaVM(JavaVM *vm);
 	JavaVM *getJavaVM();
