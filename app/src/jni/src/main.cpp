@@ -17,10 +17,7 @@ using namespace std;
 #include "Constant.h"
 #include "Common.h"
 
-
-//全局的vm指针
-JavaVM* g_vm = NULL;
-
+void *thread_fun(void *arg);
 
 extern "C" {
 	JNIEXPORT jstring	JNICALL  getStr(JNIEnv *, jclass, jobject, jint, jstring);
@@ -46,8 +43,21 @@ JNIEXPORT jstring JNICALL getStr(JNIEnv *env, jclass arg, jobject jCtxObj, jint 
 	jstring jstrResult = NULL;
 
 	switch (paramInt) {
-	case CMD_GET_INFO:
-		break;
+	case CMD_INIT:
+	{
+		//保存JVM
+		env->GetJavaVM(&g_jvm);
+		//保存activity对象
+		g_context = env->NewGlobalRef(jCtxObj);
+		g_clsJNI = (jclass)env->NewGlobalRef(arg);
+
+		LOGD("newThread begin");
+		pthread_t pt;
+		pthread_create(&pt, NULL, &thread_fun, (void *)paramStr);
+		std::string s = fmt("env: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", env, jCtxObj, g_jvm, g_context);
+		jstrResult = env->NewStringUTF(s.c_str());
+	}
+	break;
 	case CMD_GET_TEST_STR:
 	{
 		LOGD("[%s] CMD_GET_TEST_STR\n", __FUNCTION__);
@@ -142,7 +152,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 	JNIEnv* env = NULL;
 	jint	result = -1;
 
-	g_vm = vm;
+	g_jvm = vm;
 	LOGD("[%s] JavaVM: %p", __FUNCTION__, vm);
 
 	if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
@@ -164,4 +174,51 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 	/* success -- return valid version number */
 	result = JNI_VERSION_1_6;
 	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void *thread_fun(void *arg) {
+
+	JNIEnv *env;
+	jclass cls;
+	jmethodID mid, mid1;
+
+	if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
+		LOGE("%s AttachCurrentThread error failed ", __FUNCTION__);
+		return NULL;
+	}
+
+	cls = g_clsJNI;
+	LOGD("call back begin");
+	mid = env->GetStaticMethodID(cls, "formJni", "(ILjava/lang/String;)V");
+	if (mid == NULL) {
+		LOGE("GetStaticMethodID error....");
+		goto error;
+	} else {
+		LOGD("find Method formJni: %p just call it", mid);
+	}
+
+	env->CallStaticVoidMethod(cls, mid, (int)arg, str2jstr(env, "testabc123"));
+
+#if 0
+	//注意这里的NativeHandler并没有对象指针使用，所以掉不了非静态成员函数
+	mid1 = env->GetMethodID(cls, "formJniAgain", "(ILjava/lang/String;)V");
+	if (mid1 == NULL) {
+		LOGE("GetMethodID error....");
+		goto error;
+	} else {
+		LOGD("find formJniAgain: %p", mid1);
+	}
+	env->CallVoidMethod(g_context, mid1, (int)arg, str2jstr(env, "testabc123456"));
+#endif // 0
+
+
+error:
+	if (g_jvm->DetachCurrentThread() != JNI_OK) {
+		LOGE("%s DetachCurrentThread error failed ", __FUNCTION__);
+	}
+
+	LOGD("thread callback finished");
+	pthread_exit(0);
 }

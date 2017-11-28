@@ -6,7 +6,7 @@ package com.bigsing;
  */
 
 public class NativeCommand {
-    public static final int CMD_GET_INFO		    =0;
+    public static final int CMD_INIT =0;
     public static final int CMD_GET_TEST_STR	=1;
     public static final int CMD_GET_FILE_TEXT	=2;
     public static final int CMD_GET_MAC			=3;

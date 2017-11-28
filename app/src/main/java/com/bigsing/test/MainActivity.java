@@ -55,6 +55,9 @@ public class MainActivity extends BaseActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         initView();
 
+        String text = NativeHandler.getString(getApplicationContext(), NativeCommand.CMD_INIT, null);
+        tv_text.setText(text);
+
         btn_hello.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

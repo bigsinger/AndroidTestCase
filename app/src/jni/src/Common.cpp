@@ -6,6 +6,11 @@
 #include "debug.h"
 #include <cstring>
 #include <time.h>
+
+JavaVM *g_jvm = NULL;
+jobject g_context = NULL;
+jclass g_clsJNI = NULL;
+
 //将string转换为jstring
 jstring str2jstr(JNIEnv* env, string s, const char* encoding) {
 	return str2jstr(env, s.c_str(), s.length(), encoding);
@@ -101,6 +106,18 @@ string formatInt(int n) {
 	return szBuff;
 }
 
+//获取文件大小
+long get_file_size(const char *path) {
+	long ret = 0;
+	FILE *fp = fopen(path, "rb"); //打开一个文件， 文件必须存在，只运行读
+	if (fp) {
+		fseek(fp, 0, SEEK_END);
+		ret = ftell(fp);
+		fclose(fp);
+	}
+	
+	return ret;
+}
 
 bool copyFile(const char *inFileName, const char *outFileName) {
 	bool bSuccess = false;
@@ -191,6 +208,35 @@ jobject getApplication(JNIEnv *env) {
 		}
 	}
 	return NULL;
+}
+
+std::string getClassName(JNIEnv* env, jobject obj) 	{
+	std::string sName;
+	jclass cls = env->GetObjectClass(obj);
+
+	// First get the class object
+	jmethodID mid = env->GetMethodID(cls, "getClass", "()Ljava/lang/Class;");
+	jobject clsObj = env->CallObjectMethod(obj, mid);
+
+	// Now get the class object's class descriptor
+	cls = env->GetObjectClass(clsObj);
+
+	// Find the getName() method on the class object
+	mid = env->GetMethodID(cls, "getName", "()Ljava/lang/String;");
+
+	// Call the getName() to get a jstring object back
+	jstring strObj = (jstring)env->CallObjectMethod(clsObj, mid);
+
+	// Now get the c string from the java jstring object
+	const char* str = env->GetStringUTFChars(strObj, NULL);
+
+	// Print the class name
+	//printf("\nCalling class is: %s\n", str);
+	sName.assign(str);
+	// Release the memory pinned char array
+	env->ReleaseStringUTFChars(strObj, str);
+
+	return sName;
 }
 
 bool getPackageName(JNIEnv *env, string&strOut) {
