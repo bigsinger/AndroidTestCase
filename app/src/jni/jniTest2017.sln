@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2006
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookTest", "src\jni.vcxproj", "{0F5C46F4-F36C-42CB-904F-57987B1F1107}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0F5C46F4-F36C-42CB-904F-57987B1F1107}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0F5C46F4-F36C-42CB-904F-57987B1F1107}.Debug|Win32.Build.0 = Debug|Win32
+		{0F5C46F4-F36C-42CB-904F-57987B1F1107}.Release|Win32.ActiveCfg = Release|Win32
+		{0F5C46F4-F36C-42CB-904F-57987B1F1107}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5CB505F1-FC3E-447D-8B0F-5BBD19111360}
+	EndGlobalSection
+EndGlobal
