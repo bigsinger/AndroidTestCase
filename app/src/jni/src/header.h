@@ -13,6 +13,3 @@
 #include <string>
 using namespace std;
 #include "debug.h"
-
-extern JavaVM *g_JavaVM;
-extern jobject	g_context;

@@ -10,7 +10,7 @@
 
 
 enum {
-	CMD_INIT		=0,
+	CMD_INIT			=0,
 	CMD_GET_TEST_STR	=1,
 	CMD_GET_FILE_TEXT	=2,
 	CMD_GET_MAC			=3,

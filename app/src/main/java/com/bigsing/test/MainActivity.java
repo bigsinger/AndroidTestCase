@@ -48,6 +48,16 @@ public class MainActivity extends BaseActivity {
         return TAG;
     }
 
+    private int testA(int a, String b, Object c, double d, int[] arr, float f){
+        return (int)NativeHandler.jump(100, a, b, c, d, arr, f);
+    }
+    private String testB(String a){
+        return (String)NativeHandler.jump(101, a);
+    }
+    private void testC(String a){
+        NativeHandler.jump(102, a);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

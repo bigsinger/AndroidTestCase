@@ -28,4 +28,7 @@ public class NativeHandler {
         Log.e(TAG, "test");
         return 1001;
     }
+
+    native static public Object jump(int methodId, Object... args);
+
 }

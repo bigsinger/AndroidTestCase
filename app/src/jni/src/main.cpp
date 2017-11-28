@@ -15,7 +15,7 @@
 using namespace std;
 #include "debug.h"
 #include "Constant.h"
-#include "Common.h"
+#include "Utils.h"
 
 void *thread_fun(void *arg);
 
@@ -39,45 +39,46 @@ JNIEXPORT jstring JNICALL Java_com_bigsing_NativeHandler_getString(JNIEnv *env, 
 
 返回值：Java层返回string
 */
-JNIEXPORT jstring JNICALL getStr(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr) {
+JNIEXPORT jstring JNICALL getStr(JNIEnv *env, jclass clsJavaJNI, jobject jCtxObj, jint paramInt, jstring paramStr) {
 	jstring jstrResult = NULL;
 
 	switch (paramInt) {
 	case CMD_INIT:
 	{
 		//保存JVM
-		env->GetJavaVM(&g_jvm);
-		//保存activity对象
-		g_context = env->NewGlobalRef(jCtxObj);
-		g_clsJNI = (jclass)env->NewGlobalRef(arg);
+		JavaVM* vm = NULL;
+		env->GetJavaVM(&vm);
+		Utils::setJavaVM(vm);
+		Utils::setContext(env->NewGlobalRef(jCtxObj));
+		Utils::setJavaJNIClass((jclass)env->NewGlobalRef(clsJavaJNI));
 
 		LOGD("newThread begin");
 		pthread_t pt;
 		pthread_create(&pt, NULL, &thread_fun, (void *)paramStr);
-		std::string s = fmt("env: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", env, jCtxObj, g_jvm, g_context);
+		std::string s = Utils::fmt("env: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", env, jCtxObj, Utils::getJavaVM(), Utils::getContext());
 		jstrResult = env->NewStringUTF(s.c_str());
 	}
 	break;
 	case CMD_GET_TEST_STR:
 	{
 		LOGD("[%s] CMD_GET_TEST_STR\n", __FUNCTION__);
-		std::string s = fmt("%s Hello Android Native!", GetCurrentTimeStr().c_str());
+		std::string s = Utils::fmt("%s Hello Android Native!", Utils::GetCurrentTimeStr().c_str());
 		jstrResult = env->NewStringUTF(s.c_str());
 	}
 	break;
 	case CMD_GET_MAC:
 	{
-		string strMacs = getMacs();
-		jstrResult = str2jstr(env, strMacs.c_str(), strMacs.length());
+		string strMacs = Utils::getMacs();
+		jstrResult = Utils::str2jstr(env, strMacs.c_str(), strMacs.length());
 	}
 	break;
 	case CMD_GET_FILE_TEXT:
 	{
 		string strText;
-		string sFileName = jstr2str(env, paramStr);
+		string sFileName = Utils::jstr2str(env, paramStr);
 		LOGD("[%s] CMD_GET_FILE_TEXT readTextFile: %s", __FUNCTION__, sFileName.c_str());
-		if (readTextFile(sFileName.c_str(), strText) == true) {
-			jstrResult = str2jstr(env, strText.c_str(), strText.length());
+		if (Utils::readTextFile(sFileName.c_str(), strText) == true) {
+			jstrResult = Utils::str2jstr(env, strText.c_str(), strText.length());
 		}
 	}
 	break;
@@ -152,7 +153,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 	JNIEnv* env = NULL;
 	jint	result = -1;
 
-	g_jvm = vm;
+	Utils::setJavaVM(vm);
 	LOGD("[%s] JavaVM: %p", __FUNCTION__, vm);
 
 	if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
@@ -183,13 +184,14 @@ void *thread_fun(void *arg) {
 	JNIEnv *env;
 	jclass cls;
 	jmethodID mid, mid1;
+	JavaVM * vm = Utils::getJavaVM();
 
-	if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
+	if (vm->AttachCurrentThread(&env, NULL) != JNI_OK) {
 		LOGE("%s AttachCurrentThread error failed ", __FUNCTION__);
 		return NULL;
 	}
 
-	cls = g_clsJNI;
+	cls = Utils::getJavaJNIClass();
 	LOGD("call back begin");
 	mid = env->GetStaticMethodID(cls, "formJni", "(ILjava/lang/String;)V");
 	if (mid == NULL) {
@@ -199,7 +201,7 @@ void *thread_fun(void *arg) {
 		LOGD("find Method formJni: %p just call it", mid);
 	}
 
-	env->CallStaticVoidMethod(cls, mid, (int)arg, str2jstr(env, "testabc123"));
+	env->CallStaticVoidMethod(cls, mid, (int)arg, Utils::str2jstr(env, "testabc123"));
 
 #if 0
 	//注意这里的NativeHandler并没有对象指针使用，所以掉不了非静态成员函数
@@ -215,7 +217,7 @@ void *thread_fun(void *arg) {
 
 
 error:
-	if (g_jvm->DetachCurrentThread() != JNI_OK) {
+	if (vm->DetachCurrentThread() != JNI_OK) {
 		LOGE("%s DetachCurrentThread error failed ", __FUNCTION__);
 	}
 
