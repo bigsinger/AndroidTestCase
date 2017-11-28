@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>HookTest</ProjectName>
+    <ProjectName>jniTest</ProjectName>
     <ProjectGuid>{0F5C46F4-F36C-42CB-904F-57987B1F1107}</ProjectGuid>
     <RootNamespace>jni</RootNamespace>
   </PropertyGroup>
