@@ -4,47 +4,44 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "debug.h"
-
-
+#include <cstring>
+#include <time.h>
 //将string转换为jstring
-jstring str2jstr(JNIEnv* env, string s, const char* encoding)
-{
+jstring str2jstr(JNIEnv* env, string s, const char* encoding) {
 	return str2jstr(env, s.c_str(), s.length(), encoding);
 }
 
 
 #if 1
-jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding)
-{
+jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding) {
 	jstring jstrResult;
-	if ( szText != NULL ) {
+	if (szText != NULL) {
 		jstrResult = env->NewStringUTF(szText);
 	}
 
 	return jstrResult;
 }
 #else
-jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding)
-{
+jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding) {
 	jstring jstrResult;
 
-	if(env != NULL){
+	if (env != NULL) {
 		jclass clazz = env->FindClass("java/lang/String");
 		jmethodID init = env->GetMethodID(clazz, "<init>", "([BLjava/lang/String;)V");
 		jbyteArray bytes = env->NewByteArray((jsize)nLen);
 		env->SetByteArrayRegion(bytes, 0, nLen, (jbyte*)szText);
 
 		jstring jencoding;
-		if ( encoding == NULL ) {
+		if (encoding == NULL) {
 			jencoding = env->NewStringUTF("utf-8");
-		}else{
+		} else {
 			jencoding = env->NewStringUTF("GB2312");
 		}
 		jstrResult = (jstring)env->NewObject(clazz, init, bytes, jencoding);
 		env->DeleteLocalRef(bytes);
 		env->DeleteLocalRef(clazz);
 		env->DeleteLocalRef(jencoding);
-	}else{
+	} else {
 		LOGE("[%s] failed: env is null", __FUNCTION__);
 	}
 
@@ -54,13 +51,12 @@ jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* en
 
 
 //将jstring转换为string
-string jstr2str(JNIEnv* env, jstring jstr, const char *encoding)
-{
+string jstr2str(JNIEnv* env, jstring jstr, const char *encoding) {
 	string strResult;
 
-	if(env != NULL){
+	if (env != NULL) {
 
-		if ( jstr != NULL ) {
+		if (jstr != NULL) {
 			const char *key = NULL;
 			key = env->GetStringUTFChars(jstr, NULL);
 			strResult.assign(key);
@@ -91,34 +87,32 @@ string jstr2str(JNIEnv* env, jstring jstr, const char *encoding)
 		//env->DeleteLocalRef(arr);
 		//env->DeleteLocalRef(strClass);
 		//env->DeleteLocalRef(jencoding);
-	}else{
+	} else {
 		LOGE("[%s] failed: env is null", __FUNCTION__);
 	}
-	
+
 	return strResult;
 }
 
 
-string formatInt(int n)
-{
-	char szBuff[260] = {0};
+string formatInt(int n) {
+	char szBuff[260] = { 0 };
 	snprintf(szBuff, 10, "%d", n);
 	return szBuff;
 }
 
 
-bool copyFile(const char *inFileName, const char *outFileName)
-{
+bool copyFile(const char *inFileName, const char *outFileName) {
 	bool bSuccess = false;
 	unsigned long ulSize = 0;
 
 	FILE *inFile = fopen(inFileName, "r");
-	if ( inFile==NULL ) {
+	if (inFile == NULL) {
 		LOGE("[%s] open file: %s failed error: %s ", __FUNCTION__, inFileName, dlerror());
 		return bSuccess;
 	}
 	FILE *outFile = fopen(outFileName, "wb+");
-	if ( outFile==NULL ) {
+	if (outFile == NULL) {
 		LOGE("[%s] open file: %s failed error: %s ", __FUNCTION__, outFileName, dlerror());
 		fclose(outFile);
 		return bSuccess;
@@ -127,21 +121,20 @@ bool copyFile(const char *inFileName, const char *outFileName)
 	fseek(inFile, 0L, SEEK_END);
 	ulSize = ftell(inFile);
 	fseek(inFile, 0L, SEEK_SET);
-	char *buf = new char [ulSize + 1]();
+	char *buf = new char[ulSize + 1]();
 	fread(buf, ulSize, 1, inFile);
 	fclose(inFile);
 
 	fwrite(buf, ulSize, 1, outFile);
 	fflush(outFile);
 	fclose(outFile);
-	delete [] buf;	
+	delete[] buf;
 	bSuccess = true;
 
 	return bSuccess;
 }
 
-bool saveFile(const void* addr, int len, const char *outFileName)
-{
+bool saveFile(const void* addr, int len, const char *outFileName) {
 	bool bSuccess = false;
 	FILE* file = fopen(outFileName, "wb+");
 	if (file != NULL) {
@@ -150,7 +143,7 @@ bool saveFile(const void* addr, int len, const char *outFileName)
 		fclose(file);
 		bSuccess = true;
 		chmod(outFileName, S_IRWXU | S_IRWXG | S_IRWXO);
-	}else{
+	} else {
 		LOGE("[%s] fopen failed, error: %s", __FUNCTION__, dlerror());
 	}
 
@@ -158,19 +151,18 @@ bool saveFile(const void* addr, int len, const char *outFileName)
 }
 
 
-bool readTextFile(const char *fileName, string&strText)
-{
+bool readTextFile(const char *fileName, string&strText) {
 	bool bSuccess = false;
-	char buff[1024] = {0};
+	char buff[1024] = { 0 };
 	strText.clear();
 
 	unsigned long ulSize = 0;
 	FILE *fp = fopen(fileName, "r");
-	if ( fp != NULL ) {
+	if (fp != NULL) {
 		//LOGE("feof 1");
-		while ( feof(fp) == 0 ){
+		while (feof(fp) == 0) {
 			//LOGE("feof 2");
-			if ( fgets(buff, sizeof(buff), fp) == NULL ) {
+			if (fgets(buff, sizeof(buff), fp) == NULL) {
 				//LOGE("fgets continue");
 				continue;
 			}
@@ -179,22 +171,21 @@ bool readTextFile(const char *fileName, string&strText)
 		}
 		//LOGE("fgets end");
 		bSuccess = true;
-	}else{
+	} else {
 		LOGE("[%s] open file: %s failed: %s", __FUNCTION__, fileName, strerror(errno));
 	}
 
 	return bSuccess;
 }
 
-jobject getApplication(JNIEnv *env) 
-{
+jobject getApplication(JNIEnv *env) {
 	jclass localClass = env->FindClass("android/app/ActivityThread");
-	if (localClass!=NULL) {
+	if (localClass != NULL) {
 		jmethodID getapplication = env->GetStaticMethodID(localClass, "currentApplication", "()Landroid/app/Application;");
-		if (getapplication!=NULL) {
+		if (getapplication != NULL) {
 			jobject application = env->CallStaticObjectMethod(localClass, getapplication);
 			return application;
-		}else{
+		} else {
 			LOGE("[%s] 1", __FUNCTION__);
 			return NULL;
 		}
@@ -202,40 +193,39 @@ jobject getApplication(JNIEnv *env)
 	return NULL;
 }
 
-bool getPackageName(JNIEnv *env, string&strOut) 
-{
+bool getPackageName(JNIEnv *env, string&strOut) {
 	bool ret = false;
 	strOut = "";
 
 	jobject context = getApplication(env);
-	if ( context==NULL ) {
+	if (context == NULL) {
 		LOGE("[%s] 1", __FUNCTION__);
 		return ret;
 	}
 
 	jclass  activity = env->GetObjectClass(context);
-	if ( activity==NULL ) {
+	if (activity == NULL) {
 		LOGE("[%s] 2", __FUNCTION__);
 		return ret;
 	}
 
 	//得到getPackageManager方法的ID
 	jmethodID methodID_func = env->GetMethodID(activity, "getPackageManager", "()Landroid/content/pm/PackageManager;");
-	if ( methodID_func==NULL ) {
+	if (methodID_func == NULL) {
 		LOGE("[%s] 3", __FUNCTION__);
 		return ret;
 	}
 
 	//获得PackageManager对象
-	jobject packageManager = env->CallObjectMethod(context,methodID_func);
+	jobject packageManager = env->CallObjectMethod(context, methodID_func);
 	jclass packageManagerclass = env->GetObjectClass(packageManager);
-	if ( packageManager==NULL || packageManagerclass==NULL ) {
+	if (packageManager == NULL || packageManagerclass == NULL) {
 		LOGE("[%s] 4", __FUNCTION__);
 		return ret;
 	}
 
 	//得到getPackageName方法的ID
-	jmethodID methodID_pack = env->GetMethodID(activity,"getPackageName", "()Ljava/lang/String;");
+	jmethodID methodID_pack = env->GetMethodID(activity, "getPackageName", "()Ljava/lang/String;");
 
 	//获取包名
 	jstring name_str = static_cast<jstring>(env->CallObjectMethod(context, methodID_pack));
@@ -244,12 +234,11 @@ bool getPackageName(JNIEnv *env, string&strOut)
 	return true;
 }
 
-bool getPackagePath(JNIEnv *env, string&strOut)
-{
+bool getPackagePath(JNIEnv *env, string&strOut) {
 	string strPackageName;
 	strOut = "";
 
-	if ( getPackageName(env, strPackageName) ) {
+	if (getPackageName(env, strPackageName)) {
 		strOut = "/data/data/" + strPackageName;
 		return true;
 	}
@@ -257,24 +246,48 @@ bool getPackagePath(JNIEnv *env, string&strOut)
 	return false;
 }
 
-string getMacs()
-{
+string getMacs() {
 	bool bOK = false;
 	string strMacs;
 	string strText;
 
 	bOK = readTextFile("/sys/class/net/wlan0/address", strText);
-	if ( bOK ) {
+	if (bOK) {
 		strMacs += strText;
-	}	
+	}
 	bOK = readTextFile("/sys/class/net/eth0/address", strText);
-	if ( bOK && strMacs.find(strText) == string::npos ) {
+	if (bOK && strMacs.find(strText) == string::npos) {
 		strMacs += strText;
 	}
 	bOK = readTextFile("/sys/class/net/p2p0/address", strText);
-	if ( bOK && strMacs.find(strText) == string::npos ) {
+	if (bOK && strMacs.find(strText) == string::npos) {
 		strMacs += strText;
 	}
 
 	return strMacs;
+}
+
+std::string fmt(const char *lpszFormat, ...) {
+	char b = 0;
+	va_list argList;
+	va_start(argList, lpszFormat);
+	unsigned required = 1;
+	required = vsnprintf(&b, 0, lpszFormat, argList) + 1;
+	char bytes[required];
+	vsnprintf(bytes, required, lpszFormat, argList);
+	va_end(argList);
+
+	return std::string(bytes);
+}
+
+std::string GetCurrentTimeStr(const char* lpszFormat/* = NULL*/) {
+	time_t t;
+	time(&t);
+	char tmp[64] = { 0 };
+	if (lpszFormat) {
+		strftime(tmp, sizeof(tmp), lpszFormat, localtime(&t));
+	} else {
+		strftime(tmp, sizeof(tmp), "%Y-%m-%d_%H:%M:%S", localtime(&t));
+	}
+	return tmp;
 }

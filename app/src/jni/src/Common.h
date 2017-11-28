@@ -8,6 +8,10 @@
 #include <string>
 using namespace std;
 
+std::string fmt(const char *lpszFormat, ...);
+
+std::string GetCurrentTimeStr(const char* lpszFormat = NULL);
+
 
 jstring str2jstr(JNIEnv* env, string s, const char* encoding = NULL);
 jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding = NULL);

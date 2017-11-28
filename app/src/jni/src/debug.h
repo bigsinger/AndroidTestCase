@@ -9,6 +9,8 @@
 #include "Constant.h"
 
 
+#define _DEBUG
+
 //输出，LOGD，LOGE中的字符串在无_DEBUG宏的版本不会出现明文字符串
 #ifdef _DEBUG
 	#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__))
