@@ -289,12 +289,42 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 	LOGD("[%s] end class name: %s", __FUNCTION__, sClassName.c_str());
 }
 
+//枚举类的所有函数
+void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
+	static jclass c = env->FindClass("java/lang/Class");
+	static jmethodID getDeclaredmethods = env->GetMethodID(c, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+	jobjectArray methods = (jobjectArray)env->CallObjectMethod(cls, getDeclaredmethods);
+	int size = env->GetArrayLength(methods);
+
+	//Method类中有一个方法 getSignature 可以获取到方法签名.
+	static jclass Method = env->FindClass("java/lang/reflect/Method");
+	static jmethodID getSignature = env->GetMethodID(Method, "getSignature", "()Ljava/lang/String;");
+	static jmethodID getName = env->GetMethodID(Method, "getName", "()Ljava/lang/String;");
+
+	for (int i = 0; i < size; i++) {
+		jobject method = env->GetObjectArrayElement(methods, i);
+		jstring name = (jstring)env->CallObjectMethod(method, getName);
+		const char* nameChars = env->GetStringUTFChars(name, 0);
+		jstring sign = (jstring)env->CallObjectMethod(method, getSignature);
+		if (sign != NULL) {
+			const char* szSignature = env->GetStringUTFChars(sign, 0);
+			LOGD("method name: %s signature: %s", nameChars, szSignature);
+			env->ReleaseStringUTFChars(sign, szSignature);
+		}
+		env->ReleaseStringUTFChars(name, nameChars);
+	}
+}
 
 static void*(*old_loadClass)(JNIEnv *, jobject, jstring);
 static void* OnCallback_loadClass(JNIEnv *jni, jobject thiz, jstring name) {
 	string sClassName = Utils::jstr2str(jni, name);
 	LOGD("[%s] class name: %s", __FUNCTION__, sClassName.c_str());
-	return (*old_loadClass)(jni, thiz, name);
+	jclass cls = (jclass)(*old_loadClass)(jni, thiz, name);
+	if (sClassName.find("com.") != std::string::npos) {
+		//假定为用户代码类
+		enumAllMethodOfClass(jni, cls);
+	}
+	return cls;
 }
 
 static void*(*old_loadClassBool)(JNIEnv *, jobject, jstring, jboolean);
