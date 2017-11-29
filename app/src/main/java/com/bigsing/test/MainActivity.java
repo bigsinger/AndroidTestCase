@@ -24,6 +24,8 @@ import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
 import com.bigsing.view.BaseActivity;
 
+import dalvik.system.DexClassLoader;
+
 public class MainActivity extends BaseActivity {
     public static final String TAG = "MainActivity";
 

@@ -262,6 +262,27 @@ std::string Utils::getClassName(JNIEnv* env, jobject obj) 	{
 	return sName;
 }
 
+std::string Utils::getClassName(JNIEnv* env, jclass cls) {
+	std::string sName;
+
+	// Get the class object's class descriptor
+	jclass clsClazz = env->GetObjectClass(cls);
+
+	// Find the getSimpleName() method in the class object
+	jmethodID methodId = env->GetMethodID(clsClazz, "getName", "()Ljava/lang/String;");
+	jstring className = (jstring)env->CallObjectMethod(cls, methodId);
+	
+	// Now get the c string from the java jstring object
+	const char* str = env->GetStringUTFChars(className, NULL);
+	sName.assign(str);
+
+	// And finally, don't forget to release the JNI objects after usage!!!!
+	env->ReleaseStringUTFChars(className, str);
+	env->DeleteLocalRef(clsClazz);
+
+	return sName;
+}
+
 bool Utils::getPackageName(JNIEnv *env, string&strOut) {
 	bool bSuccess = false;
 	strOut.clear();

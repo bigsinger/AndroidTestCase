@@ -68,7 +68,7 @@ namespace Utils {
 
 	//获取对象的类名
 	std::string getClassName(JNIEnv* env, jobject obj);
-	//std::string getClassName(JNIEnv* env, jclass cls);
+	std::string getClassName(JNIEnv* env, jclass cls);
 
 	//获取当前应用的包名
 	bool getPackageName(JNIEnv *env, string&strOut);

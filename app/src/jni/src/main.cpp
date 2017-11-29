@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <dlfcn.h>
 #include <string>
+#include <algorithm>
 using namespace std;
 #include "debug.h"
 #include "Constant.h"
@@ -216,12 +217,8 @@ JNIEXPORT jstring	JNICALL  incNum(JNIEnv *env, jclass, jobject, jint n) 	{
 //当类被加载时触发的回调函数
 static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 	LOGTIME;
-	string sClassName;
-	string *pStrClassName = (string *)arg;
-	if (pStrClassName) {
-		sClassName = *pStrClassName;
-		delete pStrClassName;
-	}
+	string sClassName = Utils::getClassName(jni, _class);
+	std::replace(sClassName.begin(), sClassName.end(), '.', '/');
 	LOGD("[%s] begin class name: %s", __FUNCTION__, sClassName.c_str());
 
 
@@ -292,6 +289,56 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 	LOGD("[%s] end class name: %s", __FUNCTION__, sClassName.c_str());
 }
 
+
+static void*(*old_loadClass)(JNIEnv *, jobject, jstring);
+static void* OnCallback_loadClass(JNIEnv *jni, jobject thiz, jstring name) {
+	string sClassName = Utils::jstr2str(jni, name);
+	LOGD("[%s] class name: %s", __FUNCTION__, sClassName.c_str());
+	return (*old_loadClass)(jni, thiz, name);
+}
+
+static void*(*old_loadClassBool)(JNIEnv *, jobject, jstring, jboolean);
+static void* OnCallback_loadClassBool(JNIEnv *jni, jobject thiz, jstring name, jboolean resolve) {
+	string sClassName = Utils::jstr2str(jni, name);
+	LOGD("[%s] class name: %s", __FUNCTION__, sClassName.c_str());
+	return (*old_loadClassBool)(jni, thiz, name, resolve);
+}
+
+//当类被加载时触发的回调函数
+static void OnCallback_ClassLoaderClassLoad(JNIEnv *jni, jclass _class, void *arg) {
+	LOGTIME;
+	string sClassName = Utils::getClassName(jni, _class);
+	LOGD("[%s] begin class name: %s", __FUNCTION__, sClassName.c_str());
+
+
+	jmethodID loadClassMethod = jni->GetMethodID(_class, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+	if (loadClassMethod == NULL) {
+		LOGE("[%s] \"loadClass(String name)\" not found in class: %s", __FUNCTION__, sClassName.c_str());
+	} else {
+		old_loadClass = NULL;
+		LOGD("[%s] hook \"loadClass\"", __FUNCTION__);
+		MSJavaHookMethod(jni, _class, loadClassMethod, (void *)(&OnCallback_loadClass), (void **)(&old_loadClass));
+		if (old_loadClass == NULL) {
+			LOGE("[%s] old_onCreate returned NULL", __FUNCTION__);
+		}
+	}
+	
+	jmethodID loadClassBoolMethod = jni->GetMethodID(_class, "loadClass", "(Ljava/lang/String;Z)Ljava/lang/Class;");
+	if (loadClassBoolMethod == NULL) {
+		LOGE("[%s] \"loadClass(String name, boolean resolve)\" not found in class: %s", __FUNCTION__, sClassName.c_str());
+	} else {
+		old_loadClassBool = NULL;
+		LOGD("[%s] hook \"loadClass\"", __FUNCTION__);
+		MSJavaHookMethod(jni, _class, loadClassBoolMethod, (void *)(&OnCallback_loadClassBool), (void **)(&old_loadClassBool));
+		if (old_loadClassBool == NULL) {
+			LOGE("[%s] old_loadClassBool returned NULL", __FUNCTION__);
+		}
+	}
+
+	LOGD("[%s] end class name: %s", __FUNCTION__, sClassName.c_str());
+}
+
+
 /*
 * Returns the JNI version on success, -1 on failure.
 */
@@ -321,9 +368,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 	//////////////////////////////////////////////////////////////////////////
 	//OTHER USER CODE
-	string *pStrClassName = new string;
-	pStrClassName->assign("com/bigsing/test/MainActivity");
-	MSJavaHookClassLoad(env, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, (void *)pStrClassName);
+	MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
+
+	MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnCallback_ClassLoaderClassLoad, NULL);
 	//////////////////////////////////////////////////////////////////////////
 
 	/* success -- return valid version number */
