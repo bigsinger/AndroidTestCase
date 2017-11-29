@@ -7,6 +7,8 @@
 #define Native_Method_1_Signature	"(Landroid/content/Context;ILjava/lang/String;)Ljava/lang/String;"
 #define Native_Method_2_Name		"getInt"
 #define Native_Method_2_Signature	"(Landroid/content/Context;ILjava/lang/String;)I"
+#define Native_Method_3_Name		"Jump"
+#define Native_Method_3_Signature	"(I[Ljava/lang/Object;)Ljava/lang/Object;"
 
 
 enum {

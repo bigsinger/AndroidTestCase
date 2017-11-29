@@ -19,12 +19,22 @@ import java.io.File;
  */
 
 public class Utils {
-    public static void logd(String msg) {
-        if (BuildConfig.DEBUG) Log.d(Constant.TAG, msg);
+    public synchronized static void logd(String msg) {
+        Log.d(Constant.TAG, msg);
     }
-    public static void loge(String msg) {
-        if (BuildConfig.DEBUG) Log.e(Constant.TAG, msg);
+    public synchronized static void log(String msg) {
+        Log.d(Constant.TAG, msg);
     }
+    public synchronized static void loge(String msg) {
+        Log.e(Constant.TAG, msg);
+    }
+
+//    public static void logd(String msg) {
+//        if (BuildConfig.DEBUG) Log.d(Constant.TAG, msg);
+//    }
+//    public static void loge(String msg) {
+//        if (BuildConfig.DEBUG) Log.e(Constant.TAG, msg);
+//    }
 
     public static void toast(Context context, String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();

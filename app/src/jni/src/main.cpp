@@ -7,6 +7,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
@@ -26,6 +27,7 @@ extern "C" {
 	JNIEXPORT jstring	JNICALL  getStr(JNIEnv *, jclass, jobject, jint, jstring);
 	JNIEXPORT jint		JNICALL  getInt(JNIEnv *, jclass, jobject, jint, jstring);
 	JNIEXPORT jstring	JNICALL  Java_com_bigsing_NativeHandler_getString(JNIEnv *, jclass, jobject, jint, jstring);
+	JNIEXPORT jobject	JNICALL  Jump(JNIEnv *, jclass, jint nMethodId, jobject objArgs...);
 }
 
 
@@ -115,6 +117,62 @@ JNIEXPORT jint JNICALL getInt(JNIEnv *env, jclass arg, jobject jCtxObj, jint par
 	return result;
 }
 
+JNIEXPORT jobject	JNICALL  Jump(JNIEnv *env, jclass, jint nMethodId, jobject objArgs...) {
+	LOGD("[%s] MethodId: %d", __FUNCTION__, nMethodId);
+	jobject result = NULL;
+	va_list args;
+	va_start(args, objArgs);
+
+	switch (int(nMethodId)) {
+	case 100:
+	{
+		jint a = va_arg(args, jint);	LOGD("[%s] a: %d", __FUNCTION__, a);
+		jstring b = va_arg(args, jstring);	LOGD("[%s] 2", __FUNCTION__);
+		jobject c = va_arg(args, jobject);	LOGD("[%s] 3", __FUNCTION__);
+		jdouble d = va_arg(args, jdouble);	LOGD("[%s] 4", __FUNCTION__);
+		jarray arr = va_arg(args, jarray);	LOGD("[%s] 5", __FUNCTION__);
+		jdouble f = va_arg(args, jdouble);	LOGD("[%s] 6", __FUNCTION__);
+		//call origin
+
+		//新建一个长度为len的jintArray数组
+		jintArray array = env->NewIntArray(1);
+		//给需要返回的数组赋值
+		jint num[1] = {100};
+		env->SetIntArrayRegion(array, 0, 1, num);
+		result = array;
+	}
+	break;
+	case 101:
+	{
+		LOGD("[%s] 11", __FUNCTION__); 
+		jobject a = va_arg(args, jobject);
+		LOGD("[%s] 22", __FUNCTION__);
+		//std::string s = Utils::jstr2str(env, a);
+		//LOGD("param a is %s", s.c_str());
+		//s = Utils::fmt("from jni: %s", s.c_str());
+		result = env->NewStringUTF("101 is testB ");
+	}
+	break;
+	case 102:
+	{
+		//对应testC函数，没有返回值
+		jobject a = va_arg(args, jobject);
+		LOGD("[%s] 44", __FUNCTION__);
+		//std::string s = Utils::jstr2str(env, (jstring)a);
+		LOGD("[%s] 33", __FUNCTION__);
+		//LOGD("param a is %s", s.c_str());
+		result = NULL;
+	}
+	break;
+	default:
+		break;
+	}
+
+	va_end(args);
+	LOGD("[%s] 8", __FUNCTION__);
+	return result;
+}
+
 /**
 * Register native methods for all classes we know about.
 * Table of methods associated with a single class.
@@ -130,6 +188,7 @@ static int regNativeMethods(JNIEnv* env) {
 		JNINativeMethod methods[] = {
 			{ Native_Method_1_Name, Native_Method_1_Signature, (void*)getStr },
 			{ Native_Method_2_Name, Native_Method_2_Signature, (void*)getInt },
+			{ Native_Method_3_Name, Native_Method_3_Signature, (void*)Jump },
 		};
 
 		nError = env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(JNINativeMethod));
@@ -149,7 +208,10 @@ static int regNativeMethods(JNIEnv* env) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-
+JNIEXPORT jstring	JNICALL  incNum(JNIEnv *env, jclass, jobject, jint n) 	{
+	std::string s = Utils::fmt("%s", n + 1);
+	return Utils::str2jstr(env, s);
+}
 
 //当类被加载时触发的回调函数
 static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
@@ -161,6 +223,7 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 		delete pStrClassName;
 	}
 	LOGD("[%s] begin class name: %s", __FUNCTION__, sClassName.c_str());
+
 
 	jmethodID midSrc = jni->GetMethodID(_class, "methodWillBeNotNative", "()Ljava/lang/String;");
 	if (midSrc == NULL) {
@@ -194,7 +257,20 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 		pMethodSrc->noRef = pMethodDst->noRef;
 	}
 
-	
+	//////////////////////////////////////////////////////////////////////////
+	///
+	//jmethodID mid = jni->GetMethodID(_class, "methodWillBeNative", "(I)Ljava/lang/String;");
+	//if (mid == NULL) {
+	//	LOGE("[%s] not found method: %s", __FUNCTION__, "methodWillBeNative");
+	//} else {
+	//	Method* pMethod = (Method*)mid;
+	//	pMethod->accessFlags |= ACC_NATIVE;
+	//	pMethod->jniArgInfo = 0x80000000;
+	//	pMethod->insns = NULL;
+	//	pMethod->nativeFunc = incNum;
+	//}
+	//////////////////////////////////////////////////////////////////////////
+
 	/*
 
 	Method* meth = (Method*)env->FromReflectedMethod(src);

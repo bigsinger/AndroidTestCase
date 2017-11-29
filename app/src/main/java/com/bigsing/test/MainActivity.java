@@ -3,7 +3,6 @@ package com.bigsing.test;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.wifi.WifiManager;
@@ -23,10 +22,7 @@ import android.widget.TextView;
 
 import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
-import com.bigsing.util.Utils;
 import com.bigsing.view.BaseActivity;
-
-import java.io.InputStream;
 
 public class MainActivity extends BaseActivity {
     public static final String TAG = "MainActivity";
@@ -43,20 +39,39 @@ public class MainActivity extends BaseActivity {
     EditText etUsername;
     EditText etPwd;
     private SQLiteDatabase m_db;
+    private int m_nIndex = 0;
 
     public String setActName(){
         return TAG;
     }
 
+    //////////////////////////////////////////////////
+    //该函数并没有真正注册为NATIVE函数，而是在SO启动的时候HOOK了MainActivity的构造函数，把该函数修复为了methodJava的代码。
+    native public String methodWillBeNotNative();
+    public String methodJava(){
+        return "methodWillBeNotNative is here m_nIndex: " + m_nIndex;
+    }
+    //////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////
+    //
+    public String methodWillBeNative(int n) {
+        return null;
+    }
+    //////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////
     private int testA(int a, String b, Object c, double d, int[] arr, float f){
-        return (int)NativeHandler.jump(100, a, b, c, d, arr, f);
+        int[]ret = (int[]) NativeHandler.Jump(100, a, b, c, d, arr, f);
+        return ret[0];
     }
     private String testB(String a){
-        return (String)NativeHandler.jump(101, a);
+        return (String)NativeHandler.Jump(101, a);
     }
     private void testC(String a){
-        NativeHandler.jump(102, a);
+        NativeHandler.Jump(102, a);
     }
+    //////////////////////////////////////////////////
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +80,12 @@ public class MainActivity extends BaseActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         initView();
 
+        m_nIndex = 2017;
         String text = NativeHandler.getString(getApplicationContext(), NativeCommand.CMD_INIT, null);
+        text += "\n" + methodWillBeNotNative();
+        text += "\ntestA: " + testA(10, "testA", "testA", 1.0, new int[]{1,2}, (float) 2.0);
+        text += "\ntestB: " + testB("testB");
+        testC("testC");
         tv_text.setText(text);
 
         btn_hello.setOnClickListener(new View.OnClickListener() {

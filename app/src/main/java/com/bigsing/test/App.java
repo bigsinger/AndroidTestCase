@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.bigsing.util.Constant;
+import com.bigsing.util.Utils;
 import com.getkeepsafe.relinker.ReLinker;
 
 
@@ -33,10 +34,12 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("MyApplication", "onCreate");
+        Utils.log("App::onCreate");
         mApp = this;
         mContext = this;
         mSP = getSharedPreferences(Constant.PACKAGE_THIS, Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
+        ReLinker.loadLibrary(getApplicationContext(), "substratedvm");
+        ReLinker.loadLibrary(getApplicationContext(), "substrate");
         ReLinker.loadLibrary(getApplicationContext(), "test");
     }
 }
