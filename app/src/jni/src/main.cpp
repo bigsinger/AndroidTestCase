@@ -20,7 +20,7 @@ using namespace std;
 #include "Utils.h"
 #include "TimeLog.h"
 #include "..\substrate\substrate.h"
-#include "..\dalvik\dalvik.h"
+#include "..\dalvik\object.h"
 
 void *thread_fun(void *arg);
 
@@ -290,28 +290,58 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 }
 
 //枚举类的所有函数
+//ref https://github.com/woxihuannisja/StormJiagu/blob/50dce517dfca667374fe9ba1c47f507f7d4ebd62/StormProtector/dexload/Utilload.cpp
 void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
-	static jclass c = env->FindClass("java/lang/Class");
-	static jmethodID getDeclaredmethods = env->GetMethodID(c, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+	static jclass javaClass = env->FindClass("java/lang/Class");
+	static jmethodID ClassgetName = env->GetMethodID(javaClass, "getName", "()Ljava/lang/String;");
+	static jmethodID getDeclaredmethods = env->GetMethodID(javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
 	jobjectArray methods = (jobjectArray)env->CallObjectMethod(cls, getDeclaredmethods);
-	int size = env->GetArrayLength(methods);
+	int sizeMethods = env->GetArrayLength(methods);
 
 	//Method类中有一个方法 getSignature 可以获取到方法签名.
 	static jclass Method = env->FindClass("java/lang/reflect/Method");
 	static jmethodID getSignature = env->GetMethodID(Method, "getSignature", "()Ljava/lang/String;");
 	static jmethodID getName = env->GetMethodID(Method, "getName", "()Ljava/lang/String;");
+	static jmethodID getParameterTypes = env->GetMethodID(Method, "getParameterTypes", "()[Ljava/lang/Class;");
+	static jmethodID getReturnType = env->GetMethodID(Method, "getReturnType", "()Ljava/lang/Class;");
 
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < sizeMethods; i++) {
 		jobject method = env->GetObjectArrayElement(methods, i);
 		jstring name = (jstring)env->CallObjectMethod(method, getName);
-		const char* nameChars = env->GetStringUTFChars(name, 0);
-		jstring sign = (jstring)env->CallObjectMethod(method, getSignature);
-		if (sign != NULL) {
-			const char* szSignature = env->GetStringUTFChars(sign, 0);
-			LOGD("method name: %s signature: %s", nameChars, szSignature);
-			env->ReleaseStringUTFChars(sign, szSignature);
+		const char* szMethodName = env->GetStringUTFChars(name, 0);
+		string sParams;
+
+		jobjectArray args = static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
+		jint sizeArgs = env->GetArrayLength(args);
+		//循环获取每个参数的类型
+		for (int j = 0; j < sizeArgs; ++j) {
+			jobject argClass = env->GetObjectArrayElement(args, j);
+			//调用Class getName方法
+			jstring jArgTypeName = static_cast<jstring>(env->CallObjectMethod(argClass, ClassgetName));
+			string sArgTypeName = Utils::jstr2str(env, jArgTypeName);
+			if (j!= sizeArgs - 1 && sizeArgs!=1) {
+				sParams = sParams + sArgTypeName + ", ";
+			} else {
+				sParams = sParams + sArgTypeName;
+			}
+			env->DeleteLocalRef(argClass);
+			env->DeleteLocalRef(jArgTypeName);
 		}
-		env->ReleaseStringUTFChars(name, nameChars);
+
+		//拼接返回值
+		jobject retClass = env->CallObjectMethod(method, getReturnType);
+		jstring jstrRetTypeName = static_cast<jstring>(env->CallObjectMethod(retClass, ClassgetName));
+		string sRetTypeName = Utils::jstr2str(env, jstrRetTypeName);
+		//释放引用
+		env->DeleteLocalRef(retClass);
+		env->DeleteLocalRef(jstrRetTypeName);
+
+		jstring sign = (jstring)env->CallObjectMethod(method, getSignature);
+		const char* szSignature = env->GetStringUTFChars(sign, 0);
+		LOGD("method: %s %s(%s) signature: %s", sRetTypeName.c_str(), szMethodName, sParams.c_str(), szSignature);
+		env->ReleaseStringUTFChars(sign, szSignature);
+
+		env->ReleaseStringUTFChars(name, szMethodName);
 	}
 }
 

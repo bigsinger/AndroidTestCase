@@ -78,4 +78,6 @@ namespace Utils {
 
 	//分别从/sys/class/net/wlan0/address /sys/class/net/eth0/address /sys/class/net/p2p0/address文件中读取mac，如果不重复则拼接。
 	string getMacs();
+
+	const char* findLibrary(JNIEnv* env, const char* libName);
 }

@@ -24,6 +24,8 @@ import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
 import com.bigsing.view.BaseActivity;
 
+import java.lang.reflect.Method;
+
 import dalvik.system.DexClassLoader;
 
 public class MainActivity extends BaseActivity {
