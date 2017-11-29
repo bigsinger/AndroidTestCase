@@ -224,6 +224,7 @@ jobject Utils::getApplication(JNIEnv *env) {
 			} else {
 				LOGE("[%s] can not found method: currentApplication", __FUNCTION__);
 			}
+			env->DeleteLocalRef(cls);
 		} else {
 			LOGE("[%s] can not found method: currentApplication", __FUNCTION__);
 		}
@@ -256,6 +257,7 @@ std::string Utils::getClassName(JNIEnv* env, jobject obj) 	{
 	sName.assign(str);
 	// Release the memory pinned char array
 	env->ReleaseStringUTFChars(strObj, str);
+	env->DeleteLocalRef(cls);
 
 	return sName;
 }

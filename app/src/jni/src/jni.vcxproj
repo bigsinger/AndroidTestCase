@@ -75,12 +75,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TimeLog.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constant.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="header.h" />
+    <ClInclude Include="TimeLog.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

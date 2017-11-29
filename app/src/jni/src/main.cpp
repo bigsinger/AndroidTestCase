@@ -16,6 +16,9 @@ using namespace std;
 #include "debug.h"
 #include "Constant.h"
 #include "Utils.h"
+#include "TimeLog.h"
+#include "..\substrate\substrate.h"
+#include "..\dalvik\dalvik.h"
 
 void *thread_fun(void *arg);
 
@@ -135,6 +138,8 @@ static int regNativeMethods(JNIEnv* env) {
 		} else {
 			LOGE("[%s] RegisterNatives error: %d", __FUNCTION__, nError);
 		}
+
+		env->DeleteLocalRef(clazz);
 	} else {
 		LOGE("[%s] FindClass error, not found class: %s", __FUNCTION__, Java_Interface_Class_Name);
 	}
@@ -146,6 +151,71 @@ static int regNativeMethods(JNIEnv* env) {
 //////////////////////////////////////////////////////////////////////////
 
 
+//当类被加载时触发的回调函数
+static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
+	LOGTIME;
+	string sClassName;
+	string *pStrClassName = (string *)arg;
+	if (pStrClassName) {
+		sClassName = *pStrClassName;
+		delete pStrClassName;
+	}
+	LOGD("[%s] begin class name: %s", __FUNCTION__, sClassName.c_str());
+
+	jmethodID midSrc = jni->GetMethodID(_class, "methodWillBeNotNative", "()Ljava/lang/String;");
+	if (midSrc == NULL) {
+		LOGE("[%s] not found method: %s", __FUNCTION__, "methodWillBeNotNative");
+	}
+	jmethodID midDst = jni->GetMethodID(_class, "methodJava", "()Ljava/lang/String;");
+	if (midDst == NULL) {
+		LOGE("[%s] not found method: %s", __FUNCTION__, "methodJava");
+	}
+
+	if (midSrc && midDst) {
+		LOGD("[%s] found method %s: %p", __FUNCTION__, "methodJava", midDst);
+		LOGD("[%s] found method %s: %p just fix it", __FUNCTION__, "methodWillBeNotNative", midSrc);
+
+		Method* pMethodSrc = (Method*)midSrc;
+		Method* pMethodDst = (Method*)midDst;
+
+		pMethodSrc->clazz = pMethodDst->clazz;
+		pMethodSrc->accessFlags = pMethodDst->accessFlags;
+		pMethodSrc->methodIndex = pMethodDst->methodIndex;
+		pMethodSrc->registersSize = pMethodDst->registersSize;
+		pMethodSrc->outsSize = pMethodDst->outsSize;
+		pMethodSrc->insSize = pMethodDst->insSize;
+		pMethodSrc->name = pMethodDst->name;
+		pMethodSrc->prototype = pMethodDst->prototype;
+		pMethodSrc->shorty = pMethodDst->shorty;
+		pMethodSrc->insns = pMethodDst->insns;
+		pMethodSrc->jniArgInfo = pMethodDst->jniArgInfo;
+		pMethodSrc->nativeFunc = pMethodDst->nativeFunc;
+		pMethodSrc->fastJni = pMethodDst->fastJni;
+		pMethodSrc->noRef = pMethodDst->noRef;
+	}
+
+	
+	/*
+
+	Method* meth = (Method*)env->FromReflectedMethod(src);
+	Method* target = (Method*)env->FromReflectedMethod(dest);
+	LOGD("dalvikMethod: %s", meth->name);
+
+	meth->clazz = target->clazz;
+	meth->accessFlags |= ACC_PUBLIC;
+	meth->methodIndex = target->methodIndex;
+	meth->jniArgInfo = target->jniArgInfo;
+	meth->registersSize = target->registersSize;
+	meth->outsSize = target->outsSize;
+	meth->insSize = target->insSize;
+
+	meth->prototype = target->prototype;
+	meth->insns = target->insns;
+	meth->nativeFunc = target->nativeFunc;*/
+
+	LOGD("[%s] end class name: %s", __FUNCTION__, sClassName.c_str());
+}
+
 /*
 * Returns the JNI version on success, -1 on failure.
 */
@@ -153,6 +223,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 	JNIEnv* env = NULL;
 	jint	result = -1;
 
+	LOGTIME;
 	Utils::setJavaVM(vm);
 	LOGD("[%s] JavaVM: %p", __FUNCTION__, vm);
 
@@ -169,8 +240,15 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 		LOGE("[%s] regNativeMethods failed", __FUNCTION__);
 		return -1;
 	} else {
-		LOGE("[%s] regNativeMethods success", __FUNCTION__);
+		LOGD("[%s] regNativeMethods success", __FUNCTION__);
 	}
+
+	//////////////////////////////////////////////////////////////////////////
+	//OTHER USER CODE
+	string *pStrClassName = new string;
+	pStrClassName->assign("com/bigsing/test/MainActivity");
+	MSJavaHookClassLoad(env, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, (void *)pStrClassName);
+	//////////////////////////////////////////////////////////////////////////
 
 	/* success -- return valid version number */
 	result = JNI_VERSION_1_6;

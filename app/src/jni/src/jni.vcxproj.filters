@@ -9,13 +9,22 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="SUBSTRATE">
+      <UniqueIdentifier>{034fe6b8-0161-41db-bada-d133d107dbb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="公共库">
+      <UniqueIdentifier>{47e88c18-040e-4cb2-bbb6-2e380cc6dc6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Utils.cpp">
-      <Filter>源文件</Filter>
+      <Filter>公共库</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeLog.cpp">
+      <Filter>公共库</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -29,7 +38,10 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
-      <Filter>头文件</Filter>
+      <Filter>公共库</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeLog.h">
+      <Filter>公共库</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
