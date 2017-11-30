@@ -14,6 +14,8 @@ LOCAL_CFLAGS    := -Werror -fvisibility=hidden
 
 #±àÒëÔ´ÎÄ¼þ
 MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/src/*.cpp)
+MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/src/dalvik/*.cpp)
+MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/src/art/*.cpp) src/art/art_quick_dexposed_invoke_handler.S
 LOCAL_SRC_FILES := $(MY_CPP_LIST:$(LOCAL_PATH)/%=%)
 
 #LOCAL_LDLIBS := -L$(LOCAL_PATH) -llog -ldl -lz

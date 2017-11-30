@@ -1,8 +1,6 @@
-﻿
-/*
-这是一个测试so，模拟使用方的so集成anep环境
-*/
+﻿/*
 
+*/
 
 #include <jni.h>
 #include <android/log.h>
@@ -19,8 +17,8 @@ using namespace std;
 #include "Constant.h"
 #include "Utils.h"
 #include "TimeLog.h"
-#include "..\substrate\substrate.h"
-#include "..\dalvik\object.h"
+#include "substrate\substrate.h"
+#include "dalvik\object.h"
 
 void *thread_fun(void *arg);
 
