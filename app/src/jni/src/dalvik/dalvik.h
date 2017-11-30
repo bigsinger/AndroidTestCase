@@ -38,8 +38,7 @@ enum {
 
 typedef int (*dvmComputeMethodArgsSize_func)(void *);
 
-typedef void (*dvmCallMethod_func)(void *, const Method *, void *, void *, void *,
-                                   ...);
+typedef void (*dvmCallMethod_func)(void *, const Method *, void *, void *, void *, ...);
 
 typedef size_t (*dexProtoGetParameterCount_func)(const DexProto *);
 

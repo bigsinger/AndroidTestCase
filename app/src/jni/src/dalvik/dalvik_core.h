@@ -154,6 +154,7 @@ extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBri
 extern bool dalvik_is_dispatched(JNIEnv *env, jobject src);
 
 static void dispatcher_cpp(const u4 *args, jvalue *pResult, const Method *method, void *self);
+static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method, void *self);
 
 static void dispatcher_java(const u4 *args, jvalue *pResult, const Method *method, void *self);
 

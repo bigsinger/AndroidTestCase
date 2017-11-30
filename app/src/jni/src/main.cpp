@@ -339,10 +339,9 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
 		const char* szSignature = env->GetStringUTFChars(sign, 0);
 		LOGD("method: %s %s(%s) signature: %s", sRetTypeName.c_str(), szMethodName, sParams.c_str(), szSignature);
 		env->ReleaseStringUTFChars(sign, szSignature);
-
 		env->ReleaseStringUTFChars(name, szMethodName);
 
-		dalvik_dispatch(env, method, method, false);
+		//dalvik_dispatch(env, method, NULL, false);
 	}//end for
 }
 
@@ -429,7 +428,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 	//////////////////////////////////////////////////////////////////////////
 	//OTHER USER CODE
-	MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
+	//dalvik_setup(env, 14);
+	//MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
 
 	MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnCallback_ClassLoaderClassLoad, NULL);
 	//////////////////////////////////////////////////////////////////////////

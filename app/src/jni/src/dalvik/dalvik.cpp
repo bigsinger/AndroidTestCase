@@ -236,11 +236,15 @@ jint __attribute__ ((visibility ("hidden"))) dalvik_setup(
         NPEClazz = env->FindClass("java/lang/NullPointerException");
         CastEClazz = env->FindClass("java/lang/ClassCastException");
 
-        bridgeHandleClass = env->FindClass("com/qihoo360/hotpatch/Bridge");
-        bridgeHandleClass = reinterpret_cast<jclass>(env->NewGlobalRef(bridgeHandleClass));
+#if 0
+		bridgeHandleClass = env->FindClass("com/qihoo360/hotpatch/Bridge");
+		bridgeHandleClass = reinterpret_cast<jclass>(env->NewGlobalRef(bridgeHandleClass));
 
-        bridgeHandleMethod = (Method*) env->GetStaticMethodID(bridgeHandleClass, "handleHookedMethod",
-                                                                      "(Ljava/lang/reflect/Member;ILjava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+		bridgeHandleMethod = (Method*)env->GetStaticMethodID(bridgeHandleClass, "handleHookedMethod",
+			"(Ljava/lang/reflect/Member;ILjava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+#endif // 0
+
+
     } else {
         res |= 0x20000; 
     }
