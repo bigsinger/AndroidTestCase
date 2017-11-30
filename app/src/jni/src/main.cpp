@@ -428,7 +428,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 	//////////////////////////////////////////////////////////////////////////
 	//OTHER USER CODE
-	//dalvik_setup(env, 14);
+	dalvik_setup(env, 14);
 	//MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
 
 	MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnCallback_ClassLoaderClassLoad, NULL);

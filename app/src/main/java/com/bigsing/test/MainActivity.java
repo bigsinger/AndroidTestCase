@@ -86,7 +86,7 @@ public class MainActivity extends BaseActivity {
 
         m_nIndex = 2017;
         String text = NativeHandler.getString(getApplicationContext(), NativeCommand.CMD_INIT, null);
-        text += "\n" + methodWillBeNotNative();
+        //text += "\n" + methodWillBeNotNative();
         text += "\ntestA: " + testA(10, "testA", "testA", 1.0, new int[]{1,2}, (float) 2.0);
         text += "\ntestB: " + testB("testB");
         testC("testC");

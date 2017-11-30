@@ -38,7 +38,7 @@ public class App extends Application {
         mApp = this;
         mContext = this;
         mSP = getSharedPreferences(Constant.PACKAGE_THIS, Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
-        ReLinker.loadLibrary(getApplicationContext(), "substratedvm");
+        ReLinker.loadLibrary(getApplicationContext(), "substrate-dvm");
         ReLinker.loadLibrary(getApplicationContext(), "substrate");
         ReLinker.loadLibrary(getApplicationContext(), "test");
     }

@@ -16,7 +16,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         ActivityCollector.getInstance().addActivity(this);
-        actName = setActName();
+        //actName = setActName();
     }
 
     public abstract String setActName();
