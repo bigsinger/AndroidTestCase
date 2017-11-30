@@ -106,9 +106,24 @@ union JValue {
  */
 enum PrimitiveType {
 	PRIM_NOT = 0, /* value is a reference type, not a primitive type */
-	PRIM_VOID = 1, PRIM_BOOLEAN = 2, PRIM_BYTE = 3, PRIM_SHORT = 4, PRIM_CHAR = 5, PRIM_INT = 6, PRIM_LONG = 7, PRIM_FLOAT = 8, PRIM_DOUBLE = 9,
-};
+	PRIM_VOID = 1,
+	PRIM_BOOLEAN = 2,
+	PRIM_BYTE = 3,
+	PRIM_SHORT = 4,
+	PRIM_CHAR = 5,
+	PRIM_INT = 6,
+	PRIM_LONG = 7,
+	PRIM_FLOAT = 8,
+	PRIM_DOUBLE = 9,
+} typedef PrimitiveType;
 
+
+/*
+* access flags and masks; the "standard" ones are all <= 0x4000
+*
+* Note: There are related declarations in vm/oo/Object.h in the ClassFlags
+* enum.
+*/
 enum {
 	ACC_PUBLIC = 0x00000001,       // class, field, method, ic
 	ACC_PRIVATE = 0x00000002,       // field, method, ic
@@ -282,7 +297,8 @@ enum ClassFlags {
 #define GET_CLASS_FLAG_GROUP(clazz, flags) \
     ((u4)((clazz)->accessFlags & (flags)))
 
-#define RETURN_VOID()           do { (void)(pResult); return; } while(0)
+
+#define RETURN_VOID()           do { pResult->i = 0xfefeabab; return; }while(0)
 #define RETURN_BOOLEAN(_val)    do { pResult->i = (_val); return; } while(0)
 #define RETURN_INT(_val)        do { pResult->i = (_val); return; } while(0)
 #define RETURN_LONG(_val)       do { pResult->j = (_val); return; } while(0)

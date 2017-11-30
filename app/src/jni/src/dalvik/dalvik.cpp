@@ -1,6 +1,6 @@
 #include <time.h>
 #include <stdlib.h>
-#include "inlineHook.h"
+//#include "inlineHook.h"
 
 #include <stdbool.h>
 #include <dlfcn.h>
@@ -91,11 +91,17 @@ jint __attribute__ ((visibility ("hidden"))) dalvik_setup(
     if (dvm_hand) {
 
         dvmResolveClass_fnPtr = (dvmResolveClass_func) dvm_dlsym(dvm_hand, "dvmResolveClass");
-        if (registerInlineHook((uint32_t) dvmResolveClass_fnPtr, (uint32_t) new_dvmResolveClass_func, (uint32_t **) &old_dvmResolveClass_fnPtr) != ELE7EN_OK) {
-            res |= 0x8000; 
-        } else if (inlineHook((uint32_t) dvmResolveClass_fnPtr) != ELE7EN_OK) {
-            res |= 0x10000; 
-        }
+#if 0
+		if (registerInlineHook((uint32_t)dvmResolveClass_fnPtr, (uint32_t)new_dvmResolveClass_func, (uint32_t **)&old_dvmResolveClass_fnPtr) != ELE7EN_OK) {
+			res |= 0x8000;
+	} else if (inlineHook((uint32_t)dvmResolveClass_fnPtr) != ELE7EN_OK) {
+		res |= 0x10000;
+	}
+#else
+	res |= 0x10000;
+#endif // 0
+
+        
 
 
         dvmComputeMethodArgsSize_fnPtr = (dvmComputeMethodArgsSize_func) dvm_dlsym(dvm_hand,
@@ -246,10 +252,6 @@ void throwNPE(JNIEnv *env, const char *msg) {
 //	env->ThrowNew(NPEClazz, msg);
 }
 
-bool dvmIsStaticMethod(const Method *method) {
-    return (method->accessFlags & ACC_STATIC) != 0;
-}
-
 bool dvmIsPrimitiveClass(const ClassObject *clazz) {
     return clazz->primitiveType != PRIM_NOT;
 }
@@ -257,7 +259,7 @@ bool dvmIsPrimitiveClass(const ClassObject *clazz) {
 static void *dvm_dlsym(void *hand, const char *name) {
     void *ret = dlsym(hand, name);
     char msg[1024] = {0};
-    snprintf(msg, sizeof(msg) - 1, "0x%x", ret);
+    snprintf(msg, sizeof(msg) - 1, "%p", ret);
 #ifdef DEBUG
     LOGD("%s = %s\n", name, msg);
 #endif

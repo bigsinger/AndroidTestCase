@@ -74,20 +74,48 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ArtBridge.cpp" />
+    <ClCompile Include="art\art.cpp" />
+    <ClCompile Include="art\art_method_dispatch.cpp" />
+    <ClCompile Include="art\art_method_replace.cpp" />
+    <ClCompile Include="art\art_method_replace_5_0.cxx" />
+    <ClCompile Include="art\art_method_replace_5_1.cxx" />
+    <ClCompile Include="art\art_method_replace_6_0.cxx" />
+    <ClCompile Include="DalvikBridge.cpp" />
+    <ClCompile Include="dalvik\dalvik.cpp" />
+    <ClCompile Include="dalvik\dalvik_method_dispatch.cpp" />
+    <ClCompile Include="dalvik\dalvik_method_replace.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Patch.cpp" />
     <ClCompile Include="TimeLog.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArtBridge.h" />
+    <ClInclude Include="art\art.h" />
+    <ClInclude Include="art\art_5_0.h" />
+    <ClInclude Include="art\art_5_1.h" />
+    <ClInclude Include="art\art_6_0.h" />
+    <ClInclude Include="art\asm_support.h" />
+    <ClInclude Include="art\asm_support_arm.h" />
+    <ClInclude Include="Bridge.h" />
+    <ClInclude Include="common.h" />
     <ClInclude Include="Constant.h" />
+    <ClInclude Include="DalvikBridge.h" />
+    <ClInclude Include="dalvik\dalvik.h" />
+    <ClInclude Include="dalvik\dalvik_core.h" />
+    <ClInclude Include="dalvik\object.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="header.h" />
+    <ClInclude Include="substrate\substrate.h" />
     <ClInclude Include="TimeLog.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Android.mk" />
     <None Include="..\build.bat" />
+    <None Include="art\art_quick_dexposed_invoke_handler.S" />
+    <None Include="art\asm_support_arm.S" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

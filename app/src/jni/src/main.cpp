@@ -17,8 +17,9 @@ using namespace std;
 #include "Constant.h"
 #include "Utils.h"
 #include "TimeLog.h"
-#include "substrate\substrate.h"
-#include "dalvik\object.h"
+#include "substrate/substrate.h"
+#include "dalvik/object.h"
+#include "dalvik/dalvik_core.h"
 
 void *thread_fun(void *arg);
 
@@ -324,7 +325,7 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
 			}
 			env->DeleteLocalRef(argClass);
 			env->DeleteLocalRef(jArgTypeName);
-		}
+		}//end for
 
 		//拼接返回值
 		jobject retClass = env->CallObjectMethod(method, getReturnType);
@@ -340,7 +341,9 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
 		env->ReleaseStringUTFChars(sign, szSignature);
 
 		env->ReleaseStringUTFChars(name, szMethodName);
-	}
+
+		dalvik_dispatch(env, method, method, false);
+	}//end for
 }
 
 static void*(*old_loadClass)(JNIEnv *, jobject, jstring);
