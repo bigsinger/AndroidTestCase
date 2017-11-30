@@ -24,12 +24,12 @@ void DalvikBridge::applyPatch(JNIEnv *env, jobject src, jobject dest, Mode mode)
     switch (mode) {
         case MODE_METHOD_DISPATCH_CPP:
             if (!dalvik_is_dispatched(env, src)) {
-                dalvik_dispatch(env, src, dest, false);
+                dalvik_dispatch(env, src, dest, false, NULL);
             }
             break;
         case MODE_METHOD_DISPATCH_JAVA:
             if (!dalvik_is_dispatched(env, src)) {
-                dalvik_dispatch(env, src, dest, true);
+                dalvik_dispatch(env, src, dest, true, NULL);
             }
             break;
         case MODE_METHOD_REPLACE:

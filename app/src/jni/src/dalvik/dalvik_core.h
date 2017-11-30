@@ -1,6 +1,7 @@
 #ifndef _DALVIK_CORE_H_
 #define _DALVIK_CORE_H_
 
+#include <string>
 #include "dalvik.h"
 
 /**
@@ -149,7 +150,7 @@ extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
 extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
 
-extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge);
+extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge, const char*lpszMethodDesc);
 
 extern bool dalvik_is_dispatched(JNIEnv *env, jobject src);
 
@@ -175,13 +176,18 @@ public:
 
     Method *dest;
 
+	std::string sClassName;
+	std::string sMethodName;
+	std::string sMethodDesc;
+
     HotFixInfo(Method *srcCopy, Method *dest) {
         this->srcCopy = srcCopy;
         this->dest = dest;
     }
 
     ~HotFixInfo() {
-        delete srcCopy;
+        //todo
+		//delete srcCopy;
     }
 };
 #endif

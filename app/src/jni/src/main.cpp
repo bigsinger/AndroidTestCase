@@ -290,7 +290,7 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 
 //枚举类的所有函数
 //ref https://github.com/woxihuannisja/StormJiagu/blob/50dce517dfca667374fe9ba1c47f507f7d4ebd62/StormProtector/dexload/Utilload.cpp
-void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
+void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string&sClassName) {
 	static jclass javaClass = env->FindClass("java/lang/Class");
 	static jmethodID ClassgetName = env->GetMethodID(javaClass, "getName", "()Ljava/lang/String;");
 	static jmethodID getDeclaredmethods = env->GetMethodID(javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
@@ -309,6 +309,7 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
 		jstring name = (jstring)env->CallObjectMethod(method, getName);
 		const char* szMethodName = env->GetStringUTFChars(name, 0);
 		string sParams;
+		string sMethodDesc;
 
 		jobjectArray args = static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
 		jint sizeArgs = env->GetArrayLength(args);
@@ -337,11 +338,12 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls) {
 
 		jstring sign = (jstring)env->CallObjectMethod(method, getSignature);
 		const char* szSignature = env->GetStringUTFChars(sign, 0);
-		LOGD("method: %s %s(%s) signature: %s", sRetTypeName.c_str(), szMethodName, sParams.c_str(), szSignature);
+		sMethodDesc = Utils::fmt("%s %s %s(%s); sig: %s", sClassName.c_str(), sRetTypeName.c_str(), szMethodName, sParams.c_str(), szSignature);
+		LOGD("method: %s", sMethodDesc.c_str());
 		env->ReleaseStringUTFChars(sign, szSignature);
 		env->ReleaseStringUTFChars(name, szMethodName);
 
-		//dalvik_dispatch(env, method, NULL, false);
+		dalvik_dispatch(env, method, NULL, false, sMethodDesc.c_str());
 	}//end for
 }
 
@@ -352,7 +354,7 @@ static void* OnCallback_loadClass(JNIEnv *jni, jobject thiz, jstring name) {
 	jclass cls = (jclass)(*old_loadClass)(jni, thiz, name);
 	if (sClassName.find("com.") != std::string::npos) {
 		//假定为用户代码类
-		enumAllMethodOfClass(jni, cls);
+		enumAllMethodOfClass(jni, cls, sClassName);
 	}
 	return cls;
 }

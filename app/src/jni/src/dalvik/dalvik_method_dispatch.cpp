@@ -1,13 +1,16 @@
 #include "dalvik_core.h"
 #include "assert.h"
 
-void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool javaBridge) {
+void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool javaBridge, const char*lpszMethodDesc) {
 	Method *dest = NULL;
 	Method *src = (Method *)env->FromReflectedMethod(srcMethod);
 	LOGD("dalvik_dispatch src methodid: %p", src);
 
 	if (src->accessFlags & ACC_ABSTRACT || src->accessFlags & ACC_CONSTRUCTOR) {
 		//抽象方法不处理
+		return;
+	}
+	if (src->accessFlags != ACC_PUBLIC/* && src->accessFlags != ACC_PRIVATE*/) {
 		return;
 	}
 
@@ -43,6 +46,7 @@ void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool jav
 		Method *srcCopy = (Method *)malloc(sizeof(Method));
 		memcpy(srcCopy, src, sizeof(Method));
 		HotFixInfo *info = new HotFixInfo(srcCopy, srcCopy);
+		info->sMethodDesc.assign(lpszMethodDesc);
 
 		src->jniArgInfo = 0x80000000;
 		src->accessFlags |= ACC_NATIVE;
@@ -56,7 +60,9 @@ void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool jav
 		if (javaBridge) {
 			src->nativeFunc = (DalvikBridgeFunc)dispatcher_java;
 		} else {
-			src->nativeFunc = (DalvikBridgeFunc)nativeFunc_dispatcher_only_log_call;
+			if (src->nativeFunc != (DalvikBridgeFunc)nativeFunc_dispatcher_only_log_call) {
+				src->nativeFunc = (DalvikBridgeFunc)nativeFunc_dispatcher_only_log_call;
+			}
 		}
 	}
 
@@ -151,8 +157,8 @@ static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult,
 	HotFixInfo *info = (HotFixInfo *)method->insns;
 	Method *pNowMethod = (Method *)method;
 	Method *pOrignMethod = info->dest;
-	LOGD("[%s] : this func: %p,  method on call: %p flag: %08X, nativeFunc: %p orign: %p flag: %08X, nativeFunc: %p |%s %s", __FUNCTION__, 
-		nativeFunc_dispatcher_only_log_call, method, method->accessFlags, method->nativeFunc,
+	LOGD("[%s]: method on call: %s \nflag: %08X, nativeFunc: %p orign: %p flag: %08X, nativeFunc: %p |%s %s", __FUNCTION__, 
+		info->sMethodDesc.c_str(), method->accessFlags, method->nativeFunc,
 		pOrignMethod, pOrignMethod->accessFlags, pOrignMethod->nativeFunc, method->name, method->shorty);
 
 
@@ -177,8 +183,9 @@ static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult,
 		argArray = boxMethodArgs(pOrignMethod, args + 1);
 		if (dvmCheckException_fnPtr(self))
 			goto bail;
-		LOGD("[dispatcher_cpp]3 : before dvmCallMethod_fnPtr %s", method->name);
-		dvmCallMethod_fnPtr(self, (Method *)jInvokeMethod, dvmCreateReflectMethodObject_fnPtr(pOrignMethod), &result, thisObj, argArray);
+		Object *pObj = dvmCreateReflectMethodObject_fnPtr(pOrignMethod);
+		LOGD("[dispatcher_cpp]3 : before dvmCallMethod_fnPtr %s %p", method->name, pObj);
+		dvmCallMethod_fnPtr(self, (Method *)jInvokeMethod, pObj, &result, thisObj, argArray);
 		LOGD("[dispatcher_cpp]2 : after dvmCallMethod_fnPtr %s", method->name);
 		thisObj->clazz = tmp;
 	} else {
@@ -213,7 +220,7 @@ static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult,
 			goto bail;
 		}
 	}
-	LOGD("[dispatcher_cpp] : success %s", method->name);
+	LOGD("[%s] : success %s", __FUNCTION__, info->sMethodDesc.c_str());
 bail:
 	dvmReleaseTrackedAlloc_fnPtr((Object *)argArray, self);
 }
