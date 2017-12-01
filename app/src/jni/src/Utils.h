@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <string>
 #include <android/log.h>
+#include "debug.h"
+#include "TimeLog.h"
 
 using namespace std;
 
@@ -18,11 +20,9 @@ extern jclass  g_clsJNI;		//注册Native函数的类
 
 
 #define ASSERT(V) 				\
-	if(V == NULL){					\
-		LOGE("%s is null.", #V);	\
-		exit(-1);					\
-	}else{							\
-		LOGD("%s is %p.", #V, V);	\
+	if(V == NULL){									\
+		LOGE("[%s] %s is null.", __FUNCTION__, #V);	\
+		exit(-1);									\
 	}
 
 
@@ -36,6 +36,8 @@ namespace Utils {
 	void setJavaJNIClass(jclass cls);
 	jclass getJavaJNIClass();
 
+	bool getenv(JNIEnv **env);
+
 	//字符串格式化函数
 	std::string fmt(const char *lpszFormat, ...);
 
@@ -43,13 +45,10 @@ namespace Utils {
 	std::string GetCurrentTimeStr(const char* lpszFormat = NULL);
 
 	//string -> jstring
-	jstring str2jstr(JNIEnv* env, const string&s, const char* encoding = NULL);
-
-	//string -> jstring
-	jstring str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding = NULL);
+	jstring str2jstr(JNIEnv* env, const std::string&s);
 
 	//jstring -> string
-	string  jstr2str(JNIEnv* env, jstring jstr, const char *encoding = NULL);
+	string  jstr2str(JNIEnv* env, jstring jstr);
 
 	//获取文件大小
 	long get_file_size(const char *path);

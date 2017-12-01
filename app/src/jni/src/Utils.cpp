@@ -36,92 +36,64 @@ jclass Utils::getJavaJNIClass() {
 	return g_clsJNI;
 }
 
-//将string转换为jstring
-jstring Utils::str2jstr(JNIEnv* env, const string&s, const char* encoding) {
-	return str2jstr(env, s.c_str(), s.length(), encoding);
-}
+pthread_key_t s_threadKey;
+bool Utils::getenv(JNIEnv **env) {
+	bool bRet = false;
+	switch (g_jvm->GetEnv((void **)env, JNI_VERSION_1_4)) {
+	case JNI_OK:
+		bRet = true;
+		break;
 
-
-#if 1
-jstring Utils::str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding) {
-	jstring jstrResult;
-	if (szText != NULL) {
-		jstrResult = env->NewStringUTF(szText);
-	}
-
-	return jstrResult;
-}
-#else
-jstring Utils::str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding) {
-	jstring jstrResult;
-
-	if (env != NULL) {
-		jclass clazz = env->FindClass("java/lang/String");
-		jmethodID init = env->GetMethodID(clazz, "<init>", "([BLjava/lang/String;)V");
-		jbyteArray bytes = env->NewByteArray((jsize)nLen);
-		env->SetByteArrayRegion(bytes, 0, nLen, (jbyte*)szText);
-
-		jstring jencoding;
-		if (encoding == NULL) {
-			jencoding = env->NewStringUTF("utf-8");
-		} else {
-			jencoding = env->NewStringUTF("GB2312");
+	case JNI_EDETACHED:
+		if (g_jvm->AttachCurrentThread(env, 0) < 0) {
+			break;
 		}
-		jstrResult = (jstring)env->NewObject(clazz, init, bytes, jencoding);
-		env->DeleteLocalRef(bytes);
-		env->DeleteLocalRef(clazz);
-		env->DeleteLocalRef(jencoding);
-	} else {
-		LOGE("[%s] failed: env is null", __FUNCTION__);
-	}
-
-	return jstrResult;
-}
-#endif
-
-
-//将jstring转换为string
-string Utils::jstr2str(JNIEnv* env, jstring jstr, const char *encoding) {
-	string strResult;
-
-	if (env != NULL) {
-
-		if (jstr != NULL) {
-			const char *key = NULL;
-			key = env->GetStringUTFChars(jstr, NULL);
-			strResult.assign(key);
-			env->ReleaseStringUTFChars(jstr, key);
+		if (pthread_getspecific(s_threadKey) == NULL) {
+			pthread_setspecific(s_threadKey, env);
 		}
-
-		//char* rtn = NULL;
-		//jstring jencoding;
-		//if ( encoding==NULL ) {
-		//	jencoding = env->NewStringUTF("GB2312");
-		//}else{
-		//	jencoding = env->NewStringUTF(encoding);	//"utf-8"
-		//}
-
-		//jclass strClass = env->FindClass("java/lang/String");
-		//jmethodID getBytes= env->GetMethodID(strClass, "getBytes", "(Ljava/lang/String;)[B");
-		//jbyteArray arr = (jbyteArray)env->CallObjectMethod(jstr, getBytes, jencoding);
-		//jsize arrLen = env->GetArrayLength(arr);
-		//jbyte* ba = env->GetByteArrayElements(arr, JNI_FALSE);
-
-		//if( arrLen > 0 ){
-		//	strResult.assign((const char*)ba, arrLen);
-		//}else{
-		//	LOGE("[%s] error GetArrayLength: %d", arrLen);
-		//}
-
-		//env->ReleaseByteArrayElements(arr, ba, 0);
-		//env->DeleteLocalRef(arr);
-		//env->DeleteLocalRef(strClass);
-		//env->DeleteLocalRef(jencoding);
-	} else {
-		LOGE("[%s] failed: env is null", __FUNCTION__);
+		bRet = true;
+		break;
+	default:
+		break;
 	}
 
-	return strResult;
+	return bRet;
+}
+
+//将string转换为jstring ref: Android JNI出坑指南(bugly)
+jstring Utils::str2jstr(JNIEnv* env, const std::string&s) {
+	jclass str_class = env->FindClass("java/lang/String");
+	jmethodID init_mid = env->GetMethodID(str_class, "<init>", "([BLjava/lang/String;)V");
+	jbyteArray bytes = env->NewByteArray(s.length());
+	env->SetByteArrayRegion(bytes, 0, s.length(), (jbyte *)s.c_str());
+	jstring encoding = env->NewStringUTF("utf-8");
+	jstring result = (jstring)env->NewObject(str_class, init_mid, bytes, encoding);
+	env->DeleteLocalRef(str_class);
+	env->DeleteLocalRef(encoding);
+	env->DeleteLocalRef(bytes);
+	return result;
+}
+
+//将jstring转换为string ref: Android JNI出坑指南(bugly)
+string Utils::jstr2str(JNIEnv* env, jstring jstr) {
+	std::string result;
+	jclass str_class = env->FindClass("java/lang/String");
+	jstring encoding = env->NewStringUTF("utf-8");
+	jmethodID mid = env->GetMethodID(str_class, "getBytes", "(Ljava/lang/String;)[B");
+	env->DeleteLocalRef(str_class);
+
+	jbyteArray jbytes = (jbyteArray)env->CallObjectMethod(jstr, mid, encoding);
+	env->DeleteLocalRef(encoding);
+
+	jsize str_len = env->GetArrayLength(jbytes);
+	if (str_len > 0) {
+		char *bytes = (char*)malloc(str_len);
+		env->GetByteArrayRegion(jbytes, 0, str_len, (jbyte*)bytes);
+		result = std::string(bytes, str_len);
+		free(bytes);
+	}
+	env->DeleteLocalRef(jbytes);
+	return result;
 }
 
 //获取文件大小

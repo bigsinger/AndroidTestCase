@@ -24,6 +24,9 @@
     <Filter Include="dalvik">
       <UniqueIdentifier>{7c5bc022-fb40-4706-a63f-cf21c7f96524}</UniqueIdentifier>
     </Filter>
+    <Filter Include="USERCODE">
+      <UniqueIdentifier>{47d256fd-264c-41b4-9b14-3a5581ff5d00}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -70,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="dalvik\dalvik_method_replace.cpp">
       <Filter>dalvik</Filter>
+    </ClCompile>
+    <ClCompile Include="MethodLogger.cpp">
+      <Filter>USERCODE</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +135,9 @@
     </ClInclude>
     <ClInclude Include="dalvik\object.h">
       <Filter>dalvik</Filter>
+    </ClInclude>
+    <ClInclude Include="MethodLogger.h">
+      <Filter>USERCODE</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

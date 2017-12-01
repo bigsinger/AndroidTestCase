@@ -8,7 +8,7 @@ call ./ndk.bat
 
 if exist %modulefile% ( 
 	copy %modulefile% ..\main\jniLibs\armeabi-v7a\lib%modulename%.so 
-	call ./debug.bat com.bigsing.hooktest
+	call ./debug.bat com.bigsing.test
 )
 
 

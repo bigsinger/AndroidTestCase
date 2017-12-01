@@ -81,6 +81,7 @@
     <ClCompile Include="art\art_method_replace_5_0.cxx" />
     <ClCompile Include="art\art_method_replace_5_1.cxx" />
     <ClCompile Include="art\art_method_replace_6_0.cxx" />
+    <ClCompile Include="MethodLogger.cpp" />
     <ClCompile Include="DalvikBridge.cpp" />
     <ClCompile Include="dalvik\dalvik.cpp" />
     <ClCompile Include="dalvik\dalvik_method_dispatch.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="art\asm_support.h" />
     <ClInclude Include="art\asm_support_arm.h" />
     <ClInclude Include="Bridge.h" />
+    <ClInclude Include="MethodLogger.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="DalvikBridge.h" />

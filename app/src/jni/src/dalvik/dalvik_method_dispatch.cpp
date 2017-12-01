@@ -4,7 +4,6 @@
 void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool javaBridge, const char*lpszMethodDesc) {
 	Method *dest = NULL;
 	Method *src = (Method *)env->FromReflectedMethod(srcMethod);
-	LOGD("dalvik_dispatch src methodid: %p", src);
 
 	if (src->accessFlags & ACC_ABSTRACT || src->accessFlags & ACC_CONSTRUCTOR) {
 		//抽象方法不处理
@@ -174,7 +173,7 @@ static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult,
 		assert(dvmCheckException_fnPtr(self));
 		goto bail;
 	}
-	LOGD("[dispatcher_cpp] : start call->");
+	LOGD("	start call->");
 	if (dvmIsStaticMethod(pOrignMethod) == false) {
 		//非静态函数
 		Object *thisObj = (Object *)args[0];
