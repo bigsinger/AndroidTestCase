@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>jniTest</ProjectName>
+    <ProjectGuid>{0F5C46F4-F36C-42CB-904F-57987B1F1107}</ProjectGuid>
+    <RootNamespace>jni</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>15.0.26919.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine>../build.bat</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine />
+    <NMakeCleanCommandLine>../clean.bat</NMakeCleanCommandLine>
+    <NMakeOutput />
+    <IncludePath>D:\android\ndk\platforms\android-19\arch-x86\usr\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path />
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ArtBridge.cpp" />
+    <ClCompile Include="art\art.cpp" />
+    <ClCompile Include="art\art_method_dispatch.cpp" />
+    <ClCompile Include="art\art_method_replace.cpp" />
+    <ClCompile Include="art\art_method_replace_5_0.cxx" />
+    <ClCompile Include="art\art_method_replace_5_1.cxx" />
+    <ClCompile Include="art\art_method_replace_6_0.cxx" />
+    <ClCompile Include="MethodLogger.cpp" />
+    <ClCompile Include="DalvikBridge.cpp" />
+    <ClCompile Include="dalvik\dalvik.cpp" />
+    <ClCompile Include="dalvik\dalvik_method_dispatch.cpp" />
+    <ClCompile Include="dalvik\dalvik_method_replace.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Patch.cpp" />
+    <ClCompile Include="TimeLog.cpp" />
+    <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ArtBridge.h" />
+    <ClInclude Include="art\art.h" />
+    <ClInclude Include="art\art_5_0.h" />
+    <ClInclude Include="art\art_5_1.h" />
+    <ClInclude Include="art\art_6_0.h" />
+    <ClInclude Include="art\asm_support.h" />
+    <ClInclude Include="art\asm_support_arm.h" />
+    <ClInclude Include="Bridge.h" />
+    <ClInclude Include="MethodLogger.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="Constant.h" />
+    <ClInclude Include="DalvikBridge.h" />
+    <ClInclude Include="dalvik\dalvik.h" />
+    <ClInclude Include="dalvik\dalvik_core.h" />
+    <ClInclude Include="dalvik\object.h" />
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="header.h" />
+    <ClInclude Include="substrate\substrate.h" />
+    <ClInclude Include="TimeLog.h" />
+    <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Android.mk" />
+    <None Include="..\build.bat" />
+    <None Include="art\art_quick_dexposed_invoke_handler.S" />
+    <None Include="art\asm_support_arm.S" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
