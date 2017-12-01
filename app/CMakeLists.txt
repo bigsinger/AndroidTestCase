@@ -11,21 +11,15 @@ cmake_minimum_required(VERSION 3.4.1)
 # Gradle automatically packages shared libraries with your APK.
 
 set_property(SOURCE src/main/cpp/art/art_quick_dexposed_invoke_handler.S PROPERTY LANGUAGE C)
-
 file(GLOB native_srcs "src/main/cpp/*.cpp" "src/main/cpp/dalvik/*.cpp" "src/main/cpp/art/*.cpp" "src/main/cpp/art/*.S")
 add_library( # Sets the name of the library.
-             native-lib
+             hooktest
 
              # Sets the library as a shared library.
              SHARED
 
              # Provides a relative path to your source file(s).
              ${native_srcs}
-             #"src/main/cpp/*.cpp"
-             #"src/main/cpp/dalvik/*.cpp"
-             #"src/main/cpp/art/*.cpp"
-             # "src/main/cpp/art/art_quick_dexposed_invoke_handler.S"
-             src/main/cpp/art/art_quick_dexposed_invoke_handler.S
             )
 include_directories(src/main/cpp/)
 
@@ -46,12 +40,10 @@ find_library( # Sets the name of the path variable.
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
-set(LINK_DIR src/main/cpp/3rd)
-set(SUBSTRATE_LIB src/main/cpp/3rd/libsubstrate.so src/main/cpp/3rd/libsubstrate-dvm.so)
+
 file(GLOB libs src/main/cpp/3rd/libsubstrate.so src/main/cpp/3rd/libsubstrate-dvm.so)
-link_directories(${LINK_DIR})
 target_link_libraries( # Specifies the target library.
-                       native-lib
+                       hooktest
 
                        # Links the target library to the log library
                        # included in the NDK.
