@@ -141,14 +141,14 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Android.mk" />
-    <None Include="..\build.bat">
+    <None Include="Android.mk" />
+    <None Include="build.bat">
       <Filter>源文件</Filter>
     </None>
-    <None Include="art\art_quick_dexposed_invoke_handler.S">
+    <None Include="..\main\cpp\art\art_quick_dexposed_invoke_handler.S">
       <Filter>art</Filter>
     </None>
-    <None Include="art\asm_support_arm.S">
+    <None Include="..\main\cpp\art\asm_support_arm.S">
       <Filter>art</Filter>
     </None>
   </ItemGroup>

@@ -114,10 +114,10 @@
     <ClInclude Include="..\main\cpp\Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Android.mk" />
-    <None Include="..\build.bat" />
-    <None Include="art\art_quick_dexposed_invoke_handler.S" />
-    <None Include="art\asm_support_arm.S" />
+    <None Include="Android.mk" />
+    <None Include="build.bat" />
+    <None Include="..\main\cpp\art\art_quick_dexposed_invoke_handler.S" />
+    <None Include="..\main\cpp\art\asm_support_arm.S" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,7 +7,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := test
+LOCAL_MODULE    := hooktest
 
 #КЏЪ§УћвўВи
 LOCAL_CFLAGS    := -Werror -fvisibility=hidden
