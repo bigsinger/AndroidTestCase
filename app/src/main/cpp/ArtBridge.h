@@ -7,7 +7,7 @@
 
 #include "Bridge.h"
 
-class ArtBridge : public Bridge{
+class ArtBridge : public Bridge {
 private:
     static ArtBridge *sInstance;
     int mApiLevel;

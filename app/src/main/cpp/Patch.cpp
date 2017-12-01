@@ -1,6 +1,5 @@
 #include <jni.h>
 #include <stdio.h>
-#include <cassert>
 
 #include "ArtBridge.h"
 #include "DalvikBridge.h"
@@ -29,7 +28,7 @@ static void applyMethodPatch(JNIEnv *env, jclass clazz, jobject src, jobject des
     LOGD("replaceMethod");
 #endif
     if (sBridgeImpl) {
-        sBridgeImpl->applyPatch(env, src, dest, (Mode)mode);
+        sBridgeImpl->applyPatch(env, src, dest, (Mode) mode);
     }
 }
 
@@ -50,10 +49,10 @@ static JNINativeMethod gMethods[] = {
 /* name, signature, funcPtr */
         {"setupNative", "(ZI)Z",                        (bool *) setup},
         {"applyMethodPatchNative",
-                  "(Ljava/lang/reflect/Method;Ljava/lang/reflect/Method;I)V",
-                                                  (void *) applyMethodPatch},
+                        "(Ljava/lang/reflect/Method;Ljava/lang/reflect/Method;I)V",
+                                                        (void *) applyMethodPatch},
         {"setFieldFlagNative",
-                  "(Ljava/lang/reflect/Field;)V", (void *) setFieldFlag},};
+                        "(Ljava/lang/reflect/Field;)V", (void *) setFieldFlag},};
 
 /*
  * Register several native methods for one class.

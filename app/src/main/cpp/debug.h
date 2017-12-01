@@ -1,22 +1,23 @@
 
 /*
-·²ÊÇdebugÏÂÆÚÍûÊä³ö¶øreleaseÏÂ²»³öÏÖµÄ×Ö·û´®£¬Í³Ò»ÔÚ´Ë¶¨Òå
-Ïà¹ØÐÔµÄ×Ö·û´®·Ö×é¶¨Òå
+ï¿½ï¿½ï¿½ï¿½debugï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½releaseï¿½Â²ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Í³Ò»ï¿½Ú´Ë¶ï¿½ï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é¶¨ï¿½ï¿½
 */
 
 #pragma once
+
 #include <android/log.h>
 #include "Constant.h"
 
 
 #define _DEBUG
 
-//Êä³ö£¬LOGD£¬LOGEÖÐµÄ×Ö·û´®ÔÚÎÞ_DEBUGºêµÄ°æ±¾²»»á³öÏÖÃ÷ÎÄ×Ö·û´®
+//ï¿½ï¿½ï¿½ï¿½ï¿½LOGDï¿½ï¿½LOGEï¿½Ðµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½_DEBUGï¿½ï¿½Ä°æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 #ifdef _DEBUG
-	#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
-	#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 #else
-	#define LOGD(...)
-	#define LOGE(...)
+#define LOGD(...)
+#define LOGE(...)
 #endif
 

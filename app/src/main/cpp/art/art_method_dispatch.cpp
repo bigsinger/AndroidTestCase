@@ -15,12 +15,13 @@ void art_dispatch_6_0(JNIEnv *env, jobject src, jobject dest, bool javaBridge) {
     art_6_0::mirror::ArtMethod *dmeth =
             (art_6_0::mirror::ArtMethod *) env->FromReflectedMethod(dest);
 
-    smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void*>(art_quick_dexposed_invoke_handler);
+    smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
 
 }
 
-extern "C" uint64_t artQuickDexposedInvokeHandler_6_0(art_6_0::mirror::ArtMethod* proxy_method,
-                                                  art_6_0::mirror::Object* receiver, void* self, void* sp)
+extern "C" uint64_t artQuickDexposedInvokeHandler_6_0(art_6_0::mirror::ArtMethod *proxy_method,
+                                                      art_6_0::mirror::Object *receiver, void *self,
+                                                      void *sp)
 /*__attribute__ ((shared_locks_required(Locks::mutator_lock_)))*/
 {
 #ifdef DEBUG
@@ -40,12 +41,13 @@ void art_dispatch_5_1(JNIEnv *env, jobject src, jobject dest, bool javaBridge) {
     art_5_1::mirror::ArtMethod *dmeth =
             (art_5_1::mirror::ArtMethod *) env->FromReflectedMethod(dest);
 
-    smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void*>(art_quick_dexposed_invoke_handler);
+    smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
 
 }
 
-extern "C" uint64_t artQuickDexposedInvokeHandler_5_1(art_5_1::mirror::ArtMethod* proxy_method,
-                                                      art_5_1::mirror::Object* receiver, void* self, void* sp)
+extern "C" uint64_t artQuickDexposedInvokeHandler_5_1(art_5_1::mirror::ArtMethod *proxy_method,
+                                                      art_5_1::mirror::Object *receiver, void *self,
+                                                      void *sp)
 /*__attribute__ ((shared_locks_required(Locks::mutator_lock_)))*/
 {
 #ifdef DEBUG
@@ -65,12 +67,13 @@ void art_dispatch_5_0(JNIEnv *env, jobject src, jobject dest, bool javaBridge) {
     art_5_0::mirror::ArtMethod *dmeth =
             (art_5_0::mirror::ArtMethod *) env->FromReflectedMethod(dest);
 
-    smeth->entry_point_from_compiled_code_ = reinterpret_cast<void*>(art_quick_dexposed_invoke_handler);
+    smeth->entry_point_from_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
 
 }
 
-extern "C" uint64_t artQuickDexposedInvokeHandler_5_0(art_5_0::mirror::ArtMethod* proxy_method,
-                                                      art_5_0::mirror::Object* receiver, void* self, void* sp)
+extern "C" uint64_t artQuickDexposedInvokeHandler_5_0(art_5_0::mirror::ArtMethod *proxy_method,
+                                                      art_5_0::mirror::Object *receiver, void *self,
+                                                      void *sp)
 /*__attribute__ ((shared_locks_required(Locks::mutator_lock_)))*/
 {
 #ifdef DEBUG

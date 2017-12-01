@@ -150,12 +150,16 @@ extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
 extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
 
-extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge, const char*lpszMethodDesc);
+extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge,
+                            const char *lpszMethodDesc);
 
 extern bool dalvik_is_dispatched(JNIEnv *env, jobject src);
 
 static void dispatcher_cpp(const u4 *args, jvalue *pResult, const Method *method, void *self);
-static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method, void *self);
+
+static void
+nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method,
+                                    void *self);
 
 static void dispatcher_java(const u4 *args, jvalue *pResult, const Method *method, void *self);
 
@@ -165,7 +169,7 @@ extern bool dvmIsPrimitiveClass(const ClassObject *clazz);
 
 extern ArrayObject *boxMethodArgs(const Method *method, const u4 *args);
 
-extern Method* bridgeHandleMethod;
+extern Method *bridgeHandleMethod;
 
 extern jclass bridgeHandleClass;
 
@@ -176,9 +180,9 @@ public:
 
     Method *dest;
 
-	std::string sClassName;
-	std::string sMethodName;
-	std::string sMethodDesc;
+    std::string sClassName;
+    std::string sMethodName;
+    std::string sMethodDesc;
 
     HotFixInfo(Method *srcCopy, Method *dest) {
         this->srcCopy = srcCopy;
@@ -187,7 +191,8 @@ public:
 
     ~HotFixInfo() {
         //todo
-		//delete srcCopy;
+        //delete srcCopy;
     }
 };
+
 #endif

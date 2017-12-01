@@ -1,4 +1,5 @@
 #pragma once
+
 #include <time.h>
 #include <string>
 
@@ -7,12 +8,13 @@ using namespace std;
 
 class CTimeLog {
 public:
-	CTimeLog(const char *sName);
-	~CTimeLog();
+    CTimeLog(const char *sName);
+
+    ~CTimeLog();
 
 private:
-	time_t m_timeBegin;
-	std::string m_sName;
+    time_t m_timeBegin;
+    std::string m_sName;
 };
 
-#define LOGTIME	CTimeLog timeLogger(__FUNCTION__)
+#define LOGTIME    CTimeLog timeLogger(__FUNCTION__)

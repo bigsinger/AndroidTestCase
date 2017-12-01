@@ -1,9 +1,12 @@
 #pragma once
+
 class CMethodLogger {
 public:
-	CMethodLogger();
-	~CMethodLogger();
+    CMethodLogger();
+
+    ~CMethodLogger();
+
 public:
-	static bool start();
+    static bool start();
 };
 

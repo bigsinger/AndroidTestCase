@@ -4,9 +4,8 @@
 
 #include "DalvikBridge.h"
 #include "dalvik/dalvik_core.h"
-#include <assert.h>
 
-DalvikBridge* DalvikBridge::sInstance = new DalvikBridge;
+DalvikBridge *DalvikBridge::sInstance = new DalvikBridge;
 
 bool DalvikBridge::setup(JNIEnv *env, int apilevel) {
     int res = dalvik_setup(env, apilevel);

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,71 +13,75 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////
-//Çë²»ÒªÖ±½ÓÊ¹ÓÃÒÔÏÂ±äÁ¿£¬Ê¹ÓÃUtils::getxxxÀ´¶ÁÈ¡£¬Ê¹ÓÃUtils::setxxxÀ´ÉèÖÃ
+//ï¿½ë²»ÒªÖ±ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Utils::getxxxï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ê¹ï¿½ï¿½Utils::setxxxï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 extern JavaVM *g_jvm;
 extern jobject g_context;
-extern jclass  g_clsJNI;		//×¢²áNativeº¯ÊýµÄÀà
+extern jclass g_clsJNI;        //×¢ï¿½ï¿½Nativeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ///////////////////////////////////////////////////////
 
 
-#define ASSERT(V) 				\
-	if(V == NULL){									\
-		LOGE("[%s] %s is null.", __FUNCTION__, #V);	\
-		exit(-1);									\
-	}
+#define ASSERT(V)                \
+    if(V == NULL){                                    \
+        LOGE("[%s] %s is null.", __FUNCTION__, #V);    \
+        exit(-1);                                    \
+    }
 
 
 namespace Utils {
-	void setJavaVM(JavaVM *vm);
-	JavaVM *getJavaVM();
+    void setJavaVM(JavaVM *vm);
 
-	void setContext(jobject context);
-	jobject getContext();
+    JavaVM *getJavaVM();
 
-	void setJavaJNIClass(jclass cls);
-	jclass getJavaJNIClass();
+    void setContext(jobject context);
 
-	bool getenv(JNIEnv **env);
+    jobject getContext();
 
-	//×Ö·û´®¸ñÊ½»¯º¯Êý
-	std::string fmt(const char *lpszFormat, ...);
+    void setJavaJNIClass(jclass cls);
 
-	//»ñÈ¡µ±Ç°ÈÕÆÚÊ±¼äµÄ×Ö·û´®£¬¸ñÊ½£º2017-11-28_17:35:01
-	std::string GetCurrentTimeStr(const char* lpszFormat = NULL);
+    jclass getJavaJNIClass();
 
-	//string -> jstring
-	jstring str2jstr(JNIEnv* env, const std::string&s);
+    bool getenv(JNIEnv **env);
 
-	//jstring -> string
-	string  jstr2str(JNIEnv* env, jstring jstr);
+    //ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    std::string fmt(const char *lpszFormat, ...);
 
-	//»ñÈ¡ÎÄ¼þ´óÐ¡
-	long get_file_size(const char *path);
+    //ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½2017-11-28_17:35:01
+    std::string GetCurrentTimeStr(const char *lpszFormat = NULL);
 
-	//¸´ÖÆÎÄ¼þinFileNameµ½outFileName
-	bool copyFile(const char *inFileName, const char *outFileName);
+    //string -> jstring
+    jstring str2jstr(JNIEnv *env, const std::string &s);
 
-	//±£´æÒ»¶ÎÄÚ´æÊý¾Ýµ½ÎÄ¼þoutFileName
-	bool saveFile(const void* addr, int len, const char *outFileName);
+    //jstring -> string
+    string jstr2str(JNIEnv *env, jstring jstr);
 
-	//¶ÁÈ¡ÎÄ±¾ÎÄ¼þfileNameµÄÄÚÈÝµ½strText
-	bool readTextFile(const char *fileName, string&strText);
+    //ï¿½ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½Ð¡
+    long get_file_size(const char *path);
 
-	//»ñÈ¡µ±Ç°applicationµÄ¶ÔÏó¡£ref: [android jniÇ©ÃûÑéÖ¤(Ò»)](http://www.xiaobaiyey.com/598.html)
-	jobject getApplication(JNIEnv *env);
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½inFileNameï¿½ï¿½outFileName
+    bool copyFile(const char *inFileName, const char *outFileName);
 
-	//»ñÈ¡¶ÔÏóµÄÀàÃû
-	std::string getClassName(JNIEnv* env, jobject obj);
-	std::string getClassName(JNIEnv* env, jclass cls);
+    //ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½Ä¼ï¿½outFileName
+    bool saveFile(const void *addr, int len, const char *outFileName);
 
-	//»ñÈ¡µ±Ç°Ó¦ÓÃµÄ°üÃû
-	bool getPackageName(JNIEnv *env, string&strOut);
+    //ï¿½ï¿½È¡ï¿½Ä±ï¿½ï¿½Ä¼ï¿½fileNameï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½strText
+    bool readTextFile(const char *fileName, string &strText);
 
-	//»ñÈ¡appµÄdataÄ¿Â¼(Ä©Î²²»º¬Ð±¸Ü)£º/data/data/com.xxx.xxx
-	bool getPackagePath(JNIEnv *env, string&strOut);
+    //ï¿½ï¿½È¡ï¿½ï¿½Ç°applicationï¿½Ä¶ï¿½ï¿½ï¿½ref: [android jniÇ©ï¿½ï¿½ï¿½ï¿½Ö¤(Ò»)](http://www.xiaobaiyey.com/598.html)
+    jobject getApplication(JNIEnv *env);
 
-	//·Ö±ð´Ó/sys/class/net/wlan0/address /sys/class/net/eth0/address /sys/class/net/p2p0/addressÎÄ¼þÖÐ¶ÁÈ¡mac£¬Èç¹û²»ÖØ¸´ÔòÆ´½Ó¡£
-	string getMacs();
+    //ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    std::string getClassName(JNIEnv *env, jobject obj);
 
-	const char* findLibrary(JNIEnv* env, const char* libName);
+    std::string getClassName(JNIEnv *env, jclass cls);
+
+    //ï¿½ï¿½È¡ï¿½ï¿½Ç°Ó¦ï¿½ÃµÄ°ï¿½ï¿½ï¿½
+    bool getPackageName(JNIEnv *env, string &strOut);
+
+    //ï¿½ï¿½È¡appï¿½ï¿½dataÄ¿Â¼(Ä©Î²ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½)ï¿½ï¿½/data/data/com.xxx.xxx
+    bool getPackagePath(JNIEnv *env, string &strOut);
+
+    //ï¿½Ö±ï¿½ï¿½/sys/class/net/wlan0/address /sys/class/net/eth0/address /sys/class/net/p2p0/addressï¿½Ä¼ï¿½ï¿½Ð¶ï¿½È¡macï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½Æ´ï¿½Ó¡ï¿½
+    string getMacs();
+
+    const char *findLibrary(JNIEnv *env, const char *libName);
 }

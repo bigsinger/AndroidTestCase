@@ -23,7 +23,6 @@
 #define SUBSTRATE_H_
 
 
-
 #ifdef __APPLE__
 #ifdef __cplusplus
 extern "C" {
@@ -75,15 +74,19 @@ void MSHookMessageEx(Class _class, SEL sel, IMP imp, IMP *result);
 
 #ifdef __ANDROID__
 #include <jni.h>
-void MSJavaHookClassLoad(JNIEnv *jni, const char *name, void (*callback)(JNIEnv *, jclass, void *), void *data _default(NULL));
-void MSJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID methodID, void *function, void **result);
+void MSJavaHookClassLoad(JNIEnv *jni, const char *name, void (*callback)(JNIEnv *, jclass, void *),
+                         void *data _default(NULL));
+void
+MSJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID methodID, void *function, void **result);
 void MSJavaBlessClassLoader(JNIEnv *jni, jobject loader);
 
 typedef struct MSJavaObjectKey_ *MSJavaObjectKey;
 MSJavaObjectKey MSJavaCreateObjectKey();
 void MSJavaReleaseObjectKey(MSJavaObjectKey key);
 void *MSJavaGetObjectKey(JNIEnv *jni, jobject object, MSJavaObjectKey key);
-void MSJavaSetObjectKey(JNIEnv *jni, jobject object, MSJavaObjectKey key, void *value, void (*clean)(void *, JNIEnv *, void *) _default(NULL), void *data _default(NULL));
+void MSJavaSetObjectKey(JNIEnv *jni, jobject object, MSJavaObjectKey key, void *value,
+                        void (*clean)(void *, JNIEnv *, void *) _default(NULL),
+                        void *data _default(NULL));
 #endif
 
 #ifdef __cplusplus
@@ -276,34 +279,35 @@ static inline Type_ &MSHookIvar(id self, const char *name) {
 
 #endif/*__APPLE__*/
 
-template <typename Type_>
+template<typename Type_>
 static inline void MSHookFunction(Type_ *symbol, Type_ *replace, Type_ **result) {
     return MSHookFunction(
-        reinterpret_cast<void *>(symbol),
-        reinterpret_cast<void *>(replace),
-        reinterpret_cast<void **>(result)
+            reinterpret_cast<void *>(symbol),
+            reinterpret_cast<void *>(replace),
+            reinterpret_cast<void **>(result)
     );
 }
 
-template <typename Type_>
+template<typename Type_>
 static inline void MSHookFunction(Type_ *symbol, Type_ *replace) {
     return MSHookFunction(symbol, replace, reinterpret_cast<Type_ **>(NULL));
 }
 
-template <typename Type_>
+template<typename Type_>
 static inline void MSHookSymbol(Type_ *&value, const char *name, MSImageRef image = NULL) {
     value = reinterpret_cast<Type_ *>(MSFindSymbol(image, name));
 }
 
-template <typename Type_>
+template<typename Type_>
 static inline void MSHookFunction(const char *name, Type_ *replace, Type_ **result = NULL) {
     Type_ *symbol;
     MSHookSymbol(symbol, name);
     return MSHookFunction(symbol, replace, result);
 }
 
-template <typename Type_>
-static inline void MSHookFunction(MSImageRef image, const char *name, Type_ *replace, Type_ **result = NULL) {
+template<typename Type_>
+static inline void
+MSHookFunction(MSImageRef image, const char *name, Type_ *replace, Type_ **result = NULL) {
     Type_ *symbol;
     MSHookSymbol(symbol, name, image);
     return MSHookFunction(symbol, replace, result);
@@ -315,21 +319,27 @@ static inline void MSHookFunction(MSImageRef image, const char *name, Type_ *rep
 
 #ifdef __cplusplus
 
-template <typename Type_, typename Kind_, typename ...Args_>
-static inline void MSJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID method, Type_ (*replace)(JNIEnv *, Kind_, Args_...), Type_ (**result)(JNIEnv *, Kind_, ...)) {
+template<typename Type_, typename Kind_, typename ...Args_>
+static inline void MSJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID method,
+                                    Type_ (*replace)(JNIEnv *, Kind_, Args_...),
+                                    Type_ (**result)(JNIEnv *, Kind_, ...)) {
     return MSJavaHookMethod(
-        jni, _class, method,
-        reinterpret_cast<void *>(replace),
-        reinterpret_cast<void **>(result)
+            jni, _class, method,
+            reinterpret_cast<void *>(replace),
+            reinterpret_cast<void **>(result)
     );
 }
 
 #endif
 
-static inline void MSAndroidGetPackage(JNIEnv *jni, jobject global, const char *name, jobject &local, jobject &loader) {
+static inline void
+MSAndroidGetPackage(JNIEnv *jni, jobject global, const char *name, jobject &local,
+                    jobject &loader) {
     jclass Context(jni->FindClass("android/content/Context"));
-    jmethodID Context$createPackageContext(jni->GetMethodID(Context, "createPackageContext", "(Ljava/lang/String;I)Landroid/content/Context;"));
-    jmethodID Context$getClassLoader(jni->GetMethodID(Context, "getClassLoader", "()Ljava/lang/ClassLoader;"));
+    jmethodID Context$createPackageContext(jni->GetMethodID(Context, "createPackageContext",
+                                                            "(Ljava/lang/String;I)Landroid/content/Context;"));
+    jmethodID Context$getClassLoader(
+            jni->GetMethodID(Context, "getClassLoader", "()Ljava/lang/ClassLoader;"));
 
     jstring string(jni->NewStringUTF(name));
     local = jni->CallObjectMethod(global, Context$createPackageContext, string, 3);
@@ -338,7 +348,8 @@ static inline void MSAndroidGetPackage(JNIEnv *jni, jobject global, const char *
 
 static inline jclass MSJavaFindClass(JNIEnv *jni, jobject loader, const char *name) {
     jclass Class(jni->FindClass("java/lang/Class"));
-    jmethodID Class$forName(jni->GetStaticMethodID(Class, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"));
+    jmethodID Class$forName(jni->GetStaticMethodID(Class, "forName",
+                                                   "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"));
 
     jstring string(jni->NewStringUTF(name));
     jobject _class(jni->CallStaticObjectMethod(Class, Class$forName, string, JNI_TRUE, loader));
@@ -376,10 +387,10 @@ _disused static void MSJavaCleanWeak(void *data, JNIEnv *jni, void *value) {
     SubstrateConcat_(lhs, rhs)
 
 #ifdef __APPLE__
-    #define SubstrateSection \
+#define SubstrateSection \
         __attribute__((__section__("__TEXT, __substrate")))
 #else
-    #define SubstrateSection \
+#define SubstrateSection \
         __attribute__((__section__(".substrate")))
 #endif
 

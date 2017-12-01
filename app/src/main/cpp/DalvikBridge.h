@@ -12,7 +12,7 @@ class DalvikBridge : public Bridge {
 private:
     static DalvikBridge *sInstance;
 
-    DalvikBridge(){}
+    DalvikBridge() {}
 
 public:
     static DalvikBridge *getInstance() {

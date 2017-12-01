@@ -31,7 +31,7 @@ typedef struct DalvikNativeMethod_t {
 /* flags for dvmMalloc */
 enum {
     ALLOC_DEFAULT = 0x00, ALLOC_DONT_TRACK = 0x01, /* don't add to internal tracking list */
-            ALLOC_NON_MOVING = 0x02,
+    ALLOC_NON_MOVING = 0x02,
 };
 
 //typedef void* (*dvmIsStaticMethod_func)(void*);
@@ -68,7 +68,7 @@ typedef Object *(*dvmDecodeIndirectRef_func)(void *self, jobject jobj);
 
 typedef void *(*dvmThreadSelf_func)();
 
-typedef ClassObject *(*dvmResolveClass_func)(const ClassObject* referrer, u4 classIdx,
-                                      bool fromUnverifiedConstant);
+typedef ClassObject *(*dvmResolveClass_func)(const ClassObject *referrer, u4 classIdx,
+                                             bool fromUnverifiedConstant);
 
 #endif

@@ -31,8 +31,9 @@ jint __attribute__ ((visibility ("hidden"))) art_setup(
 
     void *art_hand = dlopen("libart.so", RTLD_NOW);
     if (art_hand) {
-        artDeliverPendingExceptionFromCode_fnPtr = (artDeliverPendingExceptionFromCode_func) art_dlsym(art_hand,
-                                                                                   "artDeliverPendingExceptionFromCode");
+        artDeliverPendingExceptionFromCode_fnPtr = (artDeliverPendingExceptionFromCode_func) art_dlsym(
+                art_hand,
+                "artDeliverPendingExceptionFromCode");
         if (!artDeliverPendingExceptionFromCode_fnPtr) {
             throwNPE(env, "artDeliverPendingExceptionFromCode_fnPtr");
             res |= 0x40000;
@@ -49,7 +50,7 @@ jint __attribute__ ((visibility ("hidden"))) art_setup(
     return res;
 }
 
-extern "C" void artDeliverPendingExceptionFromCode(void *self){
+extern "C" void artDeliverPendingExceptionFromCode(void *self) {
     LOGD("artDeliverPendingExceptionFromCode");
     artDeliverPendingExceptionFromCode_fnPtr(self);
 }
