@@ -20,13 +20,14 @@ using namespace std;
 #include "substrate/substrate.h"
 #include "dalvik/object.h"
 #include "dalvik/dalvik_core.h"
+#include "MethodLogger.h"
 
 void *thread_fun(void *arg);
 
 extern "C" {
-JNIEXPORT jstring    JNICALL getStr(JNIEnv *, jclass, jobject, jint, jstring);
-JNIEXPORT jint        JNICALL getInt(JNIEnv *, jclass, jobject, jint, jstring);
-JNIEXPORT jstring    JNICALL
+JNIEXPORT jstring   JNICALL getStr(JNIEnv *, jclass, jobject, jint, jstring);
+JNIEXPORT jint      JNICALL getInt(JNIEnv *, jclass, jobject, jint, jstring);
+JNIEXPORT jstring   JNICALL
 Java_com_bigsing_NativeHandler_getString(JNIEnv *, jclass, jobject, jint, jstring);
 JNIEXPORT jobject    JNICALL Jump(JNIEnv *, jclass, jint nMethodId, jobject objArgs...);
 }
@@ -128,6 +129,7 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
 
     switch (int(nMethodId)) {
         case 100: {
+            jobject dummy = va_arg(args, jobject);
             jint a = va_arg(args, jint);
             LOGD("[%s] a: %d", __FUNCTION__, a);
             jstring b = va_arg(args, jstring);
@@ -152,7 +154,8 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
             break;
         case 101: {
             LOGD("[%s] 11", __FUNCTION__);
-            jobject a = va_arg(args, jobject);
+            jobject dummy = va_arg(args, jobject);
+            dummy = va_arg(args, jobject);
             LOGD("[%s] 22", __FUNCTION__);
             //std::string s = Utils::jstr2str(env, a);
             //LOGD("param a is %s", s.c_str());
@@ -318,7 +321,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
         LOGE("[%s] regNativeMethods failed", __FUNCTION__);
         return -1;
     } else {
-        LOGD("[%s] regNativeMethods success", __FUNCTION__);
+        LOGD("[%s] regNativeMethods success!", __FUNCTION__);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -326,7 +329,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     dalvik_setup(env, 14);
     //MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
 
-    //CMethodLogger::start();
+    CMethodLogger::start();
     //////////////////////////////////////////////////////////////////////////
 
     /* success -- return valid version number */
@@ -340,7 +343,7 @@ void *thread_fun(void *arg) {
 
     JNIEnv *env;
     jclass cls;
-    jmethodID mid, mid1;
+    jmethodID mid = NULL, mid1 = NULL;
     JavaVM *vm = Utils::getJavaVM();
 
     if (vm->AttachCurrentThread(&env, NULL) != JNI_OK) {

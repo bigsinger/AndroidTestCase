@@ -47,7 +47,7 @@ void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool jav
         Method *srcCopy = (Method *) malloc(sizeof(Method));
         memcpy(srcCopy, src, sizeof(Method));
         HotFixInfo *info = new HotFixInfo(srcCopy, srcCopy);
-        info->sMethodDesc.assign(lpszMethodDesc);
+        info->sMethodDesc = lpszMethodDesc;
 
         src->jniArgInfo = 0x80000000;
         src->accessFlags |= ACC_NATIVE;
@@ -150,23 +150,19 @@ static void dispatcher_cpp(const u4 *args, jvalue *pResult, const Method *method
     dvmReleaseTrackedAlloc_fnPtr((Object *) argArray, self);
 }
 
-static void
-nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method,
-                                    void *self) {
-    ClassObject *returnType;
-    jvalue result;
-    ArrayObject *argArray;
-
+static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method, void *self) {
+    ArrayObject *argArray = NULL;
+    ClassObject *returnType = NULL;
+    jvalue result = {0};
 
     HotFixInfo *info = (HotFixInfo *) method->insns;
     Method *pNowMethod = (Method *) method;
     Method *pOrignMethod = info->dest;
-    LOGD("[%s]: method on call: %s \nflag: %08X, nativeFunc: %p orign: %p flag: %08X, nativeFunc: %p |%s %s",
-         __FUNCTION__,
-         info->sMethodDesc.c_str(), method->accessFlags, method->nativeFunc,
-         pOrignMethod, pOrignMethod->accessFlags, pOrignMethod->nativeFunc, method->name,
-         method->shorty);
-
+//    LOGD("[%s]: method on call: %s \nflag: %08X, nativeFunc: %p orign: %p flag: %08X, nativeFunc: %p |%s %s",
+//         __FUNCTION__,
+//         info->sMethodDesc.c_str(), method->accessFlags, method->nativeFunc,
+//         pOrignMethod, pOrignMethod->accessFlags, pOrignMethod->nativeFunc, method->name,
+//         method->shorty);
 
     //调用前恢复，否则会进入递归
     pNowMethod->jniArgInfo = pOrignMethod->jniArgInfo;
@@ -177,6 +173,7 @@ nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Metho
 
     returnType = dvmGetBoxedReturnType_fnPtr(method);
     if (returnType == NULL) {
+        LOGE("returnType == NULL");
         assert(dvmCheckException_fnPtr(self));
         goto bail;
     }
@@ -184,21 +181,23 @@ nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Metho
     if (dvmIsStaticMethod(pOrignMethod) == false) {
         //非静态函数
         Object *thisObj = (Object *) args[0];
-        ClassObject *tmp = thisObj->clazz;
         thisObj->clazz = pOrignMethod->clazz;
         argArray = boxMethodArgs(pOrignMethod, args + 1);
-        if (dvmCheckException_fnPtr(self))
+        if (dvmCheckException_fnPtr(self)){
+            LOGE("dvmCheckException_fnPtr failed");
             goto bail;
+        }
         Object *pObj = dvmCreateReflectMethodObject_fnPtr(pOrignMethod);
         LOGD("[dispatcher_cpp]3 : before dvmCallMethod_fnPtr %s %p", method->name, pObj);
         dvmCallMethod_fnPtr(self, (Method *) jInvokeMethod, pObj, &result, thisObj, argArray);
         LOGD("[dispatcher_cpp]2 : after dvmCallMethod_fnPtr %s", method->name);
-        thisObj->clazz = tmp;
     } else {
         //静态函数
         argArray = boxMethodArgs(pOrignMethod, args);
-        if (dvmCheckException_fnPtr(self))
+        if (dvmCheckException_fnPtr(self)){
+            LOGE("static dvmCheckException_fnPtr failed");
             goto bail;
+        }
 
         LOGD("[dispatcher_cpp]4 : static before dvmCallMethod_fnPtr");
         dvmCallMethod_fnPtr(self, (Method *) jInvokeMethod,
@@ -222,6 +221,7 @@ nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Metho
         pResult->l = NULL;
     } else {
         if (dvmUnboxPrimitive_fnPtr(result.l, returnType, pResult) == 0) {
+            LOGE("dvmUnboxPrimitive_fnPtr failed");
             char msg[1024] = {0};
             snprintf(msg, sizeof(msg) - 1, "return error %s!=%s",
                      ((Object *) result.l)->clazz->descriptor, returnType->descriptor);

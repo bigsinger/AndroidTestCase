@@ -1,5 +1,5 @@
 set dir=%~dp0
-set modulename=test
+set modulename=hooktest
 set modulefile=..\libs\armeabi-v7a\lib%modulename%.so
 
 cd /d %dir%

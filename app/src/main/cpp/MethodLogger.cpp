@@ -1,5 +1,6 @@
 #include "MethodLogger.h"
 #include <jni.h>
+#include <algorithm>
 #include "Utils.h"
 #include "substrate/substrate.h"
 #include "dalvik/dalvik_core.h"
@@ -18,75 +19,92 @@ CMethodLogger::~CMethodLogger() {
 //ref https://github.com/woxihuannisja/StormJiagu/blob/50dce517dfca667374fe9ba1c47f507f7d4ebd62/StormProtector/dexload/Utilload.cpp
 void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName) {
     static jclass javaClass = env->FindClass("java/lang/Class");
-    static jmethodID ClassgetName = env->GetMethodID(javaClass, "getName", "()Ljava/lang/String;");
-    static jmethodID getDeclaredmethods = env->GetMethodID(javaClass, "getDeclaredMethods",
-                                                           "()[Ljava/lang/reflect/Method;");
-    jobjectArray methods = (jobjectArray) env->CallObjectMethod(cls, getDeclaredmethods);
-    int sizeMethods = env->GetArrayLength(methods);
+    static jmethodID getNameOfClass = env->GetMethodID(javaClass, "getName", "()Ljava/lang/String;");
+    static jmethodID getDeclaredMethods = env->GetMethodID(javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+    jobjectArray methodsArr = (jobjectArray) env->CallObjectMethod(cls, getDeclaredMethods);
+    int sizeMethods = env->GetArrayLength(methodsArr);
 
-    //Method类中有一个方法 getSignature 可以获取到方法签名.
+    //Method类中有一个getSignature方法可以获取到方法签名.
     static jclass Method = env->FindClass("java/lang/reflect/Method");
     static jmethodID getSignature = env->GetMethodID(Method, "getSignature",
                                                      "()Ljava/lang/String;");
-    static jmethodID getName = env->GetMethodID(Method, "getName", "()Ljava/lang/String;");
+    static jmethodID getNameOfMethod = env->GetMethodID(Method, "getName", "()Ljava/lang/String;");
     static jmethodID getParameterTypes = env->GetMethodID(Method, "getParameterTypes",
                                                           "()[Ljava/lang/Class;");
     static jmethodID getReturnType = env->GetMethodID(Method, "getReturnType",
                                                       "()Ljava/lang/Class;");
 
-    for (int i = 0; i < sizeMethods; i++) {
-        jobject method = env->GetObjectArrayElement(methods, i);
-        jstring name = (jstring) env->CallObjectMethod(method, getName);
-        const char *szMethodName = env->GetStringUTFChars(name, 0);
+    for (int i = 0; i < sizeMethods; ++i) {
         string sParams;
         string sMethodDesc;
+        jobject methodObj = env->GetObjectArrayElement(methodsArr, i); //get one method obj
 
-        jobjectArray args = static_cast<jobjectArray>(env->CallObjectMethod(method,
-                                                                            getParameterTypes));
-        jint sizeArgs = env->GetArrayLength(args);
+        jobjectArray argsArr = static_cast<jobjectArray>(env->CallObjectMethod(methodObj, getParameterTypes));
+        jint sizeArgs = env->GetArrayLength(argsArr);
         //循环获取每个参数的类型
         for (int j = 0; j < sizeArgs; ++j) {
-            jobject argClass = env->GetObjectArrayElement(args, j);
-            //调用Class getName方法
-            jstring jArgTypeName = static_cast<jstring>(env->CallObjectMethod(argClass,
-                                                                              ClassgetName));
-            string sArgTypeName = Utils::jstr2str(env, jArgTypeName);
+            jobject argObj = env->GetObjectArrayElement(argsArr, j);
+            jstring jstrArgClassName = static_cast<jstring>(env->CallObjectMethod(argObj, getNameOfClass));
+            const char *szArgClassName = env->GetStringUTFChars(jstrArgClassName, 0);
             if (j != sizeArgs - 1 && sizeArgs != 1) {
-                sParams = sParams + sArgTypeName + ", ";
+                sParams.append(szArgClassName);
+                sParams.append(", ");
             } else {
-                sParams = sParams + sArgTypeName;
+                sParams.append(szArgClassName);
             }
-            env->DeleteLocalRef(argClass);
-            env->DeleteLocalRef(jArgTypeName);
+
+            //释放参数对象
+            env->ReleaseStringUTFChars(jstrArgClassName, szArgClassName);
+            env->DeleteLocalRef(jstrArgClassName);
+            env->DeleteLocalRef(argObj);
         }//end for
 
-        //拼接返回值
-        jobject retClass = env->CallObjectMethod(method, getReturnType);
-        jstring jstrRetTypeName = static_cast<jstring>(env->CallObjectMethod(retClass,
-                                                                             ClassgetName));
-        string sRetTypeName = Utils::jstr2str(env, jstrRetTypeName);
-        //释放引用
-        env->DeleteLocalRef(retClass);
-        env->DeleteLocalRef(jstrRetTypeName);
+        //获取函数名
+        jstring jstrMethodName = (jstring) env->CallObjectMethod(methodObj, getNameOfMethod);
+        const char *szMethodName = env->GetStringUTFChars(jstrMethodName, 0);
 
-        jstring sign = (jstring) env->CallObjectMethod(method, getSignature);
-        const char *szSignature = env->GetStringUTFChars(sign, 0);
-        sMethodDesc = Utils::fmt("%s %s %s(%s); sig: %s", sClassName.c_str(), sRetTypeName.c_str(),
+        //获取函数返回值类型
+        jobject returnTypeObj = env->CallObjectMethod(methodObj, getReturnType);
+        jstring jstrRetTypeClassName = static_cast<jstring>(env->CallObjectMethod(returnTypeObj,
+                                                                             getNameOfClass));
+        const char *szRetTypeClassName = env->GetStringUTFChars(jstrRetTypeClassName, 0);
+
+        //获取函数签名信息
+        jstring jstrSign = (jstring) env->CallObjectMethod(methodObj, getSignature);
+        const char *szSignature = env->GetStringUTFChars(jstrSign, 0);
+
+        //格式化函数信息
+        sMethodDesc = Utils::fmt("%s %s %s(%s); sig: %s", sClassName.c_str(), szRetTypeClassName,
                                  szMethodName, sParams.c_str(), szSignature);
         LOGD("method: %s", sMethodDesc.c_str());
-        env->ReleaseStringUTFChars(sign, szSignature);
-        env->ReleaseStringUTFChars(name, szMethodName);
 
-        dalvik_dispatch(env, method, NULL, false, sMethodDesc.c_str());
+        //释放关于签名的引用
+        env->ReleaseStringUTFChars(jstrSign, szSignature);
+        env->DeleteLocalRef(jstrSign);
+
+        //释放关于返回值的引用
+        env->ReleaseStringUTFChars(jstrRetTypeClassName, szRetTypeClassName);
+        env->DeleteLocalRef(jstrRetTypeClassName);
+        env->DeleteLocalRef(returnTypeObj);
+
+        //释放关于函数名的引用
+        env->ReleaseStringUTFChars(jstrMethodName, szMethodName);
+        env->DeleteLocalRef(jstrMethodName);
+
+        //设置函数为native
+        dalvik_dispatch(env, methodObj, NULL, false, sMethodDesc.c_str());
+
+        //释放函数对象
+        env->DeleteLocalRef(methodObj);
     }//end for
 }
 
 static void *(*orign_loadClass)(JNIEnv *, jobject, jstring);
 
-static void *OnCall_loadClass(JNIEnv *jni, jobject thiz, jstring name) {
-    string sClassName = Utils::jstr2str(jni, name);
+static void *OnCall_loadClass(JNIEnv *jni, jobject thiz, jstring jstrName) {
+    string sClassName = Utils::jstr2str(jni, jstrName);
     LOGD("[%s] class name: %s", __FUNCTION__, sClassName.c_str());
-    jclass cls = (jclass) (*orign_loadClass)(jni, thiz, name);
+    jclass cls = (jclass) (*orign_loadClass)(jni, thiz, jstrName);
     if (sClassName.find("com.") != std::string::npos) {
         //假定为用户代码类
         enumAllMethodOfClass(jni, cls, sClassName);
@@ -138,4 +156,5 @@ static void OnClassLoad_ClassLoader(JNIEnv *jni, jclass _class, void *arg) {
 
 bool CMethodLogger::start() {
     MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
+    return true;
 }

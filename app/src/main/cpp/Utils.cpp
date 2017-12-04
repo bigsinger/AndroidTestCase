@@ -64,46 +64,106 @@ bool Utils::getenv(JNIEnv **env) {
     return bRet;
 }
 
-//��stringת��Ϊjstring ref: Android JNI����ָ��(bugly)
-jstring Utils::str2jstr(JNIEnv *env, const std::string &s) {
-    jclass str_class = env->FindClass("java/lang/String");
-    jmethodID init_mid = env->GetMethodID(str_class, "<init>", "([BLjava/lang/String;)V");
-    jbyteArray bytes = env->NewByteArray(s.length());
-    env->SetByteArrayRegion(bytes, 0, s.length(), (jbyte *) s.c_str());
-    jstring encoding = env->NewStringUTF("utf-8");
-    jstring result = (jstring) env->NewObject(str_class, init_mid, bytes, encoding);
-    env->DeleteLocalRef(str_class);
-    env->DeleteLocalRef(encoding);
-    env->DeleteLocalRef(bytes);
-    return result;
+//将string转换为jstring
+jstring Utils::str2jstr(JNIEnv *env, const string &s, const char *encoding) {
+    return str2jstr(env, s.c_str(), s.length(), encoding);
 }
 
-//��jstringת��Ϊstring ref: Android JNI����ָ��(bugly)
-string Utils::jstr2str(JNIEnv *env, jstring jstr) {
-    std::string result;
-    jclass str_class = env->FindClass("java/lang/String");
-    jstring encoding = env->NewStringUTF("utf-8");
-    jmethodID mid = env->GetMethodID(str_class, "getBytes", "(Ljava/lang/String;)[B");
-    env->DeleteLocalRef(str_class);
+//请勿使用Android JNI出坑指南(bugly)中的代码，有BUG！！！
+//将string转换为jstring
+#if 1
 
-    jbyteArray jbytes = (jbyteArray) env->CallObjectMethod(jstr, mid, encoding);
-    env->DeleteLocalRef(encoding);
-
-    jsize str_len = env->GetArrayLength(jbytes);
-    if (str_len > 0) {
-        char *bytes = (char *) malloc(str_len);
-        env->GetByteArrayRegion(jbytes, 0, str_len, (jbyte *) bytes);
-        result = std::string(bytes, str_len);
-        free(bytes);
+jstring Utils::str2jstr(JNIEnv *env, const char *szText, const int nLen, const char *encoding) {
+    jstring jstrResult = NULL;
+    if (szText != NULL) {
+        jstrResult = env->NewStringUTF(szText);
     }
-    env->DeleteLocalRef(jbytes);
-    return result;
+
+    return jstrResult;
 }
 
-//��ȡ�ļ���С
+#else
+jstring Utils::str2jstr(JNIEnv* env, const char* szText, const int nLen, const char* encoding) {
+    jstring jstrResult;
+    if (env != NULL) {
+        jclass clazz = env->FindClass("java/lang/String");
+        jmethodID init = env->GetMethodID(clazz, "<init>", "([BLjava/lang/String;)V");
+        jbyteArray bytes = env->NewByteArray((jsize)nLen);
+        env->SetByteArrayRegion(bytes, 0, nLen, (jbyte*)szText);
+        jstring jencoding;
+        if (encoding == NULL) {
+            jencoding = env->NewStringUTF("utf-8");
+        } else {
+            jencoding = env->NewStringUTF("GB2312");
+        }
+        jstrResult = (jstring)env->NewObject(clazz, init, bytes, jencoding);
+        env->DeleteLocalRef(bytes);
+        env->DeleteLocalRef(clazz);
+        env->DeleteLocalRef(jencoding);
+    } else {
+        LOGE("[%s] failed: env is null", __FUNCTION__);
+    }
+    return jstrResult;
+}
+#endif
+
+//请勿使用Android JNI出坑指南(bugly)中的代码，有BUG！！！
+
+/// 使用完成后需要释放：jni->ReleaseStringUTFChars(jstr, szStr);
+/// \param env
+/// \param jstr
+/// \return
+const char *Utils::jstr2s(JNIEnv *env, const jstring jstr) {
+    return env->GetStringUTFChars(jstr, 0);
+}
+
+//将jstring转换为string
+string Utils::jstr2str(JNIEnv *env, const jstring jstr, const char *encoding) {
+    string strResult;
+
+    if (env != NULL) {
+        if (jstr != NULL) {
+            const char *s = NULL;
+            s = env->GetStringUTFChars(jstr, NULL);
+            strResult.assign(s);
+            env->ReleaseStringUTFChars(jstr, s);
+        }
+
+        //char* rtn = NULL;
+        //jstring jencoding;
+        //if ( encoding==NULL ) {
+        //	jencoding = env->NewStringUTF("GB2312");
+        //}else{
+        //	jencoding = env->NewStringUTF(encoding);	//"utf-8"
+        //}
+
+        //jclass strClass = env->FindClass("java/lang/String");
+        //jmethodID getBytes= env->GetMethodID(strClass, "getBytes", "(Ljava/lang/String;)[B");
+        //jbyteArray arr = (jbyteArray)env->CallObjectMethod(jstr, getBytes, jencoding);
+        //jsize arrLen = env->GetArrayLength(arr);
+        //jbyte* ba = env->GetByteArrayElements(arr, JNI_FALSE);
+
+        //if( arrLen > 0 ){
+        //	strResult.assign((const char*)ba, arrLen);
+        //}else{
+        //	LOGE("[%s] error GetArrayLength: %d", arrLen);
+        //}
+
+        //env->ReleaseByteArrayElements(arr, ba, 0);
+        //env->DeleteLocalRef(arr);
+        //env->DeleteLocalRef(strClass);
+        //env->DeleteLocalRef(jencoding);
+    } else {
+        LOGE("[%s] failed: env is null", __FUNCTION__);
+    }
+
+    return strResult;
+}
+
+//获取文件大小
 long Utils::get_file_size(const char *path) {
     long ret = 0;
-    FILE *fp = fopen(path, "rb"); //��һ���ļ��� �ļ�������ڣ�ֻ���ж�
+    FILE *fp = fopen(path, "rb"); //打开一个文件， 文件必须存在，只运行读
     if (fp) {
         fseek(fp, 0, SEEK_END);
         ret = ftell(fp);
@@ -276,7 +336,7 @@ bool Utils::getPackageName(JNIEnv *env, string &strOut) {
         return bSuccess;
     }
 
-    //�õ�getPackageManager������ID
+    //得到getPackageManager方法的ID
     jmethodID getPackageManagerMethod = env->GetMethodID(contextClass, "getPackageManager",
                                                          "()Landroid/content/pm/PackageManager;");
     if (getPackageManagerMethod == NULL) {
@@ -284,7 +344,7 @@ bool Utils::getPackageName(JNIEnv *env, string &strOut) {
         return bSuccess;
     }
 
-    //���PackageManager����
+    //获得PackageManager对象
     jobject packageManager = env->CallObjectMethod(context, getPackageManagerMethod);
     jclass packageManagerClass = env->GetObjectClass(packageManager);
     if (packageManager == NULL || packageManagerClass == NULL) {
@@ -292,11 +352,11 @@ bool Utils::getPackageName(JNIEnv *env, string &strOut) {
         return bSuccess;
     }
 
-    //�õ�getPackageName������ID
+    //得到getPackageName方法的ID
     jmethodID getPackageNameMethod = env->GetMethodID(contextClass, "getPackageName",
                                                       "()Ljava/lang/String;");
 
-    //��ȡ����
+    //获取包名
     jstring name_str = static_cast<jstring>(env->CallObjectMethod(context, getPackageNameMethod));
 
     strOut = jstr2str(env, name_str);
@@ -362,7 +422,7 @@ std::string Utils::GetCurrentTimeStr(const char *lpszFormat/* = NULL*/) {
 }
 
 
-//����쳣
+//清除异常
 bool clearException(JNIEnv *env) {
     jthrowable exception = env->ExceptionOccurred();
     if (exception != NULL) {
@@ -374,7 +434,7 @@ bool clearException(JNIEnv *env) {
 }
 
 
-//�����
+//类查找
 jclass findAppClass(JNIEnv *env, const char *apn) {
     jclass clazzApplicationLoaders = env->FindClass("android/app/ApplicationLoaders");
     jthrowable exception = env->ExceptionOccurred();

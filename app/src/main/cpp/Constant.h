@@ -2,7 +2,7 @@
 #pragma once
 
 #define TAG                            "[BIGSING::TEST]"
-#define Java_Interface_Class_Name    "com/bigsing/NativeHandler"
+#define Java_Interface_Class_Name   "com/bigsing/NativeHandler"
 #define Native_Method_1_Name        "getStr"
 #define Native_Method_1_Signature    "(Landroid/content/Context;ILjava/lang/String;)Ljava/lang/String;"
 #define Native_Method_2_Name        "getInt"
