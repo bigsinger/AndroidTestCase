@@ -99,6 +99,12 @@ extern dvmFindArrayClass_func dvmFindArrayClass_fnPtr;
 
 extern dvmCheckException_func dvmCheckException_fnPtr;
 
+extern dvmInvokeMethod_func dvmInvokeMethod_fnPtr;
+extern dvmFindSystemClass_func dvmFindSystemClass_fnPtr;
+//extern dvmFindJNIClass_func dvmFindJNIClass_fnPtr;
+extern dvmDescriptorToName_func dvmDescriptorToName_fnPtr;
+extern AndroidRuntime_getJNIEnv_func AndroidRuntime_getJNIEnv_fnPtr;
+
 extern dvmGetException_func dvmGetException_fnPtr;
 
 extern dvmCreateReflectMethodObject_func dvmCreateReflectMethodObject_fnPtr;
@@ -150,6 +156,9 @@ extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
 extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
 
+extern void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassName, const char*szMethodName,
+                                    const char*szSig, const char*szDesc);
+
 extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge,
                             const char *lpszMethodDesc);
 
@@ -167,29 +176,38 @@ extern bool dvmIsStaticMethod(const Method *method);
 
 extern bool dvmIsPrimitiveClass(const ClassObject *clazz);
 
-extern ArrayObject *boxMethodArgs(const Method *method, const u4 *args);
+extern ArrayObject *dvmBoxMethodArgs(const Method *method, const u4 *args);
 
 extern Method *bridgeHandleMethod;
 
 extern jclass bridgeHandleClass;
 
-class HotFixInfo {
+class HookInfo {
 
 public:
-    Method *srcCopy;
-
+    Method *originalMethod;
+    ClassObject *returnType;
+    ArrayObject *paramTypes;
     Method *dest;
+    Method *srcCopy;
 
     std::string sClassName;
     std::string sMethodName;
     std::string sMethodDesc;
+    std::string sMethodSig;
 
-    HotFixInfo(Method *srcCopy, Method *dest) {
+    HookInfo(){
+        originalMethod = NULL;
+        returnType = NULL;
+        paramTypes = NULL;
+    }
+
+    HookInfo(Method *srcCopy, Method *dest) {
         this->srcCopy = srcCopy;
         this->dest = dest;
     }
 
-    ~HotFixInfo() {
+    ~HookInfo() {
         //todo
         //delete srcCopy;
     }

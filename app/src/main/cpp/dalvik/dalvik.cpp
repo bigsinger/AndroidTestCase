@@ -29,6 +29,12 @@ dvmFindArrayClass_func dvmFindArrayClass_fnPtr;
 
 dvmCheckException_func dvmCheckException_fnPtr;
 
+dvmInvokeMethod_func dvmInvokeMethod_fnPtr;
+dvmFindSystemClass_func dvmFindSystemClass_fnPtr;
+//dvmFindJNIClass_func dvmFindJNIClass_fnPtr;
+dvmDescriptorToName_func dvmDescriptorToName_fnPtr;
+AndroidRuntime_getJNIEnv_func AndroidRuntime_getJNIEnv_fnPtr;
+
 dvmGetException_func dvmGetException_fnPtr;
 
 dvmCreateReflectMethodObject_func dvmCreateReflectMethodObject_fnPtr;
@@ -167,6 +173,14 @@ jint __attribute__((visibility("hidden"))) dalvik_setup(
             res |= 0x80;
         }
 
+        ////////////////////////////////////////////
+        dvmInvokeMethod_fnPtr = (dvmInvokeMethod_func)dvm_dlsym(dvm_hand,
+            "_Z15dvmInvokeMethodP6ObjectPK6MethodP11ArrayObjectS5_P11ClassObjectb");
+        dvmFindSystemClass_fnPtr = (dvmFindSystemClass_func)dvm_dlsym(dvm_hand, "_Z18dvmFindSystemClassPKc");
+        //dvmFindJNIClass_fnPtr = (dvmFindJNIClass_func)dvm_dlsym(dvm_hand, "_Z15dvmFindJNIClassP7_JNIEnvPKc");
+        dvmDescriptorToName_fnPtr = (dvmDescriptorToName_func)dvm_dlsym(dvm_hand, "_Z19dvmDescriptorToNamePKc");
+        //AndroidRuntime_getJNIEnv_fnPtr = (AndroidRuntime_getJNIEnv_func)dvm_dlsym(dvm_hand, "_ZN7android14AndroidRuntime9getJNIEnvEv");
+
         dvmGetException_fnPtr = (dvmGetException_func) dvm_dlsym(dvm_hand,
                                                                  apilevel > 10 ?
                                                                  "_Z15dvmGetExceptionP6Thread"
@@ -291,7 +305,7 @@ static s8 dvmGetArgLong(const u4 *args, int elem) {
  *
  * On failure, returns with an appropriate exception raised.
  */
-ArrayObject *boxMethodArgs(const Method *method, const u4 *args) {
+ArrayObject *dvmBoxMethodArgs(const Method *method, const u4 *args) {
     const char *desc = &method->shorty[1]; // [0] is the return type.
 
     /* count args */

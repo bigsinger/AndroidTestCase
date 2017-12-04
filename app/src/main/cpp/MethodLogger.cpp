@@ -78,6 +78,10 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
                                  szMethodName, sParams.c_str(), szSignature);
         LOGD("method: %s", sMethodDesc.c_str());
 
+        //设置函数为native
+        dalvik_hook_java_method(env, methodObj, sClassName.c_str(), szMethodName, szSignature, sMethodDesc.c_str());
+
+
         //释放关于签名的引用
         env->ReleaseStringUTFChars(jstrSign, szSignature);
         env->DeleteLocalRef(jstrSign);
@@ -90,9 +94,6 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
         //释放关于函数名的引用
         env->ReleaseStringUTFChars(jstrMethodName, szMethodName);
         env->DeleteLocalRef(jstrMethodName);
-
-        //设置函数为native
-        dalvik_dispatch(env, methodObj, NULL, false, sMethodDesc.c_str());
 
         //释放函数对象
         env->DeleteLocalRef(methodObj);

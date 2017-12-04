@@ -43,7 +43,7 @@ pthread_key_t s_threadKey;
 
 bool Utils::getenv(JNIEnv **env) {
     bool bRet = false;
-    switch (g_jvm->GetEnv((void **) env, JNI_VERSION_1_4)) {
+    switch (g_jvm->GetEnv((void **) env, JNI_VERSION_1_6)) {
         case JNI_OK:
             bRet = true;
             break;

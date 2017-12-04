@@ -55,6 +55,14 @@ typedef ClassObject *(*dvmFindArrayClass_func)(const char *, void *);
 //typedef jlong (*dvmGetArgLong_func)(const u4*,int);
 typedef int (*dvmCheckException_func)(void *);
 
+typedef Object*(*dvmInvokeMethod_func)(Object* invokeObj, const Method* meth, ArrayObject* argList, ArrayObject* params, ClassObject* returnType, bool noAccessCheck);
+
+typedef ClassObject* (*dvmFindSystemClass_func)(const char* descriptor);
+typedef jclass (*dvmFindJNIClass_func)(JNIEnv *env,const char *classDesc);
+typedef char* (*dvmDescriptorToName_func)(const char* str);
+typedef JNIEnv * (*AndroidRuntime_getJNIEnv_func)();
+
+
 typedef Object *(*dvmGetException_func)(void *);
 
 typedef Object *(*dvmCreateReflectMethodObject_func)(const Method *);
