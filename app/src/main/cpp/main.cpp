@@ -175,7 +175,7 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
         }
             break;
         default:
-            LOGE("[%s]unimplemented method id: %d", __FUNCTION__, (int)nMethodId);
+            LOGE("[%s]unimplemented method id: %d", __FUNCTION__, (int) nMethodId);
             break;
     }
 

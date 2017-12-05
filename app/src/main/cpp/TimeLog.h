@@ -16,5 +16,3 @@ private:
     time_t m_timeBegin;
     std::string m_sName;
 };
-
-#define LOGTIME    CTimeLog timeLogger(__FUNCTION__)

@@ -19,14 +19,6 @@ extern jobject g_context;
 extern jclass g_clsJNI;        //注册Native函数的类
 ///////////////////////////////////////////////////////
 
-
-#define ASSERT(V)                \
-    if(V == NULL){                                    \
-        LOGE("[%s] %s is null.", __FUNCTION__, #V);    \
-        exit(-1);                                    \
-    }
-
-
 namespace Utils {
     void setJavaVM(JavaVM *vm);
 

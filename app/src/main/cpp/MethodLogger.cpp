@@ -19,10 +19,12 @@ CMethodLogger::~CMethodLogger() {
 //ref https://github.com/woxihuannisja/StormJiagu/blob/50dce517dfca667374fe9ba1c47f507f7d4ebd62/StormProtector/dexload/Utilload.cpp
 void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName) {
     static jclass javaClass = env->FindClass("java/lang/Class");
-    static jmethodID getNameOfClass = env->GetMethodID(javaClass, "getName", "()Ljava/lang/String;");
-    static jmethodID getDeclaredMethods = env->GetMethodID(javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+    static jmethodID getNameOfClass = env->GetMethodID(javaClass, "getName",
+                                                       "()Ljava/lang/String;");
+    static jmethodID getDeclaredMethods = env->GetMethodID(javaClass, "getDeclaredMethods",
+                                                           "()[Ljava/lang/reflect/Method;");
     jobjectArray methodsArr = (jobjectArray) env->CallObjectMethod(cls, getDeclaredMethods);
-    if (methodsArr==NULL) {
+    if (methodsArr == NULL) {
         return;
     }
     int sizeMethods = env->GetArrayLength(methodsArr);
@@ -42,12 +44,14 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
         string sMethodDesc;
         jobject methodObj = env->GetObjectArrayElement(methodsArr, i); //get one method obj
 
-        jobjectArray argsArr = static_cast<jobjectArray>(env->CallObjectMethod(methodObj, getParameterTypes));
+        jobjectArray argsArr = static_cast<jobjectArray>(env->CallObjectMethod(methodObj,
+                                                                               getParameterTypes));
         jint sizeArgs = env->GetArrayLength(argsArr);
         //循环获取每个参数的类型
         for (int j = 0; j < sizeArgs; ++j) {
             jobject argObj = env->GetObjectArrayElement(argsArr, j);
-            jstring jstrArgClassName = static_cast<jstring>(env->CallObjectMethod(argObj, getNameOfClass));
+            jstring jstrArgClassName = static_cast<jstring>(env->CallObjectMethod(argObj,
+                                                                                  getNameOfClass));
             const char *szArgClassName = env->GetStringUTFChars(jstrArgClassName, 0);
             if (j != sizeArgs - 1 && sizeArgs != 1) {
                 sParams.append(szArgClassName);
@@ -70,7 +74,7 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
         //获取函数返回值类型
         jobject returnTypeObj = env->CallObjectMethod(methodObj, getReturnType);
         jstring jstrRetTypeClassName = static_cast<jstring>(env->CallObjectMethod(returnTypeObj,
-                                                                             getNameOfClass));
+                                                                                  getNameOfClass));
         const char *szRetTypeClassName = env->GetStringUTFChars(jstrRetTypeClassName, 0);
 
         //获取函数签名信息
@@ -83,7 +87,8 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
         LOGD("method: %s", sMethodDesc.c_str());
 
         //设置函数为native
-        dalvik_hook_java_method(env, cls, methodObj, sClassName.c_str(), szMethodName, szSignature, sMethodDesc.c_str());
+        dalvik_hook_java_method(env, cls, methodObj, sClassName.c_str(), szMethodName, szSignature,
+                                sMethodDesc.c_str());
 
 
         //释放关于签名的引用
