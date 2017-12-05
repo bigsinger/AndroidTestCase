@@ -210,9 +210,9 @@ static int regNativeMethods(JNIEnv *env) {
 
         env->DeleteLocalRef(clazz);
     } else {
-        LOGE("[%s] FindClass error, not found class: %s", __FUNCTION__, Java_Interface_Class_Name);
+        nResult = JNI_FALSE;
+        LOGE("[%s] not found class: %s may be in other app process", __FUNCTION__, Java_Interface_Class_Name);
     }
-
 
     return nResult;
 }
@@ -308,23 +308,17 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     LOGTIME;
     Utils::setJavaVM(vm);
     LOGD("[%s] JavaVM: %p", __FUNCTION__, vm);
-
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
         LOGE("[%s] GetEnv failed", __FUNCTION__);
         return -1;
     }
-    if (env == NULL) {
-        LOGE("[%s] JNIEnv is null", __FUNCTION__);
-        return -1;
-    }
+    ASSERT(env);
 
-    if (regNativeMethods(env) == 0) {
-        LOGE("[%s] regNativeMethods failed", __FUNCTION__);
-        return -1;
-    } else {
-        LOGD("[%s] regNativeMethods success!", __FUNCTION__);
+    int nRet = regNativeMethods(env);
+    if (nRet == JNI_FALSE) {
+        //可能是其他进程
+        //todo
     }
-
     //////////////////////////////////////////////////////////////////////////
     //OTHER USER CODE
     dalvik_setup(env, 14);
