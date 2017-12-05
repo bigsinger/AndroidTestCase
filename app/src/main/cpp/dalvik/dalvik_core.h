@@ -156,7 +156,7 @@ extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
 extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
 
-extern void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassName, const char*szMethodName,
+extern void dalvik_hook_java_method(JNIEnv *env, jclass cls, jobject srcMethod, const char*szClassName, const char*szMethodName,
                                     const char*szSig, const char*szDesc);
 
 extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge,
@@ -167,8 +167,8 @@ extern bool dalvik_is_dispatched(JNIEnv *env, jobject src);
 static void dispatcher_cpp(const u4 *args, jvalue *pResult, const Method *method, void *self);
 
 static void
-nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method,
-                                    void *self);
+nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *method,
+                         void *self);
 
 static void dispatcher_java(const u4 *args, jvalue *pResult, const Method *method, void *self);
 
@@ -185,6 +185,8 @@ extern jclass bridgeHandleClass;
 class HookInfo {
 
 public:
+    JNIEnv *env;
+    jmethodID toStringMethod;
     Method *originalMethod;
     ClassObject *returnType;
     ArrayObject *paramTypes;
@@ -197,6 +199,8 @@ public:
     std::string sMethodSig;
 
     HookInfo(){
+        env = NULL;
+        toStringMethod = NULL;
         originalMethod = NULL;
         returnType = NULL;
         paramTypes = NULL;

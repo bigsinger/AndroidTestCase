@@ -306,22 +306,25 @@ static s8 dvmGetArgLong(const u4 *args, int elem) {
  * On failure, returns with an appropriate exception raised.
  */
 ArrayObject *dvmBoxMethodArgs(const Method *method, const u4 *args) {
-    const char *desc = &method->shorty[1]; // [0] is the return type.
+    const char* desc = &method->shorty[1]; // [0] is the return type.
 
     /* count args */
     size_t argCount = dexProtoGetParameterCount_fnPtr(&method->prototype);
 
+    static ClassObject* java_lang_object_array = dvmFindSystemClass_fnPtr(
+            "[Ljava/lang/Object;");
+
     /* allocate storage */
-    ArrayObject *argArray = dvmAllocArrayByClass_fnPtr(classJavaLangObjectArray,
-                                                       argCount, ALLOC_DEFAULT);
+    ArrayObject* argArray = dvmAllocArrayByClass_fnPtr(java_lang_object_array,
+                                                 argCount, ALLOC_DEFAULT);
     if (argArray == NULL)
         return NULL;
-    Object **argObjects = (Object **) (void *) argArray->contents;
+
+    Object** argObjects = (Object**) (void*) argArray->contents;
 
     /*
      * Fill in the array.
      */
-
     size_t srcIndex = 0;
     size_t dstIndex = 0;
     while (*desc != '\0') {
@@ -336,9 +339,8 @@ ArrayObject *dvmBoxMethodArgs(const Method *method, const u4 *args) {
             case 'S':
             case 'I':
                 value.i = args[srcIndex++];
-                argObjects[dstIndex] = (Object *) dvmBoxPrimitive_fnPtr(value,
-                                                                        dvmFindPrimitiveClass_fnPtr(
-                                                                                descChar));
+                argObjects[dstIndex] = (Object*) dvmBoxPrimitive_fnPtr(value,
+                                                                 dvmFindPrimitiveClass_fnPtr(descChar));
                 /* argObjects is tracked, don't need to hold this too */
                 dvmReleaseTrackedAlloc_fnPtr(argObjects[dstIndex], NULL);
                 dstIndex++;
@@ -347,18 +349,14 @@ ArrayObject *dvmBoxMethodArgs(const Method *method, const u4 *args) {
             case 'J':
                 value.j = dvmGetArgLong(args, srcIndex);
                 srcIndex += 2;
-                argObjects[dstIndex] = (Object *) dvmBoxPrimitive_fnPtr(value,
-                                                                        dvmFindPrimitiveClass_fnPtr(
-                                                                                descChar));
+                argObjects[dstIndex] = (Object*) dvmBoxPrimitive_fnPtr(value,
+                                                                 dvmFindPrimitiveClass_fnPtr(descChar));
                 dvmReleaseTrackedAlloc_fnPtr(argObjects[dstIndex], NULL);
                 dstIndex++;
                 break;
             case '[':
             case 'L':
-                argObjects[dstIndex++] = (Object *) args[srcIndex++];
-#ifdef DEBUG
-                LOGD("[boxMethodArgs] : object: index = %d", dstIndex - 1);
-#endif
+                argObjects[dstIndex++] = (Object*) args[srcIndex++];
                 break;
         }
     }

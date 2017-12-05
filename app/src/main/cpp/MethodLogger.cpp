@@ -83,7 +83,7 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
         LOGD("method: %s", sMethodDesc.c_str());
 
         //设置函数为native
-        dalvik_hook_java_method(env, methodObj, sClassName.c_str(), szMethodName, szSignature, sMethodDesc.c_str());
+        dalvik_hook_java_method(env, cls, methodObj, sClassName.c_str(), szMethodName, szSignature, sMethodDesc.c_str());
 
 
         //释放关于签名的引用

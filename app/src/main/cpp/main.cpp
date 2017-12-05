@@ -122,6 +122,7 @@ getInt(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr
 }
 
 JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject objArgs...) {
+    LOGTIME;
     LOGD("[%s] MethodId: %d", __FUNCTION__, nMethodId);
     jobject result = NULL;
     va_list args;
@@ -129,7 +130,7 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
 
     switch (int(nMethodId)) {
         case 100: {
-            jobject dummy = va_arg(args, jobject);
+            //jobject dummy = va_arg(args, jobject);
             jint a = va_arg(args, jint);
             LOGD("[%s] a: %d", __FUNCTION__, a);
             jstring b = va_arg(args, jstring);
@@ -147,7 +148,7 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
             //新建一个长度为len的jintArray数组
             jintArray array = env->NewIntArray(1);
             //给需要返回的数组赋值
-            jint num[1] = {100};
+            jint num[1] = {nMethodId};
             env->SetIntArrayRegion(array, 0, 1, num);
             result = array;
         }
@@ -174,11 +175,11 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
         }
             break;
         default:
+            LOGE("[%s]unimplemented method id: %d", __FUNCTION__, (int)nMethodId);
             break;
     }
 
     va_end(args);
-    LOGD("[%s] 8", __FUNCTION__);
     return result;
 }
 

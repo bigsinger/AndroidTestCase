@@ -8,7 +8,7 @@ void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool jav
                      const char *lpszMethodDesc) {
     Method *dest = NULL;
     Method *src = (Method *) env->FromReflectedMethod(srcMethod);
-    if(src->nativeFunc == (DalvikBridgeFunc)nativeFunc_dispatcher_only_log_call){
+    if(src->nativeFunc == (DalvikBridgeFunc) nativeFunc_logMethodCall){
         LOGD("[*] method had been hooked");
         return;
     }
@@ -67,8 +67,8 @@ void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool jav
         if (javaBridge) {
             src->nativeFunc = (DalvikBridgeFunc) dispatcher_java;
         } else {
-            if (src->nativeFunc != (DalvikBridgeFunc) nativeFunc_dispatcher_only_log_call) {
-                src->nativeFunc = (DalvikBridgeFunc) nativeFunc_dispatcher_only_log_call;
+            if (src->nativeFunc != (DalvikBridgeFunc) nativeFunc_logMethodCall) {
+                src->nativeFunc = (DalvikBridgeFunc) nativeFunc_logMethodCall;
             }
         }
     }
@@ -241,10 +241,9 @@ static ClassObject* dvmFindClass(const char *classDesc){
 static ArrayObject* dvmGetMethodParamTypes(const Method* method, const char* methodsig){
     /* count args */
     size_t argCount = dexProtoGetParameterCount_fnPtr(&method->prototype);
-    static ClassObject* java_lang_object_array = dvmFindSystemClass_fnPtr("[Ljava/lang/Object;");
 
     /* allocate storage */
-    ArrayObject* argTypes = dvmAllocArrayByClass_fnPtr(java_lang_object_array, argCount, ALLOC_DEFAULT);
+    ArrayObject* argTypes = dvmAllocArrayByClass_fnPtr(classJavaLangObjectArray, argCount, ALLOC_DEFAULT);
     if(argTypes == NULL){
         return NULL;
     }
@@ -273,13 +272,13 @@ static ArrayObject* dvmGetMethodParamTypes(const Method* method, const char* met
             case 'J':
                 if(!isArray){
                     argObjects[arg_index++] = (Object*)dvmFindPrimitiveClass_fnPtr(descChar);
-                    isArray = false;
                 }else{
                     char buf[3] = {0};
                     memcpy(buf, desc + desc_index - 1, 2);
                     argObjects[arg_index++] = dvmFindSystemClass_fnPtr(buf);
                 }
 
+                isArray = false;
                 desc_index++;
                 break;
 
@@ -308,11 +307,11 @@ static ArrayObject* dvmGetMethodParamTypes(const Method* method, const char* met
     return argTypes;
 }
 
-void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassName, const char*szMethodName,
+void dalvik_hook_java_method(JNIEnv *env, jclass cls, jobject srcMethod, const char*szClassName, const char*szMethodName,
                              const char*szSig, const char*szDesc)
 {
     Method *method = (Method *) env->FromReflectedMethod(srcMethod);
-    if(method->nativeFunc == (DalvikBridgeFunc)nativeFunc_dispatcher_only_log_call){
+    if(method->nativeFunc == (DalvikBridgeFunc) nativeFunc_logMethodCall){
         LOGD("[*] method had been hooked");
         return;
     }
@@ -322,9 +321,9 @@ void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassN
         //抽象方法不处理
         return;
     }
-    if (method->accessFlags != ACC_PUBLIC/* && src->accessFlags != ACC_PRIVATE*/) {
-        return;
-    }
+//    if (method->accessFlags != ACC_PUBLIC && method->accessFlags != ACC_PRIVATE) {
+//        return;
+//    }
 
     //没有设置替换的目标，仅仅显示一个调用日志。保存原始方法的副本后再做修改。
     Method* bakMethod = (Method*) malloc(sizeof(Method));
@@ -332,6 +331,7 @@ void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassN
 
     // init info
     HookInfo *info = new HookInfo;
+    info->env = env;
     info->originalMethod = bakMethod;
     info->sMethodSig = szSig;
     //签名是从Java层反射调用返回的，是以.分割的，这里要转换一下
@@ -350,15 +350,21 @@ void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassN
     method->outsSize = 0;
     //method->jniArgInfo = dvmComputeJniArgInfo(method->shorty);
     method->insns = (u2 *) info;
-    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_dispatcher_only_log_call;
+    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_logMethodCall;
 }
 
-static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult, const Method *method, void *self) {
+//ref : Hook Java中返回值问题的解决和修改https://github.com/Harold1994/program_total/blob/7659177e1d562a8396d0ee9c9eda9f36a12727e5/program_total/3%E6%B3%A8%E5%85%A5%E7%9A%84so%E6%96%87%E4%BB%B6/documents/HookJava%E4%B8%AD%E8%BF%94%E5%9B%9E%E5%80%BC%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E5%92%8C%E4%BF%AE%E6%94%B9.md
+static void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *method,
+                                     void *self) {
+    Object *result = NULL;
     HookInfo* info = (HookInfo*)method->insns; //get hookinfo pointer from method-insns
-    LOGD("nativeFunc_dispatcher_only_log_call: %s::%s", info->sClassName.c_str(), info->sMethodName.c_str());
+    LOGD("nativeFunc_logMethodCall: %s::%s", info->sClassName.c_str(), info->sMethodName.c_str());
 
     Method* originalMethod = (Method*)(info->originalMethod);
-
+    if (method->accessFlags & ACC_PRIVATE) {
+        int a = 0;
+        a++;
+    }
     if (info->returnType == NULL) {
         info->returnType = dvmGetBoxedReturnType_fnPtr(originalMethod);
     }
@@ -366,14 +372,108 @@ static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult,
     if (info->paramTypes == NULL) {
         info->paramTypes = dvmGetMethodParamTypes(originalMethod, info->sMethodSig.c_str());
     }
-    if (!dvmIsStaticMethod(originalMethod)) {
+    if (dvmIsStaticMethod(originalMethod)== false) {
         Object* thisObject = (Object*)args[0];
         ArrayObject* argArr = dvmBoxMethodArgs(originalMethod, args + 1);
-        pResult->l = (jobject)dvmInvokeMethod_fnPtr(thisObject, originalMethod, argArr, info->paramTypes, info->returnType, true);
+        result = dvmInvokeMethod_fnPtr(thisObject, originalMethod, argArr, info->paramTypes, info->returnType, true);
         dvmReleaseTrackedAlloc_fnPtr((Object *)argArr, self);
     }else{
         ArrayObject* argTypes = dvmBoxMethodArgs(originalMethod, args);
-        pResult->l = (jobject)dvmInvokeMethod_fnPtr(NULL, originalMethod, argTypes, info->paramTypes, info->returnType, true);
+        result = dvmInvokeMethod_fnPtr(NULL, originalMethod, argTypes, info->paramTypes, info->returnType, true);
+    }
+
+    switch (info->returnType->primitiveType) {
+        case PRIM_NOT:
+        {
+            pResult->l = result;
+//                JNIEnv *env = NULL;
+//                Utils::getenv(&env);
+//
+//                jobject* i = reinterpret_cast<jobject*>(&result[1]);
+//                jobject jobj = (jobject)*i;
+//
+//
+//                char *newclassDesc = dvmDescriptorToName_fnPtr(info->returnType->descriptor);
+//                jclass retClass = env->FindClass(newclassDesc);
+//                info->toStringMethod = env->GetMethodID(retClass, "toString", "()Ljava/lang/String;");
+//                free(newclassDesc);
+//
+//                jstring msg = (jstring) env->CallObjectMethod(jobj, info->toStringMethod);
+//                env->DeleteLocalRef(retClass);
+//                const char *szMsg = env->GetStringUTFChars(msg, 0);
+//                LOGD("nativeFunc_logMethodCall: ret object %s", szMsg);
+//                env->ReleaseStringUTFChars(msg, szMsg);
+//                env->DeleteLocalRef(msg);
+        }break;
+        case PRIM_VOID:
+        {
+            pResult->l = NULL;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret void", info->sClassName.c_str(), info->sMethodName.c_str());
+        }
+            break;
+        case PRIM_BOOLEAN:
+        {
+            unsigned char* i = reinterpret_cast<unsigned char *>(&result[1]);
+            pResult->z = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret bool %d", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->z);
+        }
+            break;
+        case PRIM_BYTE:
+        {
+            signed char * i = reinterpret_cast<signed char *>(&result[1]);
+            pResult->b = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret byte %c", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->b);
+        }
+            break;
+        case PRIM_CHAR:
+        {
+            unsigned short * i = reinterpret_cast<unsigned short *>(&result[1]);
+            pResult->c = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret byte %c", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->c);
+        }
+            break;
+        case PRIM_SHORT:
+        {
+            signed short * i = reinterpret_cast<signed short *>(&result[1]);
+            pResult->s = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret byte %c", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->s);
+        }
+            break;
+        case PRIM_INT:
+        {
+
+            int* i = reinterpret_cast<int*>(&result[1]);
+            pResult->i = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret int %d", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->i);
+        }
+            break;
+        case PRIM_LONG:
+        {
+            long * i = reinterpret_cast<long *>(&result[1]);
+            pResult->j = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret byte %c", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->j);
+        }
+            break;
+        case PRIM_FLOAT:
+        {
+            float * i = reinterpret_cast<float *>(&result[1]);
+            pResult->f = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret byte %c", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->f);
+        }
+            break;
+        case PRIM_DOUBLE:
+        {
+            double * i = reinterpret_cast<double *>(&result[1]);
+            pResult->d = *i;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret byte %c", info->sClassName.c_str(), info->sMethodName.c_str(), pResult->d);
+        }
+            break;
+        default:
+        {
+            pResult->l = (void *)result;
+            LOGD("nativeFunc_logMethodCall: %s::%s ret unkonw type", info->sClassName.c_str(), info->sMethodName.c_str());
+        }
+            break;
     }
 
 }

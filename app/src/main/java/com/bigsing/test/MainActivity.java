@@ -65,7 +65,7 @@ public class MainActivity extends BaseActivity {
     //////////////////////////////////////////////////
 
     //////////////////////////////////////////////////
-    private int testA(int a, String b, Object c, double d, int[] arr, float f){
+   static private int testA(int a, String b, Object c, double d, int[] arr, float f){
         int[]ret = (int[]) NativeHandler.Jump(100, a, b, c, d, arr, f);
         return ret[0];
     }
