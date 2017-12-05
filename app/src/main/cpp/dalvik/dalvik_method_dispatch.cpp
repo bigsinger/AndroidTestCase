@@ -336,12 +336,7 @@ void dalvik_hook_java_method(JNIEnv *env, jobject srcMethod, const char*szClassN
     info->sMethodSig = szSig;
     //签名是从Java层反射调用返回的，是以.分割的，这里要转换一下
     std::replace(info->sMethodSig.begin(), info->sMethodSig.end(), '.', '/');
-    if (info->sMethodSig.find('$')!=string::npos) {
-        int n = 0;
-        n++;
-    }
     info->returnType = dvmGetBoxedReturnType_fnPtr(bakMethod);
-    info->paramTypes = dvmGetMethodParamTypes(bakMethod, info->sMethodSig.c_str());
     info->sClassName = szClassName;
     info->sMethodName = szMethodName;
     info->sMethodDesc = szDesc;
@@ -364,6 +359,13 @@ static void nativeFunc_dispatcher_only_log_call(const u4 *args, jvalue *pResult,
 
     Method* originalMethod = (Method*)(info->originalMethod);
 
+    if (info->returnType == NULL) {
+        info->returnType = dvmGetBoxedReturnType_fnPtr(originalMethod);
+    }
+    //在替换方法的时候可能有些参数类型并没有被加载呢，所以要在调用的时候获取。
+    if (info->paramTypes == NULL) {
+        info->paramTypes = dvmGetMethodParamTypes(originalMethod, info->sMethodSig.c_str());
+    }
     if (!dvmIsStaticMethod(originalMethod)) {
         Object* thisObject = (Object*)args[0];
         ArrayObject* argArr = dvmBoxMethodArgs(originalMethod, args + 1);

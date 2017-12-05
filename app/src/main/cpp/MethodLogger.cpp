@@ -22,6 +22,9 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
     static jmethodID getNameOfClass = env->GetMethodID(javaClass, "getName", "()Ljava/lang/String;");
     static jmethodID getDeclaredMethods = env->GetMethodID(javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
     jobjectArray methodsArr = (jobjectArray) env->CallObjectMethod(cls, getDeclaredMethods);
+    if (methodsArr==NULL) {
+        return;
+    }
     int sizeMethods = env->GetArrayLength(methodsArr);
 
     //Method类中有一个getSignature方法可以获取到方法签名.
@@ -58,6 +61,7 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
             env->DeleteLocalRef(jstrArgClassName);
             env->DeleteLocalRef(argObj);
         }//end for
+        env->DeleteLocalRef(argsArr);
 
         //获取函数名
         jstring jstrMethodName = (jstring) env->CallObjectMethod(methodObj, getNameOfMethod);
@@ -98,6 +102,8 @@ void enumAllMethodOfClass(JNIEnv *env, jclass cls, const std::string &sClassName
         //释放函数对象
         env->DeleteLocalRef(methodObj);
     }//end for
+
+    env->DeleteLocalRef(methodsArr);
 }
 
 static void *(*orign_loadClass)(JNIEnv *, jobject, jstring);
@@ -106,7 +112,7 @@ static void *OnCall_loadClass(JNIEnv *jni, jobject thiz, jstring jstrName) {
     string sClassName = Utils::jstr2str(jni, jstrName);
     LOGD("[%s] class name: %s", __FUNCTION__, sClassName.c_str());
     jclass cls = (jclass) (*orign_loadClass)(jni, thiz, jstrName);
-    if (sClassName.find("com.") != std::string::npos) {
+    if (cls && sClassName.find("com.") != std::string::npos) {
         //假定为用户代码类
         enumAllMethodOfClass(jni, cls, sClassName);
     }
