@@ -41,6 +41,9 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass cls, const std::string &sClassName
     static jmethodID getDeclaredMethods = jni->GetMethodID(javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
     jobjectArray methodsArr = (jobjectArray) jni->CallObjectMethod(cls, getDeclaredMethods);
     if (methodsArr == NULL) {
+        if(jni->ExceptionCheck() == JNI_TRUE){
+            jni->ExceptionClear();
+        }
         return;
     }
     int sizeMethods = jni->GetArrayLength(methodsArr);
@@ -61,6 +64,9 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass cls, const std::string &sClassName
         string sMethodDesc;
         jobject methodObj = jni->GetObjectArrayElement(methodsArr, i); //get one method obj
         if (methodObj == NULL) {
+            if(jni->ExceptionCheck() == JNI_TRUE){
+                jni->ExceptionClear();
+            }
             continue;
         }
 
@@ -163,7 +169,6 @@ static void *OnCall_loadClass(JNIEnv *jni, jobject thiz, jstring jstrName) {
 }
 
 static void *(*orign_loadClassBool)(JNIEnv *, jobject, jstring, jboolean);
-
 static void *OnCall_loadClassBool(JNIEnv *jni, jobject thiz, jstring name, jboolean resolve) {
     string sClassName = Utils::jstr2str(jni, name);
     jclass cls = (jclass) (*orign_loadClassBool)(jni, thiz, name, resolve);
@@ -214,8 +219,7 @@ static void OnClassLoad_ClassLoader(JNIEnv *jni, jclass clazz, void *arg) {
     LOGD("[%s] end class name: %s", __FUNCTION__, sClassName.c_str());
 }
 
-
-bool CMethodLogger::start(JNIEnv *jni) {
+void hookClassLoader_loadClass(JNIEnv *jni){
     jclass clazz = jni->FindClass("java/lang/ClassLoader");
     if (clazz != NULL) {
         LOGD("java/lang/ClassLoader FOUND, HOOK loadClass");
@@ -247,5 +251,83 @@ bool CMethodLogger::start(JNIEnv *jni) {
         LOGD("java/lang/ClassLoader NOT FOUND, HOOK IT ON CLASSLOAD");
         MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
     }
+}
+
+
+static void *(*orign_forName)(JNIEnv *, jobject, jstring, jboolean, jobject);
+static void *OnCall_forName(JNIEnv *jni, jobject thiz, jstring name, jboolean initialize, jobject loader) {
+    string sClassName = Utils::jstr2str(jni, name);
+    jclass cls = (jclass) (*orign_forName)(jni, thiz, name, initialize, loader);
+    if (sClassName.find("com.tencent.") != std::string::npos ) {
+        return cls;
+    }
+    if (initialize== true && cls && sClassName.find("com.") != std::string::npos) {
+        //假定为用户代码类
+        LOGD("[%s] class name: %s hook begin", __FUNCTION__, sClassName.c_str());
+        enumAllMethodOfClass(jni, cls, sClassName);
+        //会不会有异常，处理一下
+        //todo 实测里面会有异常，有空找出来
+        if(jni->ExceptionCheck() == JNI_TRUE){
+            LOGE("[%s] Exception", __FUNCTION__);
+            jni->ExceptionClear();
+        }
+        LOGD("[%s] class name: %s hook end", __FUNCTION__, sClassName.c_str());
+    }
+    return cls;
+}
+
+//
+//static void *(*orign_forName)(JNIEnv *, jstring);
+//static void *OnCall_forName(JNIEnv *jni, jstring name) {
+//    string sClassName = Utils::jstr2str(jni, name);
+//    jclass cls = (jclass) (*orign_forName)(jni, name);
+//    if (cls && sClassName.find("com.") != std::string::npos) {
+//        //假定为用户代码类
+//        LOGD("[%s] class name: %s hook begin", __FUNCTION__, sClassName.c_str());
+//        enumAllMethodOfClass(jni, cls, sClassName);
+//        //会不会有异常，处理一下
+//        //todo 实测里面会有异常，有空找出来
+//        if(jni->ExceptionCheck() == JNI_TRUE){
+//            LOGE("[%s] Exception", __FUNCTION__);
+//            jni->ExceptionClear();
+//        }
+//        LOGD("[%s] class name: %s hook end", __FUNCTION__, sClassName.c_str());
+//    }
+//    return cls;
+//}
+
+void hookClass_forName(JNIEnv *jni){
+    jclass clazz = jni->FindClass("java/lang/Class");
+    if (clazz != NULL) {
+        LOGD("java/lang/Class FOUND, HOOK loadClass");
+        jmethodID forNameMethod = jni->GetStaticMethodID(clazz, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
+        if (forNameMethod == NULL) {
+            LOGE("[%s] \"forName(String name, boolean initialize, ClassLoader loader)\" not found in class: %s", __FUNCTION__, "java/lang/Class");
+        } else {
+            orign_forName = NULL;
+            MSJavaHookMethod(jni, clazz, forNameMethod, (void *)(&OnCall_forName), (void **)(&orign_forName));
+            ASSERT(orign_forName);
+        }
+
+//        jmethodID forNameMethod = jni->GetStaticMethodID(clazz, "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
+//        if (forNameMethod == NULL) {
+//            LOGE("[%s] \"forName(String name)\" not found in class: %s", __FUNCTION__, "java/lang/Class");
+//        } else {
+//            orign_forName = NULL;
+//            MSJavaHookMethod(jni, clazz, forNameMethod, (void *)(&OnCall_forName), (void **)(&orign_forName));
+//            ASSERT(orign_forName);
+//        }
+    }else{
+        //找不到会有异常，处理一下
+        if(jni->ExceptionCheck() == JNI_TRUE){
+            jni->ExceptionClear();
+        }
+        LOGD("java/lang/Class NOT FOUND, HOOK IT ON CLASSLOAD");
+        //MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
+    }
+}
+
+bool CMethodLogger::start(JNIEnv *jni) {
+    hookClass_forName(jni);
     return true;
 }

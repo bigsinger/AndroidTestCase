@@ -318,7 +318,7 @@ static ArrayObject* dvmGetMethodParamTypes(const Method* method, const char* met
     LOGD("[%s] begin1", __FUNCTION__);
     Method *method = NULL;
     method = (Method *) jni->FromReflectedMethod(srcMethod);
-    return true;
+    //return true;
     if (method == NULL) {
         LOGE("[dalvik_hook_java_method] method == NULL %s::%s", szClassName, szMethodName);
         if(jni->ExceptionCheck() == JNI_TRUE){
@@ -335,8 +335,6 @@ static ArrayObject* dvmGetMethodParamTypes(const Method* method, const char* met
     }
     if(method->nativeFunc == (DalvikBridgeFunc) nativeFunc_logMethodCall){
         LOGD("[dalvik_hook_java_method] method had been hooked");
-        return true;
-    }else{
         return true;
     }
 
