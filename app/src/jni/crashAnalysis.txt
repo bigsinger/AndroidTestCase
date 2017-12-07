@@ -1,0 +1,1 @@
+D:\android\ndk\toolchains\arm-linux-androideabi-4.9\prebuilt\windows-x86_64\bin\arm-linux-androideabi-addr2line.exe -C -f -e F:\bigsinger\AndroidTestCase\trunk\app\src\obj\local\armeabi\libhooktest.so xxx

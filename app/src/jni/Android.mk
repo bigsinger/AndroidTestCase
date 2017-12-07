@@ -19,7 +19,7 @@ MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/../main/cpp/art/*.cpp) ../main/cpp/art/a
 LOCAL_SRC_FILES := $(MY_CPP_LIST:$(LOCAL_PATH)/%=%)
 
 #LOCAL_LDLIBS := -L$(LOCAL_PATH) -llog -ldl -lz
-LOCAL_LDLIBS := -L$(LOCAL_PATH) -llog -ldl ../main/cpp/3rd/libsubstrate-dvm.so ../main/cpp/3rd/libsubstrate.so
+LOCAL_LDLIBS := -L$(LOCAL_PATH) -llog -ldl ../main/cpp/3rd/libsubstratedvm.so ../main/cpp/3rd/libsubstrate.so
 
 LOCAL_CPPFLAGS += -std=c++11  -fvisibility=hidden
 
