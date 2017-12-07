@@ -156,7 +156,7 @@ extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
 extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
 
-extern void dalvik_hook_java_method(JNIEnv *env, jclass cls, jobject srcMethod, const char*szClassName, const char*szMethodName,
+extern bool dalvik_hook_java_method(JNIEnv *env, jclass cls, jobject srcMethod, const char*szClassName, const char*szMethodName,
                                     const char*szSig, const char*szDesc);
 
 extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge,
@@ -204,6 +204,7 @@ public:
         originalMethod = NULL;
         returnType = NULL;
         paramTypes = NULL;
+        sMethodSig.clear();
     }
 
     HookInfo(Method *srcCopy, Method *dest) {

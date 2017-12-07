@@ -64,6 +64,38 @@ bool Utils::getenv(JNIEnv **env) {
     return bRet;
 }
 
+jobject Utils::getGlobalContext(JNIEnv *env)
+{
+    jobject application = NULL;
+    jclass activity_thread_clz = env->FindClass("android/app/ActivityThread");
+    if (activity_thread_clz != NULL) {
+        jmethodID currentApplication = env->GetStaticMethodID(
+                activity_thread_clz, "currentApplication", "()Landroid/app/Application;");
+        if (currentApplication != NULL) {
+            application = env->CallStaticObjectMethod(activity_thread_clz, currentApplication);
+        } else {
+            LOGE("Cannot find method: currentApplication() in ActivityThread.");
+        }
+        env->DeleteLocalRef(activity_thread_clz);
+    } else {
+        LOGE("Cannot find class: android.app.ActivityThread");
+    }
+    LOGD("context: %p", application);
+    return application;
+
+//    //获取Activity Thread的实例对象
+//    jclass clsActivityThread = env->FindClass("android/app/ActivityThread");
+//    jmethodID currentActivityThread = env->GetStaticMethodID(clsActivityThread, "currentActivityThread", "()Landroid/app/ActivityThread;");
+//    jobject at = env->CallStaticObjectMethod(clsActivityThread, currentActivityThread);
+//    LOGD("context: %p", at);
+//    //获取Application，也就是全局的Context
+//    jmethodID getApplication = env->GetMethodID(clsActivityThread, "getApplication", "()Landroid/app/Application;");
+//    jobject context = env->CallObjectMethod(at, getApplication);
+//    env->DeleteLocalRef(clsActivityThread);
+//    LOGD("context: %p", context);
+//    return at;
+}
+
 //将string转换为jstring
 jstring Utils::str2jstr(JNIEnv *env, const string &s, const char *encoding) {
     return str2jstr(env, s.c_str(), s.length(), encoding);

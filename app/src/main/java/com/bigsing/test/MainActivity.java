@@ -85,7 +85,7 @@ public class MainActivity extends BaseActivity {
         initView();
 
         m_nIndex = 2017;
-        String text = NativeHandler.getString(getApplicationContext(), NativeCommand.CMD_INIT, null);
+        String text = NativeHandler.getString(App.getContext(), NativeCommand.CMD_INIT, null);
         //text += "\n" + methodWillBeNotNative();
         text += "\ntestA: " + testA(10, "testA", "testA", 1.0, new int[]{1,2}, (float) 2.0);
         text += "\ntestB: " + testB("testB");
@@ -102,7 +102,7 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.btn_getstr_native2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = NativeHandler.getStr(getApplicationContext(), NativeCommand.CMD_GET_TEST_STR, null);
+                String text = NativeHandler.getStr(App.getContext(), NativeCommand.CMD_GET_TEST_STR, null);
                 tv_text.setText(text);
             }
         });

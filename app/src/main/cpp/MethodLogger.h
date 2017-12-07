@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jni.h>
+
 class CMethodLogger {
 public:
     CMethodLogger();
@@ -7,6 +9,6 @@ public:
     ~CMethodLogger();
 
 public:
-    static bool start();
+    static bool start(JNIEnv *jni);
 };
 

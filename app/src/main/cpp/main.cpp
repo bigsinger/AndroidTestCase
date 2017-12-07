@@ -54,6 +54,9 @@ getStr(JNIEnv *env, jclass clsJavaJNI, jobject jCtxObj, jint paramInt, jstring p
 
     switch (paramInt) {
         case CMD_INIT: {
+            LOGD("context: %p", jCtxObj);
+            jobject obj = Utils::getGlobalContext(env);
+            LOGD("context: %p", obj);
             //保存JVM
             JavaVM *vm = NULL;
             env->GetJavaVM(&vm);
@@ -210,6 +213,10 @@ static int regNativeMethods(JNIEnv *env) {
 
         env->DeleteLocalRef(clazz);
     } else {
+        //找不到会有异常，处理一下
+        if(env->ExceptionCheck() == JNI_TRUE){
+            env->ExceptionClear();
+        }
         nResult = JNI_FALSE;
         LOGE("[%s] not found class: %s may be in other app process", __FUNCTION__, Java_Interface_Class_Name);
     }
@@ -298,6 +305,67 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
     LOGD("[%s] end class name: %s", __FUNCTION__, sClassName.c_str());
 }
 
+//handleBindApplication原函数地址
+static void (*old_handleBindApplication)(JNIEnv *, jobject, ...);
+
+//参数二的形式为：android.app.ActivityThread@41683ec8
+//参数三的形式为：AppBindData{appInfo=ApplicationInfo{4178ead0 com.huawei.ChnUnicomAutoReg}}
+//因此可以通过参数三的包名进行过滤
+static void OnCallback_handleBindApplicaton(JNIEnv *jni, jobject jthis, jobject appBindData)
+{
+    LOGD("[%s] begin", __FUNCTION__);
+    string strName;
+    strName = Utils::getClassName(jni, appBindData);
+    if ( (int)strName.size() > 0 ) {
+        LOGD("[%s] class: %s", __FUNCTION__, strName.c_str());
+    }
+
+    (*old_handleBindApplication)(jni, jthis, appBindData);
+    LOGD("[%s] end", __FUNCTION__);
+}
+bool Hook_handleBindApplication(JNIEnv *env)
+{
+    LOGD("[%s] begin", __FUNCTION__);
+    jclass ActivityThread = env->FindClass("android/app/ActivityThread");
+    if ( ActivityThread==NULL ) {
+        LOGE("[%s] not found: android/app/ActivityThread, error: %s", __FUNCTION__, dlerror());
+        return false;
+    }
+
+    jmethodID handleBindApplication = env->GetMethodID(ActivityThread, "handleBindApplication", "(Landroid/app/ActivityThread$AppBindData;)V");
+    if (handleBindApplication == NULL) {
+        LOGE("[%s] not found: handleBindApplication, error: %s", __FUNCTION__, dlerror());
+        return false;
+    }
+
+    old_handleBindApplication = NULL;
+    MSJavaHookMethod(env, ActivityThread, handleBindApplication, (void *) (&OnCallback_handleBindApplicaton), (void **) (&old_handleBindApplication));
+    if ( old_handleBindApplication==NULL ) {
+        LOGE("[%s] old_handleBindApplication is NULL, error: %s", __FUNCTION__, dlerror());
+    }
+
+    LOGD("[%s] end", __FUNCTION__);
+    return true;
+}
+
+// this function pointer is purposely variadic
+static void (*oldApplicationOnCreate)(JNIEnv *, jobject, ...);
+static void newApplicationOnCreate(JNIEnv *jni, jobject thiz) {
+    std:string sPackageName;
+    Utils::getPackageName(jni, sPackageName);
+    LOGD("current process package name: %s [begin]", sPackageName.c_str());
+    (*oldApplicationOnCreate)(jni, thiz);
+    //Utils::getGlobalContext(jni);
+    Utils::getPackageName(jni, sPackageName);
+    LOGD("current process package name: %s [end]", sPackageName.c_str());
+}
+
+void HookApplicationOnCreate(JNIEnv *jni){
+    jclass cls = jni->FindClass("android/app/Application");
+    jmethodID method = jni->GetMethodID(cls, "onCreate",  "()V" );
+    MSJavaHookMethod(jni, cls, method, &newApplicationOnCreate, &oldApplicationOnCreate);
+    jni->DeleteLocalRef(cls);
+}
 /*
 * Returns the JNI version on success, -1 on failure.
 */
@@ -313,6 +381,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
     ASSERT(env);
+    //
+    jobject obj = Utils::getGlobalContext(env);
+    LOGD("context: %p", obj);
 
     int nRet = regNativeMethods(env);
     if (nRet == JNI_FALSE) {
@@ -324,7 +395,14 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     dalvik_setup(env, 14);
     //MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
 
-    CMethodLogger::start();
+
+    jobject context = Utils::getApplication(env);
+    if (context == NULL) {
+        //Hook_handleBindApplication(env);
+        HookApplicationOnCreate(env);
+    }
+
+    CMethodLogger::start(env);
     //////////////////////////////////////////////////////////////////////////
 
     /* success -- return valid version number */

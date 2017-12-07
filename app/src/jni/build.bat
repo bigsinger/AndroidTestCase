@@ -8,7 +8,7 @@ call ./ndk.bat
 
 if exist %modulefile% ( 
 	copy %modulefile% ..\main\jniLibs\armeabi\lib%modulename%.so 
-	call ./debug.bat com.douban.frodo
+	call ./debug.bat com.bigsing.xtool
 )
 
 

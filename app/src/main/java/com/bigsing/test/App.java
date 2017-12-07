@@ -31,15 +31,22 @@ public class App extends Application {
         return mSP;
     }
 
+    static {
+        System.loadLibrary("substrate-dvm");
+        System.loadLibrary("substrate");
+        System.loadLibrary("hooktest");
+        Utils.log("System.loadLibrary");
+    }
+
     @Override
     public void onCreate() {
-        super.onCreate();
         Utils.log("App::onCreate");
+        super.onCreate();
         mApp = this;
         mContext = this;
         mSP = getSharedPreferences(Constant.PACKAGE_THIS, Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
-        ReLinker.loadLibrary(getApplicationContext(), "substrate-dvm");
-        ReLinker.loadLibrary(getApplicationContext(), "substrate");
-        ReLinker.loadLibrary(getApplicationContext(), "hooktest");
+//        ReLinker.loadLibrary(getApplicationContext(), "substrate-dvm");
+//        ReLinker.loadLibrary(getApplicationContext(), "substrate");
+//        ReLinker.loadLibrary(getApplicationContext(), "hooktest");
     }
 }

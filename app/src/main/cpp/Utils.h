@@ -34,6 +34,8 @@ namespace Utils {
 
     bool getenv(JNIEnv **env);
 
+    jobject getGlobalContext(JNIEnv *env);
+
     //字符串格式化函数
     std::string fmt(const char *lpszFormat, ...);
 
