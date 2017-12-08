@@ -84,4 +84,10 @@ namespace Utils {
     string getMacs();
 
     const char *findLibrary(JNIEnv *env, const char *libName);
+
+    //dvmDecodeIndirectRef
+    jclass getObjectFromJobject(JNIEnv *jni, jobject);
+
+    jclass dvmFindJNIClass(JNIEnv *env, const char *classDesc);
 }
+

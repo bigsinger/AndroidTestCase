@@ -104,6 +104,8 @@ extern dvmFindSystemClass_func dvmFindSystemClass_fnPtr;
 //extern dvmFindJNIClass_func dvmFindJNIClass_fnPtr;
 extern dvmDescriptorToName_func dvmDescriptorToName_fnPtr;
 extern AndroidRuntime_getJNIEnv_func AndroidRuntime_getJNIEnv_fnPtr;
+extern dvmGetMethodFromReflect_func dvmGetMethodFromReflect_fnPtr;
+extern dvmResolveClass_func dvmResolveClass_fnPtr;
 
 extern dvmGetException_func dvmGetException_fnPtr;
 
@@ -156,19 +158,12 @@ extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
 extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
 
-extern bool dalvik_hook_java_method(JNIEnv *env, jclass cls, jobject srcMethod, const char*szClassName, const char*szMethodName,
-                                    const char*szSig, const char*szDesc);
-
 extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge,
                             const char *lpszMethodDesc);
 
 extern bool dalvik_is_dispatched(JNIEnv *env, jobject src);
 
 static void dispatcher_cpp(const u4 *args, jvalue *pResult, const Method *method, void *self);
-
-static void
-nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *method,
-                         void *self);
 
 static void dispatcher_java(const u4 *args, jvalue *pResult, const Method *method, void *self);
 
@@ -218,4 +213,6 @@ public:
     }
 };
 
+ArrayObject* dvmGetMethodParamTypes(const Method* method, const char* methodsig);
+jclass dvmFindJNIClass(JNIEnv *env, const char *classDesc);
 #endif

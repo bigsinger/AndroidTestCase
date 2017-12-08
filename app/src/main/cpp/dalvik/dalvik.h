@@ -61,7 +61,7 @@ typedef ClassObject* (*dvmFindSystemClass_func)(const char* descriptor);
 typedef jclass (*dvmFindJNIClass_func)(JNIEnv *env,const char *classDesc);
 typedef char* (*dvmDescriptorToName_func)(const char* str);
 typedef JNIEnv * (*AndroidRuntime_getJNIEnv_func)();
-
+typedef void *(*dvmGetMethodFromReflect_func)(void *);
 
 typedef Object *(*dvmGetException_func)(void *);
 

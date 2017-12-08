@@ -34,6 +34,7 @@ dvmFindSystemClass_func dvmFindSystemClass_fnPtr;
 //dvmFindJNIClass_func dvmFindJNIClass_fnPtr;
 dvmDescriptorToName_func dvmDescriptorToName_fnPtr;
 AndroidRuntime_getJNIEnv_func AndroidRuntime_getJNIEnv_fnPtr;
+dvmGetMethodFromReflect_func dvmGetMethodFromReflect_fnPtr;
 
 dvmGetException_func dvmGetException_fnPtr;
 
@@ -180,6 +181,8 @@ jint __attribute__((visibility("hidden"))) dalvik_setup(
         //dvmFindJNIClass_fnPtr = (dvmFindJNIClass_func)dvm_dlsym(dvm_hand, "_Z15dvmFindJNIClassP7_JNIEnvPKc");
         dvmDescriptorToName_fnPtr = (dvmDescriptorToName_func)dvm_dlsym(dvm_hand, "_Z19dvmDescriptorToNamePKc");
         //AndroidRuntime_getJNIEnv_fnPtr = (AndroidRuntime_getJNIEnv_func)dvm_dlsym(dvm_hand, "_ZN7android14AndroidRuntime9getJNIEnvEv");
+        dvmGetMethodFromReflect_fnPtr = (dvmGetMethodFromReflect_func)dvm_dlsym(dvm_hand, "_Z26dvmGetMethodFromReflectObjP6Object");
+        ASSERT(dvmGetMethodFromReflect_fnPtr);
 
         dvmGetException_fnPtr = (dvmGetException_func) dvm_dlsym(dvm_hand,
                                                                  apilevel > 10 ?
@@ -249,6 +252,7 @@ jint __attribute__((visibility("hidden"))) dalvik_setup(
         jclass clazz = env->FindClass("java/lang/reflect/Method");
         jInvokeMethod = env->GetMethodID(clazz, "invoke",
                                          "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+        ASSERT(jInvokeMethod);
         jClassMethod = env->GetMethodID(clazz, "getDeclaringClass",
                                         "()Ljava/lang/Class;");
         NPEClazz = env->FindClass("java/lang/NullPointerException");

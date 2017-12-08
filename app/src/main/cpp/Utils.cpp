@@ -538,7 +538,7 @@ jclass findAppClass(JNIEnv *env, const char *apn) {
 /*
 *
 */
-jclass dvmFindJNIClass(JNIEnv *env, const char *classDesc) {
+jclass Utils::dvmFindJNIClass(JNIEnv *env, const char *classDesc) {
     jclass classObj = env->FindClass(classDesc);
 
     if (env->ExceptionCheck() == JNI_TRUE) {
