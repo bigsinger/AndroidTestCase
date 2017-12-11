@@ -25,11 +25,11 @@ using namespace std;
 void *thread_fun(void *arg);
 
 extern "C" {
-JNIEXPORT jstring   JNICALL getStr(JNIEnv *, jclass, jobject, jint, jstring);
-JNIEXPORT jint      JNICALL getInt(JNIEnv *, jclass, jobject, jint, jstring);
-JNIEXPORT jstring   JNICALL
-Java_com_bigsing_NativeHandler_getString(JNIEnv *, jclass, jobject, jint, jstring);
-JNIEXPORT jobject    JNICALL Jump(JNIEnv *, jclass, jint nMethodId, jobject objArgs...);
+    JNIEXPORT jstring   JNICALL getStr(JNIEnv *, jclass, jobject, jint, jstring);
+    JNIEXPORT jint      JNICALL getInt(JNIEnv *, jclass, jobject, jint, jstring);
+    JNIEXPORT jstring   JNICALL
+    Java_com_bigsing_NativeHandler_getString(JNIEnv *, jclass, jobject, jint, jstring);
+    JNIEXPORT jobject    JNICALL Jump(JNIEnv *, jclass, jint nMethodId, jobject objArgs...);
 }
 
 

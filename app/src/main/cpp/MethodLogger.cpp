@@ -7,6 +7,7 @@
 #include "dalvik/object.h"
 
 jclass g_javaClass;
+jclass g_ObjectClass;
 jclass g_MethodClass;
 jclass g_javaFieldClass;
 jclass g_javaMemberClass;
@@ -20,6 +21,11 @@ jmethodID g_getReturnType;
 jmethodID g_getDeclaredField;
 jmethodID g_getInt;
 jmethodID g_getModifiers;
+jmethodID g_toString;
+
+
+std::list<std::string>   g_lstExcludedClassName;
+std::list<std::string>   g_lstIncludedClassName;
 
 
 CMethodLogger::CMethodLogger() {
@@ -31,6 +37,8 @@ CMethodLogger::~CMethodLogger() {
 
 
 bool CMethodLogger::start(JNIEnv *jni) {
+    g_lstExcludedClassName.clear();
+    g_lstIncludedClassName.clear();
     init(jni);
     //hookBydvmResolveClass(jni);
     hookByloadClass(jni);
@@ -60,6 +68,22 @@ void hookJavaMethod(JNIEnv *env, jclass cls, jobject methodObj) {
 }
 ////////////////////////////////////////////////////////////////
 
+/*
+ * Convert a slot number to a method pointer.
+ */
+Method* dvmSlotToMethod(ClassObject* clazz, int slot)
+{
+    if (slot < 0) {
+        slot = -(slot+1);
+        assert(slot < clazz->directMethodCount);
+        return &clazz->directMethods[slot];
+    } else {
+        assert(slot < clazz->virtualMethodCount);
+        return &clazz->virtualMethods[slot];
+    }
+}
+
+
 //枚举类的所有函数
 //ref https://github.com/woxihuannisja/StormJiagu/blob/50dce517dfca667374fe9ba1c47f507f7d4ebd62/StormProtector/dexload/Utilload.cpp
 void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassName) {
@@ -70,6 +94,10 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
         }
         return;
     }
+
+    jclass MethodClass = jni->FindClass("java/lang/reflect/Method");
+    ClassObject* pCls = (ClassObject*) dvmDecodeIndirectRef_fnPtr(dvmThreadSelf_fnPtr(), clazz);
+
     int sizeMethods = jni->GetArrayLength(methodsArr);
     for (int i = 0; i < sizeMethods; ++i) {
         string sParams;
@@ -86,20 +114,12 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
         //获取函数名
         jstring jstrMethodName = (jstring) jni->CallObjectMethod(methodObj, g_getNameOfMethod);
         const char *szMethodName = jni->GetStringUTFChars(jstrMethodName, 0);
-#if 1
-        if (strstr(szMethodName, "onClick") == NULL) {
-            //释放关于函数名的引用
-            jni->ReleaseStringUTFChars(jstrMethodName, szMethodName);
-            jni->DeleteLocalRef(jstrMethodName);
 
-            //释放函数对象
-            jni->DeleteLocalRef(methodObj);
-            continue;
-        }
-#endif
         //....
         //ref https://github.com/xiaobaiyey/dexload/blob/4f4679de20c1282589530e16e91c9bdea0e530a1/dexload/Utilload.cpp
         jint nSlot = 0;
+        jfieldID slotId = jni->GetFieldID(MethodClass, "slot", "I");
+        nSlot = jni->GetIntField(methodObj, slotId);
 //        jclass clsOneMethod = jni->GetObjectClass(methodObj);
 //        jstring slotName = jni->NewStringUTF("slot");
 //        jobject mfield = jni->CallObjectMethod(clsOneMethod, getDeclaredField, slotName);
@@ -157,24 +177,30 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
         //释放关于签名的引用
         jni->ReleaseStringUTFChars(jstrSign, szSignature);
         jni->DeleteLocalRef(jstrSign);
-        //格式化函数信息
-        sMethodDesc = Utils::fmt("%s %s %s(%s); slot: %d sig: %s", sClassName.c_str(), szRetTypeClassName,
-                                 szMethodName, sParams.c_str(), nSlot, sSig.c_str());
-        LOGD("method: %s", sMethodDesc.c_str());
 
-        if (strchr(szMethodName, '$') == NULL) {
+
+        if (strchr(szMethodName, '$') == NULL && (strstr(szMethodName, "on") == szMethodName
+                || strstr(sSig.c_str(), "String")
+                || strstr(szRetTypeClassName,"String")
+                                                 )) {
+            //格式化函数信息
+            sMethodDesc = Utils::fmt("%s %s %s(%s); slotId: %p slot: %d sig: %s", sClassName.c_str(), szRetTypeClassName,
+                                     szMethodName, sParams.c_str(), slotId, nSlot, sSig.c_str());
+            LOGD("method: %s", sMethodDesc.c_str());
+
             //设置函数为native
             jmethodID mid = NULL;
             jint nModifiers = jni->CallIntMethod(methodObj, g_getModifiers);
             if (nModifiers & ACC_STATIC) {
-                mid = jni->GetStaticMethodID(clazz, szMethodName, sSig.c_str());
+                //mid = jni->GetStaticMethodID(clazz, szMethodName, sSig.c_str());
             }else{
-                mid = jni->GetMethodID(clazz, szMethodName, sSig.c_str());
+                //mid = jni->GetMethodID(clazz, szMethodName, sSig.c_str());
             }
             //todo FromReflectedMethod等函数会触发其他类的加载，也就是loadClass会被调用，由于本函数已经在loadClass中，
             //这样会引起递归调用。而且由于触发了其他类的加载，使得类的加载顺序混乱，容易崩溃。
             //Method *method = (Method *) jni->FromReflectedMethod(methodObj);
             Method *method = (Method *) mid;
+            method = dvmSlotToMethod(pCls, nSlot);
             //method = (Method *)dvmGetMethodFromReflect_fnPtr(srcMethod);
             //Object* pmethod = dvmDecodeIndirectRef(jni, srcMethod);
             //method = dvmGetMethodFromReflectObj(pmethod);
@@ -198,6 +224,7 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
     }//end for
 
     jni->DeleteLocalRef(methodsArr);
+    jni->DeleteLocalRef(MethodClass);
 }
 
 static void *(*orign_loadClass)(JNIEnv *, jobject, jstring);
@@ -368,13 +395,7 @@ static void *(*orign_loadClassBool)(JNIEnv *, jobject, jstring, jboolean);
 static void *OnCall_loadClassBool(JNIEnv *jni, jobject thiz, jstring name, jboolean resolve) {
     string sClassName = Utils::jstr2str(jni, name);
     jclass cls = (jclass) (*orign_loadClassBool)(jni, thiz, name, resolve);
-//    if (sClassName.find("com.") != std::string::npos) {
-//        string *pParam = new string(sClassName);
-//        LOGD("[%s] class name: %s ", __FUNCTION__, sClassName.c_str());
-//        std::replace(sClassName.begin(), sClassName.end(), '.', '/');
-//        MSJavaHookClassLoad(NULL, sClassName.c_str(), &OnClassLoad_EveryClass, pParam);
-//    }
-    if (cls && sClassName.find("com.") != std::string::npos) {
+    if(cls && CMethodLogger::isCanHookThisClass(sClassName.c_str())){
         //假定为用户代码类
         LOGD("[%s] class name: %s hook begin", __FUNCTION__, sClassName.c_str());
         enumAllMethodOfClass(jni, cls, sClassName);
@@ -385,6 +406,7 @@ static void *OnCall_loadClassBool(JNIEnv *jni, jobject thiz, jstring name, jbool
         }
         LOGD("[%s] class name: %s hook end", __FUNCTION__, sClassName.c_str());
     }
+
     return cls;
 }
 
@@ -465,20 +487,35 @@ void CMethodLogger::hookBydvmResolveClass(JNIEnv *jni) {
 }
 
 bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc) {
-    LOGD("[%s] begin", __FUNCTION__);
+    //LOGD("[%s] begin", __FUNCTION__);
     if (method->nativeFunc == (DalvikBridgeFunc) nativeFunc_logMethodCall) {
         LOGD("[%s] method had been hooked", __FUNCTION__);
         return true;
     }
 
-    if (method->accessFlags & ACC_ABSTRACT ||
-        method->accessFlags & ACC_CONSTRUCTOR ||
-        method->accessFlags & ACC_NATIVE ||
-        method->accessFlags & ACC_INTERFACE ||
-        method->accessFlags & ACC_ANNOTATION
+    if (method->accessFlags == ACC_PUBLIC
+        || method->accessFlags == ACC_PRIVATE
+           ||   method->accessFlags == (ACC_STATIC | ACC_PUBLIC)
+                || method->accessFlags == (ACC_STATIC | ACC_PRIVATE)
             ) {
-        //抽象方法不处理
-        LOGD("[%s] the method can not surpport", __FUNCTION__);
+
+    }else {
+        if (method->accessFlags & ACC_ABSTRACT ||
+            method->accessFlags & ACC_CONSTRUCTOR ||
+            method->accessFlags & ACC_NATIVE ||
+            method->accessFlags & ACC_INTERFACE ||
+            method->accessFlags & ACC_SYNCHRONIZED ||
+            method->accessFlags & ACC_FINAL ||
+            method->accessFlags & ACC_VOLATILE ||
+            method->accessFlags & ACC_SYNTHETIC ||
+            method->accessFlags & ACC_DECLARED_SYNCHRONIZED ||
+            method->accessFlags & ACC_STRICT ||
+            method->accessFlags & ACC_ANNOTATION
+                ) {
+            //抽象方法不处理
+            //LOGD("[%s] the method can not surpport accessFlags: %08X", __FUNCTION__, method->accessFlags);
+            return true;
+        }
         return true;
     }
 
@@ -494,18 +531,19 @@ bool dalvik_hook_method(Method *method, const char *szClassName, const char *szM
     info->sMethodSig = szSig;
     info->sMethodDesc = szDesc;
 
-    int argsSize = dvmComputeMethodArgsSize_fnPtr(method);
-    if (dvmIsStaticMethod(method) == false) {
-        argsSize++;
-    }
+//    int argsSize = dvmComputeMethodArgsSize_fnPtr(method);
+//    if (dvmIsStaticMethod(method) == false) {
+//        argsSize++;
+//    }
     method->accessFlags |= ACC_NATIVE;
-    method->registersSize = method->insSize = argsSize;
+    //method->registersSize = method->insSize = argsSize;
+    method->registersSize = method->insSize;
     method->outsSize = 0;
     //method->jniArgInfo = dvmComputeJniArgInfo(method->shorty);
     method->insns = (u2 *) info;
     method->nativeFunc = (DalvikBridgeFunc) nativeFunc_logMethodCall;
 
-    LOGD("[%s] end", __FUNCTION__);
+    //LOGD("[%s] end", __FUNCTION__);
     return true;
 }
 
@@ -565,8 +603,8 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
     if (dvmCheckException_fnPtr(self)) {
         LOGE("[%s] error 5", __FUNCTION__);
         Object *excep = dvmGetException_fnPtr(self);
-        jni_env->Throw((jthrowable) excep);
-        //jni_env->ExceptionClear();
+        //jni_env->Throw((jthrowable) excep);
+        jni_env->ExceptionClear();
     }
     dvmReleaseTrackedAlloc_fnPtr((Object *)argArr, self);
 
@@ -575,8 +613,25 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
         switch (info->returnType->primitiveType) {
             case PRIM_NOT: {
                 pResult->l = result;
-                LOGD("[%s] <-- %s::%s ret object %p", __FUNCTION__, info->sClassName.c_str(),
-                     info->sMethodName.c_str(), result);
+                const char *szObj2String = NULL;
+#if 0
+                jstring jstrObj = (jstring)jni_env->CallObjectMethod((jobject)(result), g_toString);
+                if (dvmCheckException_fnPtr(self)) {
+                    Object *excep = dvmGetException_fnPtr(self);
+                    jni_env->ExceptionClear();
+                } else {
+                    szObj2String = jni_env->GetStringUTFChars(jstrObj, 0);
+                }
+
+                LOGD("[%s] <-- %s::%s ret object %p %s", __FUNCTION__, info->sClassName.c_str(),
+                     info->sMethodName.c_str(), result, szObj2String);
+
+                //释放
+                if (jstrObj) {
+                    jni_env->ReleaseStringUTFChars(jstrObj, szObj2String);
+                    jni_env->DeleteLocalRef(jstrObj);
+                }
+#endif
 
 //                JNIEnv *env = NULL;
 //                Utils::getenv(&env);
@@ -681,6 +736,23 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
 }
 
 void CMethodLogger::init(JNIEnv *jni) {
+    addExcludedClassName("android.");
+    addExcludedClassName(".tencent.");
+    addExcludedClassName(".hotfix.");
+    addExcludedClassName(".push");
+    addExcludedClassName(".bugrpt.");
+    addExcludedClassName(".fastjson.");
+    addExcludedClassName(".util");
+    addExcludedClassName(".common");
+    addExcludedClassName(".service");
+
+    addIncludedClassName("com.");
+    addIncludedClassName("cn.");
+    addIncludedClassName("im.yixin");
+//    addIncludedClassName("Activity");
+//    addIncludedClassName("activity");
+//    addIncludedClassName(".view.");
+
     g_javaClass = jni->FindClass("java/lang/Class");
     g_getNameOfClass = jni->GetMethodID(g_javaClass, "getName", "()Ljava/lang/String;");
     g_getDeclaredMethods = jni->GetMethodID(g_javaClass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
@@ -699,4 +771,39 @@ void CMethodLogger::init(JNIEnv *jni) {
     g_javaMemberClass = jni->FindClass("java/lang/reflect/Member");
     g_getModifiers = jni->GetMethodID(g_javaMemberClass, "getModifiers", "()I");
     ASSERT(g_getModifiers);
+
+    g_ObjectClass = jni->FindClass("java/lang/Object");
+    g_toString = jni->GetMethodID(g_ObjectClass, "toString", "()Ljava/lang/String;");
+    ASSERT(g_toString);
+}
+
+void CMethodLogger::addExcludedClassName(const char * lpszName) {
+    g_lstExcludedClassName.push_back(std::string(lpszName));
+}
+void CMethodLogger::addIncludedClassName(const char * lpszName) {
+    g_lstIncludedClassName.push_back(std::string(lpszName));
+}
+
+bool CMethodLogger::isCanHookThisClass(const std::string&sClassName) {
+    if (g_lstExcludedClassName.empty()==false) {
+        for(auto i:g_lstExcludedClassName) {
+            if (sClassName.find(i) != std::string::npos) {
+                return false;
+                break;
+            }
+        }
+    }
+
+
+    if (g_lstIncludedClassName.empty() == false) {
+        for(auto i:g_lstIncludedClassName) {
+            if (sClassName.find(i) != std::string::npos) {
+                return true;
+                break;
+            }
+        }
+        return false;
+    }
+
+    return true;
 }
