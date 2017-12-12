@@ -156,7 +156,7 @@ extern jmethodID jClassMethod;
 
 extern jint dalvik_setup(JNIEnv *env, int apilevel);
 
-extern void dalvik_replace(JNIEnv *env, jobject src, jobject dest);
+extern void dalvik_replace(JNIEnv *jni, jobject src, jobject dest);
 
 extern void dalvik_dispatch(JNIEnv *env, jobject src, jobject dest, bool javaBridge,
                             const char *lpszMethodDesc);

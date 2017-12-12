@@ -14,7 +14,7 @@ cmake_minimum_required(VERSION 3.4.1)
 set_property(SOURCE src/main/cpp/art/art_quick_dexposed_invoke_handler.S PROPERTY LANGUAGE C)
 
 # 设置源码文件列表
-file(GLOB NATIVE_SRC "src/main/cpp/*.cpp" "src/main/cpp/dalvik/*.cpp" "src/main/cpp/art/*.cpp" "src/main/cpp/libcutils/*.c" "src/main/cpp/art/*.S")
+file(GLOB NATIVE_SRC "src/main/cpp/*.cpp" "src/main/cpp/dalvik/*.cpp" "src/main/cpp/demo/*.cpp" "src/main/cpp/art/*.cpp" "src/main/cpp/libcutils/*.c" "src/main/cpp/art/*.S")
 add_library( # Sets the name of the library.
              hooktest
 

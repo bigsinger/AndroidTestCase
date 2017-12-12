@@ -20,6 +20,7 @@ LOCAL_C_INCLUDES := $(JNI_H_INCLUDE) \
 					
 #±àÒëÔ´ÎÄ¼þ
 MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/*.cpp)
+MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/demo/*.cpp)
 MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/dalvik/*.cpp)
 MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/libcutils/*.c)
 MY_CPP_LIST += $(wildcard $(LOCAL_PATH)/art/*.cpp) $(LOCAL_PATH)/art/art_quick_dexposed_invoke_handler.S

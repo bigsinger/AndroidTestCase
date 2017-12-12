@@ -1,8 +1,7 @@
 #include <cstdlib>
 #include "../Utils.h"
 #include <algorithm>
-#include "dalvik_core.h"
-#include "assert.h"
+#include "../dalvik/dalvik_core.h"
 
 void dalvik_dispatch(JNIEnv *env, jobject srcMethod, jobject dstMethod, bool javaBridge,
                      const char *lpszMethodDesc) {
