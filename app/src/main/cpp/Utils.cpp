@@ -81,7 +81,6 @@ jobject Utils::getGlobalContext(JNIEnv *env)
     } else {
         LOGE("Cannot find class: android.app.ActivityThread");
     }
-    LOGD("context: %p", application);
     return application;
 
 //    //获取Activity Thread的实例对象

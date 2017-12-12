@@ -6,6 +6,7 @@
 #include "substrate/substrate.h"
 #include "dalvik/dalvik_core.h"
 #include "dalvik/object.h"
+#include "DeviceInfo.h"
 
 jclass g_javaClass;
 jclass g_ObjectClass;
@@ -432,7 +433,7 @@ static void OnClassLoad_ClassLoader(JNIEnv *jni, jclass clazz, void *arg) {
 void CMethodLogger::hookByloadClass(JNIEnv *jni) {
     jclass clazz = jni->FindClass("java/lang/ClassLoader");
     if (clazz != NULL) {
-        LOGD("java/lang/ClassLoader FOUND, HOOK loadClass");
+        //LOGD("java/lang/ClassLoader FOUND, HOOK loadClass");
         hook_loadClass(jni, clazz);
         jni->DeleteLocalRef(clazz);
     }else{
@@ -440,7 +441,7 @@ void CMethodLogger::hookByloadClass(JNIEnv *jni) {
         if(jni->ExceptionCheck() == JNI_TRUE){
             jni->ExceptionClear();
         }
-        LOGD("java/lang/ClassLoader NOT FOUND, HOOK IT ON CLASSLOAD");
+        //LOGD("java/lang/ClassLoader NOT FOUND, HOOK IT ON CLASSLOAD");
         MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
     }
 }

@@ -10,8 +10,11 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
+# 设置其他后缀文件为源文件
 set_property(SOURCE src/main/cpp/art/art_quick_dexposed_invoke_handler.S PROPERTY LANGUAGE C)
-file(GLOB native_srcs "src/main/cpp/*.cpp" "src/main/cpp/dalvik/*.cpp" "src/main/cpp/art/*.cpp" "src/main/cpp/art/*.S")
+
+# 设置源码文件列表
+file(GLOB NATIVE_SRC "src/main/cpp/*.cpp" "src/main/cpp/dalvik/*.cpp" "src/main/cpp/art/*.cpp" "src/main/cpp/libcutils/*.c" "src/main/cpp/art/*.S")
 add_library( # Sets the name of the library.
              hooktest
 
@@ -19,9 +22,9 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             ${native_srcs}
+             ${NATIVE_SRC}
             )
-include_directories(src/main/cpp/)
+include_directories(src/main/cpp/ src/main/cpp/include)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -40,8 +43,8 @@ find_library( # Sets the name of the path variable.
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
-
-file(GLOB libs src/main/cpp/3rd/libsubstrate.so src/main/cpp/3rd/libsubstrate-dvm.so)
+# 设置链接的库文件列表
+file(GLOB libs src/main/cpp/3rd/libsubstrate.so src/main/cpp/3rd/libsubstratedvm.so)
 target_link_libraries( # Specifies the target library.
                        hooktest
 

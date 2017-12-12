@@ -14,7 +14,7 @@ class CDeviceInfo {
 public:
     static int isArt();
     static int getSdkInt();
-    static int getOsVer();
+    static std::string getOsReleaseVer();
     static std::string getMac();
     static int getAndroidId();
     static int getImei();

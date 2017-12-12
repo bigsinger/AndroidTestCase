@@ -21,6 +21,7 @@ using namespace std;
 #include "dalvik/object.h"
 #include "dalvik/dalvik_core.h"
 #include "MethodLogger.h"
+#include "DeviceInfo.h"
 
 void *thread_fun(void *arg);
 
@@ -217,7 +218,7 @@ static int regNativeMethods(JNIEnv *jni) {
             jni->ExceptionClear();
         }
         nResult = JNI_FALSE;
-        LOGE("[%s] not found class: %s may be in other app process", __FUNCTION__, Java_Interface_Class_Name);
+        LOGI("[%s] not found class: %s may be in other app process", __FUNCTION__, Java_Interface_Class_Name);
     }
 
     return nResult;
@@ -352,11 +353,10 @@ static void (*oldApplicationOnCreate)(JNIEnv *, jobject, ...);
 static void newApplicationOnCreate(JNIEnv *jni, jobject thiz) {
     std:string sPackageName;
     Utils::getPackageName(jni, sPackageName);
-    LOGD("current process package name: %s [begin]", sPackageName.c_str());
     (*oldApplicationOnCreate)(jni, thiz);
     //Utils::getGlobalContext(jni);
     Utils::getPackageName(jni, sPackageName);
-    LOGD("current process package name: %s [end]", sPackageName.c_str());
+    LOGD("current process package name: %s", sPackageName.c_str());
 }
 
 void HookApplicationOnCreate(JNIEnv *jni){
@@ -374,15 +374,13 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
     LOGTIME;
     Utils::setJavaVM(vm);
-    LOGD("[%s] JavaVM: %p", __FUNCTION__, vm);
+
+    LOGD("Android OS: %s ( %d )", CDeviceInfo::getOsReleaseVer().c_str(), CDeviceInfo::getSdkInt());
     if (vm->GetEnv((void **) &jni, JNI_VERSION_1_6) != JNI_OK) {
         LOGE("[%s] GetEnv failed", __FUNCTION__);
         return -1;
     }
     ASSERT(jni);
-    //
-    jobject obj = Utils::getGlobalContext(jni);
-    LOGD("context: %p", obj);
 
     int nRet = regNativeMethods(jni);
     if (nRet == JNI_FALSE) {
