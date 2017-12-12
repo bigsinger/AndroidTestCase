@@ -15,8 +15,8 @@ bool DalvikBridge::setup(JNIEnv *env, int apilevel) {
 
 void DalvikBridge::setFieldFlag(JNIEnv *env, jobject field) {
     Field *dalvikField = (Field *) env->FromReflectedField(field);
-    dalvikField->accessFlags = dalvikField->accessFlags & (~ACC_PRIVATE)
-                               | ACC_PUBLIC;
+    dalvikField->accessFlags = (dalvikField->accessFlags & (~ACC_PRIVATE)) | ACC_PUBLIC;
+
 }
 
 void DalvikBridge::applyPatch(JNIEnv *env, jobject src, jobject dest, Mode mode) {

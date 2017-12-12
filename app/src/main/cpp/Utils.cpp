@@ -6,6 +6,7 @@
 #include <cstring>
 #include "debug.h"
 #include <sys/stat.h>
+#include "include/cutils/properties.h"
 
 
 ///////////////////////////////////////////////////////
@@ -649,4 +650,10 @@ const char *Utils::findLibrary(JNIEnv *env, const char *libName) {
         return NULL;
     }
     return env->GetStringUTFChars(libPath, 0);
+}
+
+bool Utils::isArt(){
+    char value[PROPERTY_VALUE_MAX] = {0};
+    property_get("persist.sys.dalvik.vm.lib", value, "");
+    return strncmp(value, "libart.so", strlen("libart.so")) == 0;
 }

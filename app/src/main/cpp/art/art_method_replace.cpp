@@ -50,7 +50,7 @@ void replace_5_0(JNIEnv *env, jobject src, jobject dest) {
 void setFieldFlag_5_0(JNIEnv *env, jobject field) {
     art_5_0::mirror::ArtField *artField =
             (art_5_0::mirror::ArtField *) env->FromReflectedField(field);
-    artField->access_flags_ = artField->access_flags_ & (~0x0002) | 0x0001;
+    artField->access_flags_ = (artField->access_flags_ & (~0x0002)) | 0x0001;
     LOGD("setFieldFlag_5_0: %d ", artField->access_flags_);
 }
 
@@ -94,7 +94,7 @@ void replace_5_1(JNIEnv *env, jobject src, jobject dest) {
 void setFieldFlag_5_1(JNIEnv *env, jobject field) {
     art_5_1::mirror::ArtField *artField =
             (art_5_1::mirror::ArtField *) env->FromReflectedField(field);
-    artField->access_flags_ = artField->access_flags_ & (~0x0002) | 0x0001;
+    artField->access_flags_ = (artField->access_flags_ & (~0x0002)) | 0x0001;
     LOGD("setFieldFlag_5_1: %d ", artField->access_flags_);
 }
 
@@ -140,6 +140,6 @@ void replace_6_0(JNIEnv *env, jobject src, jobject dest) {
 void setFieldFlag_6_0(JNIEnv *env, jobject field) {
     art_6_0::mirror::ArtField *artField =
             (art_6_0::mirror::ArtField *) env->FromReflectedField(field);
-    artField->access_flags_ = artField->access_flags_ & (~0x0002) | 0x0001;
+    artField->access_flags_ = (artField->access_flags_ & (~0x0002)) | 0x0001;
     LOGD("setFieldFlag_6_0: %d ", artField->access_flags_);
 }

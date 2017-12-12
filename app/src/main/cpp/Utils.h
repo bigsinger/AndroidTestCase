@@ -89,5 +89,6 @@ namespace Utils {
     jclass getObjectFromJobject(JNIEnv *jni, jobject);
 
     jclass dvmFindJNIClass(JNIEnv *env, const char *classDesc);
-}
 
+    bool isArt();
+}

@@ -1,7 +1,7 @@
 set dir=%~dp0
 set package=%1%
 set modulename=hooktest
-set modulefile=..\libs\armeabi\lib%modulename%.so
+set modulefile=..\libs\armeabi-v7a\lib%modulename%.so
 set destso=/data/data/%package%/lib/lib%modulename%.so
 
 cd /d %dir%

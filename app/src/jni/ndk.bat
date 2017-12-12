@@ -1,5 +1,5 @@
 set dir=%~dp0
-set ndk=d:\Android\ndk\ndk-build.cmd
+set ndk=D:\android\sdk\ndk-bundle\ndk-build.cmd
 
 cd /d %dir%
 

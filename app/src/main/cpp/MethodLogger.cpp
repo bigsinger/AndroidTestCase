@@ -1,6 +1,7 @@
 #include "MethodLogger.h"
 #include <jni.h>
 #include <algorithm>
+#include "art/art.h"
 #include "Utils.h"
 #include "substrate/substrate.h"
 #include "dalvik/dalvik_core.h"
@@ -37,6 +38,13 @@ CMethodLogger::~CMethodLogger() {
 
 
 bool CMethodLogger::start(JNIEnv *jni) {
+    if (Utils::isArt()) {
+        LOGD("art mode");
+        art_setup(jni, 14);
+    } else {
+        LOGD("dalvik mode");
+        dalvik_setup(jni, 14);
+    }
     g_lstExcludedClassName.clear();
     g_lstIncludedClassName.clear();
     init(jni);
@@ -62,9 +70,9 @@ static void newMethod(JNIEnv *jni,...) {
 }
 
 //todo 不定参数的处理不对，但是BEGIN有输出，说明这个方法可以，日后参考MSJavaHookMethod的实现再看。
-void hookJavaMethod(JNIEnv *env, jclass cls, jobject methodObj) {
-    Method *method = (Method *) env->FromReflectedMethod(methodObj);
-    MSJavaHookMethod(env, cls, (jmethodID) method, (void *)&newMethod, reinterpret_cast<void **>(&oldMethod));
+void hookJavaMethod(JNIEnv *jni, jclass cls, jobject methodObj) {
+    Method *method = (Method *) jni->FromReflectedMethod(methodObj);
+    MSJavaHookMethod(jni, cls, (jmethodID) method, (void *)&newMethod, reinterpret_cast<void **>(&oldMethod));
 }
 ////////////////////////////////////////////////////////////////
 
@@ -100,8 +108,9 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
 
     int sizeMethods = jni->GetArrayLength(methodsArr);
     for (int i = 0; i < sizeMethods; ++i) {
-        string sParams;
-        string sMethodDesc;
+        jint nSlot = 0;
+        string sParams;     //函数参数
+        string sMethodDesc; //函数详细描述
         jobject methodObj = jni->GetObjectArrayElement(methodsArr, i); //get one method obj
         if (methodObj == NULL) {
             if(jni->ExceptionCheck() == JNI_TRUE){
@@ -110,33 +119,9 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
             continue;
         }
 
-
         //获取函数名
         jstring jstrMethodName = (jstring) jni->CallObjectMethod(methodObj, g_getNameOfMethod);
         const char *szMethodName = jni->GetStringUTFChars(jstrMethodName, 0);
-
-        //....
-        //ref https://github.com/xiaobaiyey/dexload/blob/4f4679de20c1282589530e16e91c9bdea0e530a1/dexload/Utilload.cpp
-        jint nSlot = 0;
-        jfieldID slotId = jni->GetFieldID(MethodClass, "slot", "I");
-        nSlot = jni->GetIntField(methodObj, slotId);
-//        jclass clsOneMethod = jni->GetObjectClass(methodObj);
-//        jstring slotName = jni->NewStringUTF("slot");
-//        jobject mfield = jni->CallObjectMethod(clsOneMethod, getDeclaredField, slotName);
-//
-//        if (mfield == NULL) {
-//            LOGE("nulllllll");
-//            if(jni->ExceptionCheck() == JNI_TRUE){
-//                jni->ExceptionClear();
-//            }
-//        }else{
-//            LOGE("getInt2 %p ", getInt);
-//            nSlot = jni->CallIntMethod(mfield, getInt, methodObj);
-//        }
-        //jni->DeleteLocalRef(slotName);
-        //jni->DeleteLocalRef(mfield);
-        //jni->DeleteLocalRef(clsOneMethod);
-        /////////////////////
 
         jobjectArray argsArr = static_cast<jobjectArray>(jni->CallObjectMethod(methodObj, g_getParameterTypes));
         jint sizeArgs = jni->GetArrayLength(argsArr);
@@ -178,37 +163,40 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
         jni->ReleaseStringUTFChars(jstrSign, szSignature);
         jni->DeleteLocalRef(jstrSign);
 
-
-        if (strchr(szMethodName, '$') == NULL && (strstr(szMethodName, "on") == szMethodName
-                || strstr(sSig.c_str(), "String")
-                || strstr(szRetTypeClassName,"String")
-                                                 )) {
+        if (CMethodLogger::isCanHookThisMethod(szMethodName, szRetTypeClassName, sParams.c_str(), sSig.c_str())) {
             //格式化函数信息
-            sMethodDesc = Utils::fmt("%s %s %s(%s); slotId: %p slot: %d sig: %s", sClassName.c_str(), szRetTypeClassName,
-                                     szMethodName, sParams.c_str(), slotId, nSlot, sSig.c_str());
+            sMethodDesc = Utils::fmt("%s %s %s(%s); sig: %s", sClassName.c_str(),
+                                     szRetTypeClassName,
+                                     szMethodName, sParams.c_str(), sSig.c_str());
             LOGD("method: %s", sMethodDesc.c_str());
 
-            //设置函数为native
             jmethodID mid = NULL;
+            Method *method = NULL;
+#if 0
             jint nModifiers = jni->CallIntMethod(methodObj, g_getModifiers);
             if (nModifiers & ACC_STATIC) {
-                //mid = jni->GetStaticMethodID(clazz, szMethodName, sSig.c_str());
-            }else{
-                //mid = jni->GetMethodID(clazz, szMethodName, sSig.c_str());
+                mid = jni->GetStaticMethodID(clazz, szMethodName, sSig.c_str());
+            } else {
+                mid = jni->GetMethodID(clazz, szMethodName, sSig.c_str());
             }
+            method = (Method *) mid;
+#endif
             //todo FromReflectedMethod等函数会触发其他类的加载，也就是loadClass会被调用，由于本函数已经在loadClass中，
             //这样会引起递归调用。而且由于触发了其他类的加载，使得类的加载顺序混乱，容易崩溃。
             //Method *method = (Method *) jni->FromReflectedMethod(methodObj);
-            Method *method = (Method *) mid;
-            method = dvmSlotToMethod(pCls, nSlot);
             //method = (Method *)dvmGetMethodFromReflect_fnPtr(srcMethod);
             //Object* pmethod = dvmDecodeIndirectRef(jni, srcMethod);
             //method = dvmGetMethodFromReflectObj(pmethod);
+
+            jfieldID slotId = jni->GetFieldID(MethodClass, "slot", "I");    //jmethodID和jfieldID不需要手动释放的
+            nSlot = jni->GetIntField(methodObj, slotId);
+            method = dvmSlotToMethod(pCls, nSlot);
             if (method) {
-                dalvik_hook_method(method, sClassName.c_str(), szMethodName, sSig.c_str(), sMethodDesc.c_str());
+                //设置函数为native
+                dalvik_hook_method(method, sClassName.c_str(), szMethodName, sSig.c_str(),
+                                   sMethodDesc.c_str());
             }
         }
-        //hookJavaMethod(jni, clazz, methodObj);
 
         //释放关于返回值的引用
         jni->ReleaseStringUTFChars(jstrRetTypeClassName, szRetTypeClassName);
@@ -228,7 +216,6 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
 }
 
 static void *(*orign_loadClass)(JNIEnv *, jobject, jstring);
-
 static void *OnCall_loadClass(JNIEnv *jni, jobject thiz, jstring jstrName) {
     string sClassName = Utils::jstr2str(jni, jstrName);
     jclass cls = (jclass) (*orign_loadClass)(jni, thiz, jstrName);
@@ -488,7 +475,7 @@ void CMethodLogger::hookBydvmResolveClass(JNIEnv *jni) {
 
 bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc) {
     //LOGD("[%s] begin", __FUNCTION__);
-    if (method->nativeFunc == (DalvikBridgeFunc) nativeFunc_logMethodCall) {
+    if (method->nativeFunc == (DalvikBridgeFunc) nativeFunc_MethodOnCall) {
         LOGD("[%s] method had been hooked", __FUNCTION__);
         return true;
     }
@@ -541,7 +528,7 @@ bool dalvik_hook_method(Method *method, const char *szClassName, const char *szM
     method->outsSize = 0;
     //method->jniArgInfo = dvmComputeJniArgInfo(method->shorty);
     method->insns = (u2 *) info;
-    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_logMethodCall;
+    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_MethodOnCall;
 
     //LOGD("[%s] end", __FUNCTION__);
     return true;
@@ -549,18 +536,18 @@ bool dalvik_hook_method(Method *method, const char *szClassName, const char *szM
 
 
 //ref : Hook Java中返回值问题的解决和修改https://github.com/Harold1994/program_total/blob/7659177e1d562a8396d0ee9c9eda9f36a12727e5/program_total/3%E6%B3%A8%E5%85%A5%E7%9A%84so%E6%96%87%E4%BB%B6/documents/HookJava%E4%B8%AD%E8%BF%94%E5%9B%9E%E5%80%BC%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E5%92%8C%E4%BF%AE%E6%94%B9.md
-void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *method, void *self) {
+void nativeFunc_MethodOnCall(const u4 *args, JValue *pResult, const Method *method, void *self) {
     Object *result = NULL;
     HookInfo* info = (HookInfo*)method->insns; //get hookinfo pointer from method-insns
-    LOGD("[%s] --> %s::%s %s", __FUNCTION__, info->sClassName.c_str(), info->sMethodName.c_str(), info->sMethodSig.c_str());
+    LOGI("[onCall] --> %s", info->sMethodDesc.c_str());
 
     Method* originalMethod = (Method*)(info->originalMethod);
     if (info->returnType == NULL) {
         info->returnType = dvmGetBoxedReturnType_fnPtr(originalMethod);
         if (info->returnType == NULL) {
-            LOGE("[%s] error 1", __FUNCTION__);
+            LOGE("[onCall] error 1");
             if (dvmCheckException_fnPtr(self)) {
-                LOGE("[%s] error 1 Exception", __FUNCTION__);
+                LOGE("[onCall] error 1 exception");
             }
         }
     }
@@ -568,9 +555,9 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
     if (info->paramTypes == NULL) {
         info->paramTypes = dvmGetMethodParamTypes(originalMethod, info->sMethodSig.c_str());
         if (info->paramTypes == NULL) {
-            LOGE("[%s] error 2", __FUNCTION__);
+            LOGE("[onCall] error 2");
             if (dvmCheckException_fnPtr(self)) {
-                LOGE("[%s] error 2 Exception", __FUNCTION__);
+                LOGE("[onCall] error 2 exception");
                 Object *excep = dvmGetException_fnPtr(self);
                 jni_env->Throw((jthrowable) excep);
             }
@@ -581,7 +568,7 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
         Object* thisObject = (Object*)args[0];
         argArr = dvmBoxMethodArgs(originalMethod, args + 1);
         if (dvmCheckException_fnPtr(self)) {
-            LOGE("[%s] error 3", __FUNCTION__);
+            LOGE("[onCall] error 3");
             //Object *excep = dvmGetException_fnPtr(self);
             //jni_env->Throw((jthrowable) excep);
             jni_env->ExceptionClear();
@@ -591,7 +578,7 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
     }else{
         argArr = dvmBoxMethodArgs(originalMethod, args);
         if (dvmCheckException_fnPtr(self)) {
-            LOGE("[%s] error 4", __FUNCTION__);
+            LOGE("[onCall] error 4");
             //Object *excep = dvmGetException_fnPtr(self);
             //jni_env->Throw((jthrowable) excep);
             jni_env->ExceptionClear();
@@ -601,7 +588,7 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
     }
 
     if (dvmCheckException_fnPtr(self)) {
-        LOGE("[%s] error 5", __FUNCTION__);
+        LOGE("[onCall] error 5");
         Object *excep = dvmGetException_fnPtr(self);
         //jni_env->Throw((jthrowable) excep);
         jni_env->ExceptionClear();
@@ -648,42 +635,42 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
 //                jstring msg = (jstring) env->CallObjectMethod(jobj, info->toStringMethod);
 //                env->DeleteLocalRef(retClass);
 //                const char *szMsg = env->GetStringUTFChars(msg, 0);
-//                LOGD("nativeFunc_logMethodCall: ret object %s", szMsg);
+//                LOGD("nativeFunc_MethodOnCall: ret object %s", szMsg);
 //                env->ReleaseStringUTFChars(msg, szMsg);
 //                env->DeleteLocalRef(msg);
             }
                 break;
             case PRIM_VOID: {
                 pResult->l = NULL;
-                LOGD("[%s] <-- %s::%s ret void", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret void", info->sClassName.c_str(),
                      info->sMethodName.c_str());
             }
                 break;
             case PRIM_BOOLEAN: {
                 unsigned char *i = reinterpret_cast<unsigned char *>(&result[1]);
                 pResult->z = *i;
-                LOGD("[%s] <-- %s::%s ret bool %d", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret bool %d", info->sClassName.c_str(),
                      info->sMethodName.c_str(), pResult->z);
             }
                 break;
             case PRIM_BYTE: {
                 signed char *i = reinterpret_cast<signed char *>(&result[1]);
                 pResult->b = *i;
-                LOGD("[%s] <-- %s::%s ret byte %c", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret byte %c", info->sClassName.c_str(),
                      info->sMethodName.c_str(), pResult->b);
             }
                 break;
             case PRIM_CHAR: {
                 unsigned short *i = reinterpret_cast<unsigned short *>(&result[1]);
                 pResult->c = *i;
-                LOGD("[%s] <-- %s::%s ret char %c", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret char %c", info->sClassName.c_str(),
                      info->sMethodName.c_str(), pResult->c);
             }
                 break;
             case PRIM_SHORT: {
                 signed short *i = reinterpret_cast<signed short *>(&result[1]);
                 pResult->s = *i;
-                LOGD("[%s] <-- %s::%s ret byte %c", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret byte %c", info->sClassName.c_str(),
                      info->sMethodName.c_str(), pResult->s);
             }
                 break;
@@ -691,11 +678,11 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
                 if (result != NULL) {
                     int *i = reinterpret_cast<int *>(&result[1]);
                     pResult->i = *i;
-                    LOGD("[%s] <-- %s::%s ret int %d", __FUNCTION__, info->sClassName.c_str(),
+                    LOGI("[onCall] <-- %s::%s ret int %d", info->sClassName.c_str(),
                          info->sMethodName.c_str(), pResult->i);
                 } else {
                     pResult->l = result;
-                    LOGE("[%s] <-- %s::%s ret int , but NULL returned", __FUNCTION__,
+                    LOGE("[onCall] <-- %s::%s ret int , but NULL returned",
                          info->sClassName.c_str(), info->sMethodName.c_str());
                 }
             }
@@ -703,52 +690,68 @@ void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *met
             case PRIM_LONG: {
                 long *i = reinterpret_cast<long *>(&result[1]);
                 pResult->j = *i;
-                LOGD("[%s] <-- %s::%s ret long %d", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret long %d", info->sClassName.c_str(),
                      info->sMethodName.c_str(), (int) pResult->j);
             }
                 break;
             case PRIM_FLOAT: {
                 float *i = reinterpret_cast<float *>(&result[1]);
                 pResult->f = *i;
-                LOGD("[%s] <-- %s::%s ret fload %f", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret fload %f", info->sClassName.c_str(),
                      info->sMethodName.c_str(), pResult->f);
             }
                 break;
             case PRIM_DOUBLE: {
                 double *i = reinterpret_cast<double *>(&result[1]);
                 pResult->d = *i;
-                LOGD("[%s] <-- %s::%s ret double %f", __FUNCTION__, info->sClassName.c_str(),
+                LOGI("[onCall] <-- %s::%s ret double %f", info->sClassName.c_str(),
                      info->sMethodName.c_str(), pResult->d);
             }
                 break;
             default: {
                 pResult->l = (void *) result;
-                LOGD("[%s] <-- %s::%s ret unkonw type", __FUNCTION__, info->sClassName.c_str(),
+                LOGE("[onCall] <-- %s::%s ret unkonw type", info->sClassName.c_str(),
                      info->sMethodName.c_str());
             }
                 break;
         }
     }else {
         pResult->l = (void *) result;
-        LOGD("[%s] <-- %s::%s ret NULL", __FUNCTION__, info->sClassName.c_str(),
+        LOGI("[onCall] <-- %s::%s ret NULL", info->sClassName.c_str(),
              info->sMethodName.c_str());
     }
 }
 
 void CMethodLogger::init(JNIEnv *jni) {
     addExcludedClassName("android.");
-    addExcludedClassName(".tencent.");
+    addExcludedClassName(".memory.");
     addExcludedClassName(".hotfix.");
     addExcludedClassName(".push");
     addExcludedClassName(".bugrpt.");
+    addExcludedClassName(".bugly.");
     addExcludedClassName(".fastjson.");
     addExcludedClassName(".util");
     addExcludedClassName(".common");
     addExcludedClassName(".service");
+    addExcludedClassName(".gson.");
+    addExcludedClassName(".umeng.");
+    addExcludedClassName(".app.");
+    addExcludedClassName(".loader.");
+    addExcludedClassName(".splash.");
+    addExcludedClassName(".vending.");
+    addExcludedClassName(".kernel.");
+    addExcludedClassName(".crash.");
+    addExcludedClassName("com.tencent.mm.bm.");
+    addExcludedClassName("com.tencent.mm.ui.");
+    addExcludedClassName("com.tencent.mm.bn.a");
+    addExcludedClassName("com.tencent.mm.l.a");
+    addExcludedClassName("com.tencent.mm.bs.a");
+    addExcludedClassName("com.tencent.mm.a.h");
+    addExcludedClassName("com.tencent.mm.bj.d");
 
-    addIncludedClassName("com.");
-    addIncludedClassName("cn.");
-    addIncludedClassName("im.yixin");
+
+    addIncludedClassName("com.tencent.mm.");
+    //addIncludedClassName("cn.");
 //    addIncludedClassName("Activity");
 //    addIncludedClassName("activity");
 //    addIncludedClassName(".view.");
@@ -777,6 +780,16 @@ void CMethodLogger::init(JNIEnv *jni) {
     ASSERT(g_toString);
 }
 
+bool CMethodLogger::isCanHookThisMethod(const char*szName, const char*szRetType, const char*szParam, const char*szSig) {
+    bool isCan = false;
+
+//    isCan = strchr(szName, '$') == NULL &&
+//            (strstr(szName, "on") == szName || strstr(szSig, "String") ||
+//             strstr(szRetType, "String"));
+    isCan = strcmp(szRetType, "int") == 0 && strstr(szParam, "int");
+    return isCan;
+}
+
 void CMethodLogger::addExcludedClassName(const char * lpszName) {
     g_lstExcludedClassName.push_back(std::string(lpszName));
 }
@@ -793,7 +806,6 @@ bool CMethodLogger::isCanHookThisClass(const std::string&sClassName) {
             }
         }
     }
-
 
     if (g_lstIncludedClassName.empty() == false) {
         for(auto i:g_lstIncludedClassName) {

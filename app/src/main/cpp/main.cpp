@@ -40,7 +40,6 @@ Java_com_bigsing_NativeHandler_getString(JNIEnv *env, jclass arg, jobject jCtxOb
     return getStr(env, arg, jCtxObj, paramInt, paramStr);
 }
 
-
 /*
 **jobject	jCtxObj：	传入的Context 
 **jint		paramInt：	作为命令ID，不同的命令ID执行不同的功能
@@ -49,47 +48,47 @@ Java_com_bigsing_NativeHandler_getString(JNIEnv *env, jclass arg, jobject jCtxOb
 返回值：Java层返回string
 */
 JNIEXPORT jstring JNICALL
-getStr(JNIEnv *env, jclass clsJavaJNI, jobject jCtxObj, jint paramInt, jstring paramStr) {
+getStr(JNIEnv *jni, jclass clsJavaJNI, jobject jCtxObj, jint paramInt, jstring paramStr) {
     jstring jstrResult = NULL;
 
     switch (paramInt) {
         case CMD_INIT: {
             LOGD("context: %p", jCtxObj);
-            jobject obj = Utils::getGlobalContext(env);
+            jobject obj = Utils::getGlobalContext(jni);
             LOGD("context: %p", obj);
             //保存JVM
             JavaVM *vm = NULL;
-            env->GetJavaVM(&vm);
+            jni->GetJavaVM(&vm);
             Utils::setJavaVM(vm);
-            Utils::setContext(env->NewGlobalRef(jCtxObj));
-            Utils::setJavaJNIClass((jclass) env->NewGlobalRef(clsJavaJNI));
+            Utils::setContext(jni->NewGlobalRef(jCtxObj));
+            Utils::setJavaJNIClass((jclass) jni->NewGlobalRef(clsJavaJNI));
 
             LOGD("newThread begin");
             pthread_t pt;
             pthread_create(&pt, NULL, &thread_fun, (void *) paramStr);
-            std::string s = Utils::fmt("env: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", env, jCtxObj,
+            std::string s = Utils::fmt("jni: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", jni, jCtxObj,
                                        Utils::getJavaVM(), Utils::getContext());
-            jstrResult = env->NewStringUTF(s.c_str());
+            jstrResult = jni->NewStringUTF(s.c_str());
         }
             break;
         case CMD_GET_TEST_STR: {
             LOGD("[%s] CMD_GET_TEST_STR\n", __FUNCTION__);
             std::string s = Utils::fmt("%s Hello Android Native!",
                                        Utils::GetCurrentTimeStr().c_str());
-            jstrResult = env->NewStringUTF(s.c_str());
+            jstrResult = jni->NewStringUTF(s.c_str());
         }
             break;
         case CMD_GET_MAC: {
             string strMacs = Utils::getMacs();
-            jstrResult = Utils::str2jstr(env, strMacs);
+            jstrResult = Utils::str2jstr(jni, strMacs);
         }
             break;
         case CMD_GET_FILE_TEXT: {
             string strText;
-            string sFileName = Utils::jstr2str(env, paramStr);
+            string sFileName = Utils::jstr2str(jni, paramStr);
             LOGD("[%s] CMD_GET_FILE_TEXT readTextFile: %s", __FUNCTION__, sFileName.c_str());
             if (Utils::readTextFile(sFileName.c_str(), strText) == true) {
-                jstrResult = Utils::str2jstr(env, strText);
+                jstrResult = Utils::str2jstr(jni, strText);
             }
         }
             break;
@@ -124,7 +123,7 @@ getInt(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr
     return result;
 }
 
-JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject objArgs...) {
+JNIEXPORT jobject    JNICALL Jump(JNIEnv *jni, jclass, jint nMethodId, jobject objArgs...) {
     LOGTIME;
     LOGD("[%s] MethodId: %d", __FUNCTION__, nMethodId);
     jobject result = NULL;
@@ -149,10 +148,10 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
             //call origin
 
             //新建一个长度为len的jintArray数组
-            jintArray array = env->NewIntArray(1);
+            jintArray array = jni->NewIntArray(1);
             //给需要返回的数组赋值
             jint num[1] = {nMethodId};
-            env->SetIntArrayRegion(array, 0, 1, num);
+            jni->SetIntArrayRegion(array, 0, 1, num);
             result = array;
         }
             break;
@@ -161,17 +160,17 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
             jobject dummy = va_arg(args, jobject);
             dummy = va_arg(args, jobject);
             LOGD("[%s] 22", __FUNCTION__);
-            //std::string s = Utils::jstr2str(env, a);
+            //std::string s = Utils::jstr2str(jni, a);
             //LOGD("param a is %s", s.c_str());
             //s = Utils::fmt("from jni: %s", s.c_str());
-            result = env->NewStringUTF("101 is testB ");
+            result = jni->NewStringUTF("101 is testB ");
         }
             break;
         case 102: {
             //对应testC函数，没有返回值
             jobject a = va_arg(args, jobject);
             LOGD("[%s] 44", __FUNCTION__);
-            //std::string s = Utils::jstr2str(env, (jstring)a);
+            //std::string s = Utils::jstr2str(jni, (jstring)a);
             LOGD("[%s] 33", __FUNCTION__);
             //LOGD("param a is %s", s.c_str());
             result = NULL;
@@ -190,13 +189,13 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *env, jclass, jint nMethodId, jobject o
 * Register native methods for all classes we know about.
 * Table of methods associated with a single class.
 */
-static int regNativeMethods(JNIEnv *env) {
+static int regNativeMethods(JNIEnv *jni) {
     int nResult = JNI_FALSE;
     int nError = 0;
     jclass clazz = NULL;
 
     //查找Java层对应的接口类
-    clazz = env->FindClass(Java_Interface_Class_Name);
+    clazz = jni->FindClass(Java_Interface_Class_Name);
     if (clazz != NULL) {
         JNINativeMethod methods[] = {
                 {Native_Method_1_Name, Native_Method_1_Signature, (void *) getStr},
@@ -204,18 +203,18 @@ static int regNativeMethods(JNIEnv *env) {
                 {Native_Method_3_Name, Native_Method_3_Signature, (void *) Jump},
         };
 
-        nError = env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(JNINativeMethod));
+        nError = jni->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(JNINativeMethod));
         if (nError >= 0) {
             nResult = JNI_TRUE;
         } else {
             LOGE("[%s] RegisterNatives error: %d", __FUNCTION__, nError);
         }
 
-        env->DeleteLocalRef(clazz);
+        jni->DeleteLocalRef(clazz);
     } else {
         //找不到会有异常，处理一下
-        if(env->ExceptionCheck() == JNI_TRUE){
-            env->ExceptionClear();
+        if(jni->ExceptionCheck() == JNI_TRUE){
+            jni->ExceptionClear();
         }
         nResult = JNI_FALSE;
         LOGE("[%s] not found class: %s may be in other app process", __FUNCTION__, Java_Interface_Class_Name);
@@ -323,23 +322,23 @@ static void OnCallback_handleBindApplicaton(JNIEnv *jni, jobject jthis, jobject 
     (*old_handleBindApplication)(jni, jthis, appBindData);
     LOGD("[%s] end", __FUNCTION__);
 }
-bool Hook_handleBindApplication(JNIEnv *env)
+bool Hook_handleBindApplication(JNIEnv *jni)
 {
     LOGD("[%s] begin", __FUNCTION__);
-    jclass ActivityThread = env->FindClass("android/app/ActivityThread");
+    jclass ActivityThread = jni->FindClass("android/app/ActivityThread");
     if ( ActivityThread==NULL ) {
         LOGE("[%s] not found: android/app/ActivityThread, error: %s", __FUNCTION__, dlerror());
         return false;
     }
 
-    jmethodID handleBindApplication = env->GetMethodID(ActivityThread, "handleBindApplication", "(Landroid/app/ActivityThread$AppBindData;)V");
+    jmethodID handleBindApplication = jni->GetMethodID(ActivityThread, "handleBindApplication", "(Landroid/app/ActivityThread$AppBindData;)V");
     if (handleBindApplication == NULL) {
         LOGE("[%s] not found: handleBindApplication, error: %s", __FUNCTION__, dlerror());
         return false;
     }
 
     old_handleBindApplication = NULL;
-    MSJavaHookMethod(env, ActivityThread, handleBindApplication, (void *) (&OnCallback_handleBindApplicaton), (void **) (&old_handleBindApplication));
+    MSJavaHookMethod(jni, ActivityThread, handleBindApplication, (void *) (&OnCallback_handleBindApplicaton), (void **) (&old_handleBindApplication));
     if ( old_handleBindApplication==NULL ) {
         LOGE("[%s] old_handleBindApplication is NULL, error: %s", __FUNCTION__, dlerror());
     }
@@ -370,40 +369,38 @@ void HookApplicationOnCreate(JNIEnv *jni){
 * Returns the JNI version on success, -1 on failure.
 */
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
-    JNIEnv *env = NULL;
+    JNIEnv *jni = NULL;
     jint result = -1;
 
     LOGTIME;
     Utils::setJavaVM(vm);
     LOGD("[%s] JavaVM: %p", __FUNCTION__, vm);
-    if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+    if (vm->GetEnv((void **) &jni, JNI_VERSION_1_6) != JNI_OK) {
         LOGE("[%s] GetEnv failed", __FUNCTION__);
         return -1;
     }
-    ASSERT(env);
+    ASSERT(jni);
     //
-    jobject obj = Utils::getGlobalContext(env);
+    jobject obj = Utils::getGlobalContext(jni);
     LOGD("context: %p", obj);
 
-    int nRet = regNativeMethods(env);
+    int nRet = regNativeMethods(jni);
     if (nRet == JNI_FALSE) {
         //可能是其他进程
-        //todo
+        //////////////////////////////////////////////////////////////////////////
+        //OTHER USER CODE
+        jobject context = Utils::getApplication(jni);
+        if (context == NULL) {
+            //Hook_handleBindApplication(jni);
+            HookApplicationOnCreate(jni);
+        }
+
+        CMethodLogger::start(jni);
+        //////////////////////////////////////////////////////////////////////////
+    }else{
+        //在测试APP中
+        MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
     }
-    //////////////////////////////////////////////////////////////////////////
-    //OTHER USER CODE
-    dalvik_setup(env, 14);
-    //MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
-
-
-    jobject context = Utils::getApplication(env);
-    if (context == NULL) {
-        //Hook_handleBindApplication(env);
-        HookApplicationOnCreate(env);
-    }
-
-    CMethodLogger::start(env);
-    //////////////////////////////////////////////////////////////////////////
 
     /* success -- return valid version number */
     result = JNI_VERSION_1_6;

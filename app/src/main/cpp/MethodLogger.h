@@ -24,7 +24,7 @@ extern jmethodID g_toString;
 extern std::list<std::string>   g_lstExcludedClassName;
 extern std::list<std::string>   g_lstIncludedClassName;
 
-void nativeFunc_logMethodCall(const u4 *args, JValue *pResult, const Method *method, void *self);
+void nativeFunc_MethodOnCall(const u4 *args, JValue *pResult, const Method *method, void *self);
 bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc);
 ///
 /// \param jni
@@ -43,7 +43,7 @@ public:
     static void addExcludedClassName(const char * lpszName);
     static void addIncludedClassName(const char * lpszName);
     static bool isCanHookThisClass(const std::string&sClassName);
-
+    static bool isCanHookThisMethod(const char*szName, const char*szRetType, const char*szParam, const char*szSig);
 private:
     static void hookByforName(JNIEnv *jni);
     static void hookByloadClass(JNIEnv *jni);
