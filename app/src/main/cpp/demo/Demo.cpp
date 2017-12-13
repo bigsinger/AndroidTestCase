@@ -91,6 +91,7 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 
 void testDemo(JNIEnv *jni) {
     MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
+    Utils::loadSo(jni, "/data/data/com.xxx.xx/lib/libtest.so");
 }
 
 //该函数不需要动态注册

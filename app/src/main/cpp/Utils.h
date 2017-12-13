@@ -91,4 +91,9 @@ namespace Utils {
     jclass dvmFindJNIClass(JNIEnv *env, const char *classDesc);
 
     bool isArt();
+
+    bool clearException(JNIEnv *jni);
+    void exceptionClear(JNIEnv *jni);
+
+    void loadSo(JNIEnv *jni, const char *szLibFile);
 }

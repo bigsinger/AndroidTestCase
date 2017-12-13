@@ -24,8 +24,11 @@ extern jmethodID g_toString;
 extern std::list<std::string>   g_lstExcludedClassName;
 extern std::list<std::string>   g_lstIncludedClassName;
 
-void nativeFunc_MethodOnCall(const u4 *args, JValue *pResult, const Method *method, void *self);
-bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc);
+void nativeFunc_OnCallNatvieMethod(const u4 *args, JValue *pResult, const Method *method, void *self);
+void nativeFunc_OnCallJavaMethod(const u4 *args, JValue *pResult, const Method *method, void *self);
+bool dalvik_hook_java_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc, ArrayObject * pParamTypes, ClassObject *pRetType);
+bool dalvik_hook_native_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc, ArrayObject * pParamTypes, ClassObject *pRetType);
+bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc, ArrayObject * pParamTypes, ClassObject *pRetType);
 ///
 /// \param jni
 /// \param clazz 是java/lang/ClassLoader返回的jclass，本函数不负责释放

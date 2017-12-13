@@ -454,15 +454,20 @@ std::string Utils::GetCurrentTimeStr(const char *lpszFormat/* = NULL*/) {
 }
 
 
-//清除异常
-bool clearException(JNIEnv *env) {
-    jthrowable exception = env->ExceptionOccurred();
-    if (exception != NULL) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
+bool Utils::clearException(JNIEnv *jni) {
+    jthrowable e = jni->ExceptionOccurred();
+    if (e != NULL) {
+        jni->ExceptionDescribe();
+        jni->ExceptionClear();
         return true;
     }
     return false;
+}
+
+void Utils::exceptionClear(JNIEnv *jni){
+    if(jni->ExceptionCheck() == JNI_TRUE){
+        jni->ExceptionClear();
+    }
 }
 
 
@@ -470,31 +475,31 @@ bool clearException(JNIEnv *env) {
 jclass findAppClass(JNIEnv *env, const char *apn) {
     jclass clazzApplicationLoaders = env->FindClass("android/app/ApplicationLoaders");
     jthrowable exception = env->ExceptionOccurred();
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("No class : %s", "android/app/ApplicationLoaders");
         return NULL;
     }
     jfieldID fieldApplicationLoaders = env->GetStaticFieldID(clazzApplicationLoaders,
                                                              "gApplicationLoaders",
                                                              "Landroid/app/ApplicationLoaders;");
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("No Static Field :%s", "gApplicationLoaders");
         return NULL;
     }
     jobject objApplicationLoaders = env->GetStaticObjectField(clazzApplicationLoaders,
                                                               fieldApplicationLoaders);
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("GetStaticObjectField is failed [%s", "gApplicationLoaders");
         return NULL;
     }
     jfieldID fieldLoaders = env->GetFieldID(clazzApplicationLoaders, "mLoaders",
                                             "Landroid/util/ArrayMap;");
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("No Field :%s", "mLoaders");
         return NULL;
     }
     jobject objLoaders = env->GetObjectField(objApplicationLoaders, fieldLoaders);
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("No object :%s", "mLoaders");
         return NULL;
     }
@@ -505,13 +510,13 @@ jclass findAppClass(JNIEnv *env, const char *apn) {
 
     jclass clazzValues = env->GetObjectClass(values);
     jmethodID methodToArray = env->GetMethodID(clazzValues, "toArray", "()[Ljava/lang/Object;");
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("No Method:%s", "toArray");
         return NULL;
     }
 
     jobjectArray classLoaders = (jobjectArray) env->CallObjectMethod(values, methodToArray);
-    if (clearException(env)) {
+    if (Utils::clearException(env)) {
         LOGE("CallObjectMethod failed :%s", "toArray");
         return NULL;
     }
@@ -525,7 +530,7 @@ jclass findAppClass(JNIEnv *env, const char *apn) {
                                                "(Ljava/lang/String;)Ljava/lang/Class;");
         jstring param = env->NewStringUTF(apn);
         jclass tClazz = (jclass) env->CallObjectMethod(classLoader, loadClass, param);
-        if (clearException(env)) {
+        if (Utils::clearException(env)) {
             LOGE("No");
             continue;
         }
@@ -655,4 +660,17 @@ bool Utils::isArt(){
     char value[PROPERTY_VALUE_MAX] = {0};
     property_get("persist.sys.dalvik.vm.lib", value, "");
     return strncmp(value, "libart.so", strlen("libart.so")) == 0;
+}
+
+/// 通过反射的方式调用java/lang/System load
+/// \param jni
+/// \param szLibFile so文件的全路径
+void Utils::loadSo(JNIEnv *jni, const char *szLibFile){
+    jclass systemClass = jni->FindClass("java/lang/System");
+    jmethodID load = jni->GetStaticMethodID(systemClass, "load", "(Ljava/lang/String;)V");
+    jstring jstrFile = jni->NewStringUTF(szLibFile);
+    jni->CallStaticVoidMethod(systemClass, load, jstrFile);
+    clearException(jni);
+    jni->DeleteLocalRef(jstrFile);
+    jni->DeleteLocalRef(systemClass);
 }

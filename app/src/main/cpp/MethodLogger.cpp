@@ -143,7 +143,7 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
             jni->DeleteLocalRef(jstrArgClassName);
             jni->DeleteLocalRef(argObj);
         }//end for
-        jni->DeleteLocalRef(argsArr);
+
 
 
         //获取函数返回值类型
@@ -193,11 +193,17 @@ void enumAllMethodOfClass(JNIEnv *jni, jclass clazz, const std::string &sClassNa
             nSlot = jni->GetIntField(methodObj, slotId);
             method = dvmSlotToMethod(pCls, nSlot);
             if (method) {
+                ArrayObject * pParamTypes = (ArrayObject *)dvmDecodeIndirectRef_fnPtr(jni, jni->NewGlobalRef(argsArr));
+                ClassObject *pRetType = (ClassObject *)dvmDecodeIndirectRef_fnPtr(jni, jni->NewGlobalRef(returnTypeObj));
                 //设置函数为native
                 dalvik_hook_method(method, sClassName.c_str(), szMethodName, sSig.c_str(),
-                                   sMethodDesc.c_str());
+                                   sMethodDesc.c_str(), pParamTypes, pRetType);
             }
         }
+
+        //释放参数相关引用
+        jni->DeleteLocalRef(argsArr);
+
 
         //释放关于返回值的引用
         jni->ReleaseStringUTFChars(jstrRetTypeClassName, szRetTypeClassName);
@@ -354,14 +360,14 @@ static ClassObject *new_dvmResolveClass(const ClassObject *referrer, u4 classIdx
         sMethodDesc = Utils::fmt("%s::%s sig: %s", sClassName.c_str(), pMethod->name, pMethod->shorty);
         LOGD("[%s] directMethod: %s", __FUNCTION__, sMethodDesc.c_str());
         //todo 这里应该传入一个全一点的签名，例如：Lcom/xxx/xxx;Z  到后面dvmGetMethodParamTypes解析的时候会出错
-        dalvik_hook_method(pMethod, sClassName.c_str(), pMethod->name, pMethod->shorty, sMethodDesc.c_str());
+        dalvik_hook_method(pMethod, sClassName.c_str(), pMethod->name, pMethod->shorty, sMethodDesc.c_str(), NULL, NULL);
     }
     for (int i = 0; i < referrer->virtualMethodCount; ++i) {
         Method *pMethod = &referrer->virtualMethods[i];
         sMethodDesc = Utils::fmt("%s::%s sig: %s", sClassName.c_str(), pMethod->name, pMethod->shorty);
         LOGD("[%s] virtualMethod: %s", __FUNCTION__, sMethodDesc.c_str());
         //todo 这里应该传入一个全一点的签名，例如：Lcom/xxx/xxx;Z  到后面dvmGetMethodParamTypes解析的时候会出错
-        dalvik_hook_method(pMethod, sClassName.c_str(), pMethod->name, pMethod->shorty, sMethodDesc.c_str());
+        dalvik_hook_method(pMethod, sClassName.c_str(), pMethod->name, pMethod->shorty, sMethodDesc.c_str(), NULL, NULL);
     }
 
 //    if (clazz) {
@@ -373,12 +379,10 @@ static ClassObject *new_dvmResolveClass(const ClassObject *referrer, u4 classIdx
 
     return pRet;
 }
-
 ////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////
-
 static void *(*orign_loadClassBool)(JNIEnv *, jobject, jstring, jboolean);
 static void *OnCall_loadClassBool(JNIEnv *jni, jobject thiz, jstring name, jboolean resolve) {
     string sClassName = Utils::jstr2str(jni, name);
@@ -438,9 +442,7 @@ void CMethodLogger::hookByloadClass(JNIEnv *jni) {
         jni->DeleteLocalRef(clazz);
     }else{
         //找不到会有异常，处理一下
-        if(jni->ExceptionCheck() == JNI_TRUE){
-            jni->ExceptionClear();
-        }
+        Utils::exceptionClear(jni);
         //LOGD("java/lang/ClassLoader NOT FOUND, HOOK IT ON CLASSLOAD");
         MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
     }
@@ -474,17 +476,17 @@ void CMethodLogger::hookBydvmResolveClass(JNIEnv *jni) {
     MSHookFunction(dvmResolveClass_fnPtr, new_dvmResolveClass, &orign_dvmResolveClass);
 }
 
-bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc) {
+bool dalvik_hook_java_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc, ArrayObject * pParamTypes, ClassObject *pRetType) {
     //LOGD("[%s] begin", __FUNCTION__);
-    if (method->nativeFunc == (DalvikBridgeFunc) nativeFunc_MethodOnCall) {
+    if (method->nativeFunc == (DalvikBridgeFunc) nativeFunc_OnCallJavaMethod) {
         LOGD("[%s] method had been hooked", __FUNCTION__);
         return true;
     }
 
     if (method->accessFlags == ACC_PUBLIC
         || method->accessFlags == ACC_PRIVATE
-           ||   method->accessFlags == (ACC_STATIC | ACC_PUBLIC)
-                || method->accessFlags == (ACC_STATIC | ACC_PRIVATE)
+        ||   method->accessFlags == (ACC_STATIC | ACC_PUBLIC)
+        || method->accessFlags == (ACC_STATIC | ACC_PRIVATE)
             ) {
 
     }else {
@@ -510,7 +512,8 @@ bool dalvik_hook_method(Method *method, const char *szClassName, const char *szM
     //没有设置替换的目标，仅仅显示一个调用日志。保存原始方法的副本后再做修改。
     Method *pOriginalMethod = (Method *) malloc(sizeof(Method));
     memcpy(pOriginalMethod, method, sizeof(Method));
-
+    //pParamTypes = NULL;
+    //pRetType = NULL;
     // init info
     HookInfo *info = new HookInfo;
     info->originalMethod = pOriginalMethod;
@@ -518,6 +521,8 @@ bool dalvik_hook_method(Method *method, const char *szClassName, const char *szM
     info->sMethodName = szMethodName;
     info->sMethodSig = szSig;
     info->sMethodDesc = szDesc;
+    info->paramTypes = pParamTypes;
+    info->returnType = pRetType;
 
 //    int argsSize = dvmComputeMethodArgsSize_fnPtr(method);
 //    if (dvmIsStaticMethod(method) == false) {
@@ -529,15 +534,68 @@ bool dalvik_hook_method(Method *method, const char *szClassName, const char *szM
     method->outsSize = 0;
     //method->jniArgInfo = dvmComputeJniArgInfo(method->shorty);
     method->insns = (u2 *) info;
-    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_MethodOnCall;
-
+    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_OnCallJavaMethod;
     //LOGD("[%s] end", __FUNCTION__);
     return true;
 }
 
+bool dalvik_hook_native_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc, ArrayObject * pParamTypes, ClassObject *pRetType) {
+    if (method->nativeFunc == (DalvikBridgeFunc) nativeFunc_OnCallNatvieMethod) {
+        LOGD("[%s] method had been hooked", __FUNCTION__);
+        return true;
+    }
+
+    if (method->accessFlags & ACC_ABSTRACT ||
+        method->accessFlags & ACC_CONSTRUCTOR ||
+        method->accessFlags & ACC_INTERFACE ||
+        method->accessFlags & ACC_SYNCHRONIZED ||
+        method->accessFlags & ACC_FINAL ||
+        method->accessFlags & ACC_VOLATILE ||
+        method->accessFlags & ACC_SYNTHETIC ||
+        method->accessFlags & ACC_DECLARED_SYNCHRONIZED ||
+        method->accessFlags & ACC_STRICT ||
+        method->accessFlags & ACC_ANNOTATION
+            ) {
+        //抽象方法不处理
+        return true;
+    }
+
+    Method *pOriginalMethod = (Method *) malloc(sizeof(Method));
+    memcpy(pOriginalMethod, method, sizeof(Method));
+
+    // init info
+    HookInfo *info = new HookInfo;
+    info->originalMethod = pOriginalMethod;
+    info->sClassName = szClassName;
+    info->sMethodName = szMethodName;
+    info->sMethodSig = szSig;
+    info->sMethodDesc = szDesc;
+
+    method->insns = (u2 *) info;
+    method->nativeFunc = (DalvikBridgeFunc) nativeFunc_OnCallNatvieMethod;
+    return true;
+}
+
+bool dalvik_hook_method(Method *method, const char *szClassName, const char *szMethodName, const char *szSig, const char *szDesc, ArrayObject * pParamTypes, ClassObject *pRetType) {
+    if (method->accessFlags & ACC_NATIVE) {
+        return dalvik_hook_native_method(method, szClassName, szMethodName, szSig, szDesc, pParamTypes, pRetType);
+    } else {
+        return dalvik_hook_java_method(method, szClassName, szMethodName, szSig, szDesc, pParamTypes, pRetType);
+    }
+}
+
+/// 由于时机太早，后面APP启动的时候才真正注册，所以太早的话没有HOOK到。
+void nativeFunc_OnCallNatvieMethod(const u4 *args, JValue *pResult, const Method *method, void *self) {
+    HookInfo* info = (HookInfo*)method->insns; //get hookinfo pointer from method-insns
+    Method* originalMethod = (Method*)(info->originalMethod);
+    LOGI("[onCallNative] --> %s", info->sMethodDesc.c_str());
+    originalMethod->nativeFunc(args, pResult, originalMethod, (Thread *)self);
+    LOGI("[onCallNative] <-- %s::%s ret", info->sClassName.c_str(),
+         info->sMethodName.c_str());
+}
 
 //ref : Hook Java中返回值问题的解决和修改https://github.com/Harold1994/program_total/blob/7659177e1d562a8396d0ee9c9eda9f36a12727e5/program_total/3%E6%B3%A8%E5%85%A5%E7%9A%84so%E6%96%87%E4%BB%B6/documents/HookJava%E4%B8%AD%E8%BF%94%E5%9B%9E%E5%80%BC%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E5%92%8C%E4%BF%AE%E6%94%B9.md
-void nativeFunc_MethodOnCall(const u4 *args, JValue *pResult, const Method *method, void *self) {
+void nativeFunc_OnCallJavaMethod(const u4 *args, JValue *pResult, const Method *method, void *self) {
     Object *result = NULL;
     HookInfo* info = (HookInfo*)method->insns; //get hookinfo pointer from method-insns
     LOGI("[onCall] --> %s", info->sMethodDesc.c_str());
@@ -636,7 +694,7 @@ void nativeFunc_MethodOnCall(const u4 *args, JValue *pResult, const Method *meth
 //                jstring msg = (jstring) env->CallObjectMethod(jobj, info->toStringMethod);
 //                env->DeleteLocalRef(retClass);
 //                const char *szMsg = env->GetStringUTFChars(msg, 0);
-//                LOGD("nativeFunc_MethodOnCall: ret object %s", szMsg);
+//                LOGD("nativeFunc_OnCallJavaMethod: ret object %s", szMsg);
 //                env->ReleaseStringUTFChars(msg, szMsg);
 //                env->DeleteLocalRef(msg);
             }
@@ -716,32 +774,39 @@ void nativeFunc_MethodOnCall(const u4 *args, JValue *pResult, const Method *meth
             }
                 break;
         }
+        dvmUnboxPrimitive_fnPtr(result, info->returnType, pResult);
     }else {
         pResult->l = (void *) result;
-        LOGI("[onCall] <-- %s::%s ret NULL", info->sClassName.c_str(),
-             info->sMethodName.c_str());
+        LOGI("[onCall] <-- %s::%s ret NULL", info->sClassName.c_str(), info->sMethodName.c_str());
     }
+
 }
 
 void CMethodLogger::init(JNIEnv *jni) {
     addExcludedClassName("android.");
-    addExcludedClassName(".memory.");
+    addExcludedClassName(".crash.");
     addExcludedClassName(".hotfix.");
     addExcludedClassName(".push");
     addExcludedClassName(".bugrpt.");
     addExcludedClassName(".bugly.");
     addExcludedClassName(".fastjson.");
-    addExcludedClassName(".util");
-    addExcludedClassName(".common");
     addExcludedClassName(".service");
     addExcludedClassName(".gson.");
     addExcludedClassName(".umeng.");
+    addExcludedClassName("http");
+    addExcludedClassName(".application");
+    addExcludedClassName("com.tencent.mm.a.j");
+    addExcludedClassName("com.tencent.mm.plugin.emoji");
+
+
+    addExcludedClassName(".memory.");
+    addExcludedClassName(".util");
+    addExcludedClassName(".common");
     addExcludedClassName(".app.");
     addExcludedClassName(".loader.");
     addExcludedClassName(".splash.");
     addExcludedClassName(".vending.");
     addExcludedClassName(".kernel.");
-    addExcludedClassName(".crash.");
     addExcludedClassName("com.tencent.mm.bm.");
     addExcludedClassName("com.tencent.mm.ui.");
     addExcludedClassName("com.tencent.mm.bn.a");
@@ -749,10 +814,11 @@ void CMethodLogger::init(JNIEnv *jni) {
     addExcludedClassName("com.tencent.mm.bs.a");
     addExcludedClassName("com.tencent.mm.a.h");
     addExcludedClassName("com.tencent.mm.bj.d");
+    addExcludedClassName("com.tencent.mm.bj.d");
+    addExcludedClassName("com.tencent.mm.bj.d");
 
-
-    addIncludedClassName("com.tencent.mm.");
-    //addIncludedClassName("cn.");
+    //addIncludedClassName("com.tencent.mm.");
+    //addIncludedClassName("com.douban.frodo");
 //    addIncludedClassName("Activity");
 //    addIncludedClassName("activity");
 //    addIncludedClassName(".view.");
@@ -782,12 +848,12 @@ void CMethodLogger::init(JNIEnv *jni) {
 }
 
 bool CMethodLogger::isCanHookThisMethod(const char*szName, const char*szRetType, const char*szParam, const char*szSig) {
-    bool isCan = false;
+    bool isCan = true;
 
 //    isCan = strchr(szName, '$') == NULL &&
 //            (strstr(szName, "on") == szName || strstr(szSig, "String") ||
 //             strstr(szRetType, "String"));
-    isCan = strcmp(szRetType, "int") == 0 && strstr(szParam, "int");
+    //isCan = strcmp(szRetType, "int") == 0 && strstr(szParam, "int");
     return isCan;
 }
 
