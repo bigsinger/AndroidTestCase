@@ -112,6 +112,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
         if (context == NULL) {
             //Hook_handleBindApplication(jni);
             HookApplicationOnCreate(jni);
+        }else{
+            std:string sPackageName;
+            Utils::getPackageName(jni, sPackageName);
+            LOGD("current process package name: %s", sPackageName.c_str());
         }
 
         CMethodLogger::start(jni);

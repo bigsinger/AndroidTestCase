@@ -597,7 +597,7 @@ void nativeFunc_OnCallNatvieMethod(const u4 *args, JValue *pResult, const Method
 //ref : Hook Java中返回值问题的解决和修改https://github.com/Harold1994/program_total/blob/7659177e1d562a8396d0ee9c9eda9f36a12727e5/program_total/3%E6%B3%A8%E5%85%A5%E7%9A%84so%E6%96%87%E4%BB%B6/documents/HookJava%E4%B8%AD%E8%BF%94%E5%9B%9E%E5%80%BC%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E5%92%8C%E4%BF%AE%E6%94%B9.md
 void nativeFunc_OnCallJavaMethod(const u4 *args, JValue *pResult, const Method *method, void *self) {
     Object *result = NULL;
-    HookInfo* info = (HookInfo*)method->insns; //get hookinfo pointer from method-insns
+    HookInfo* info = (HookInfo*)method->insns;
     LOGI("[onCall] --> %s", info->sMethodDesc.c_str());
 
     Method* originalMethod = (Method*)(info->originalMethod);
