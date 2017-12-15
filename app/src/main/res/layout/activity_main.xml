@@ -39,6 +39,11 @@
             android:layout_weight="1"/>
     </LinearLayout>
     <Button
+        android:id="@+id/btn_lua"
+        android:text="运行脚本"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <Button
         android:id="@+id/btn_enumui"
         android:text="Enum UI"
         android:layout_width="match_parent"

@@ -13,6 +13,8 @@ import com.bigsing.test.App;
 import com.bigsing.test.BuildConfig;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 /**
  * Created by sing on 2017/4/19.
@@ -122,5 +124,41 @@ public class Utils {
     public static String getCachePath(Context context) {
         String path = context.getApplicationInfo().dataDir + "/cache";
         return path;
+    }
+
+    /**
+     * 复制assets目录下的文件到指定目录下
+     *
+     * @param srcFileName
+     * @param dstDir
+     * @param context
+     * @return
+     */
+    public static Boolean copyAssetsFileToDir(String srcFileName, String dstDir, Context context) {
+        byte[] array = new byte[4096];
+        File fileDest = new File(dstDir, srcFileName);
+        if (fileDest.exists()) {
+            fileDest.delete();
+        }
+        try {
+            InputStream open = context.getResources().getAssets().open(srcFileName);
+            FileOutputStream fileOutputStream = new FileOutputStream(fileDest);
+            while (true) {
+                int read = open.read(array);
+                if (read == -1) {
+                    break;
+                }
+                fileOutputStream.write(array, 0, read);
+            }
+            fileOutputStream.flush();
+            fileOutputStream.close();
+            fileDest.setReadable(true);
+            fileDest.setWritable(true);
+            fileDest.setExecutable(true);
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
     }
 }

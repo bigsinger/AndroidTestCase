@@ -22,8 +22,11 @@ import android.widget.TextView;
 
 import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
+import com.bigsing.ScriptRunner;
+import com.bigsing.util.Utils;
 import com.bigsing.view.BaseActivity;
 
+import java.io.File;
 import java.lang.reflect.Method;
 
 import dalvik.system.DexClassLoader;
@@ -142,6 +145,27 @@ public class MainActivity extends BaseActivity {
                     }
                 }
                 tv_text.setText(str);
+            }
+        });
+
+        findViewById(R.id.btn_lua).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ScriptRunner luaRunner = new ScriptRunner();
+                try {
+                    String luaDir = getDir("lua", Context.MODE_WORLD_READABLE).getAbsolutePath();
+                    String luaFile = luaDir + "/test.lua";
+                    File file = new File(luaFile);
+                    //if (file.exists() == false) {
+                        Utils.copyAssetsFileToDir("test.lua", luaDir, MainActivity.this);
+                        Utils.copyAssetsFileToDir("import.lua", luaDir, MainActivity.this);
+                   // }
+
+                    luaRunner.initLua(MainActivity.this);
+                    luaRunner.doFile(luaDir + "/test.lua");
+                } catch (Exception e) {
+                    Utils.loge(e.getMessage());
+                }
             }
         });
 
