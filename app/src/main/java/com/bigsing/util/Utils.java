@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
@@ -12,8 +13,10 @@ import android.widget.Toast;
 import com.bigsing.test.App;
 import com.bigsing.test.BuildConfig;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -160,5 +163,28 @@ public class Utils {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    //读取asset文件
+
+    public static byte[] readAsset(Context context, String name) throws IOException {
+        AssetManager am = context.getAssets();
+        InputStream is = am.open(name);
+        byte[] ret = readAll(is);
+        is.close();
+        //am.close();
+        return ret;
+    }
+
+    private static byte[] readAll(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream(4096);
+        byte[] buffer = new byte[4096];
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+        }
+        byte[] ret = output.toByteArray();
+        output.close();
+        return ret;
     }
 }

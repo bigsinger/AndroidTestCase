@@ -78,6 +78,9 @@ public class MainActivity extends BaseActivity {
     private void testC(String a){
         NativeHandler.Jump(102, a);
     }
+    static public void testLua(String s){
+        Utils.logd(s);
+    }
     //////////////////////////////////////////////////
 
     @Override
@@ -161,7 +164,7 @@ public class MainActivity extends BaseActivity {
                         Utils.copyAssetsFileToDir("import.lua", luaDir, MainActivity.this);
                    // }
 
-                    luaRunner.initLua(MainActivity.this);
+                    luaRunner.init(MainActivity.this);
                     luaRunner.doFile(luaDir + "/test.lua");
                 } catch (Exception e) {
                     Utils.loge(e.getMessage());
