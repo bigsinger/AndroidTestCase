@@ -16,7 +16,7 @@ require "layout"
 print(123)
 
 -- Java 类的名称
-local className = "com/bigsing/test/MainActivity"
+local MainActivity = luajava.bindClass("com.bigsing.test.MainActivity")
 -- 调用 的Java 方法名
 local method = 'testLua'
 -- 调用 Java 方法需要的参数
@@ -25,4 +25,12 @@ local args = {
      n
 }
 -- 调用 Java 方法
-local _, screenwidth = luaj.callStaticMethod(className, method, args)
+local msg = MainActivity.testLua('hello from Lua script file')
+print(msg)
+
+--[[
+MainActivity.testLua = function()
+	return 'MainActivity.testLua Changed by Lua'
+end
+
+--]]

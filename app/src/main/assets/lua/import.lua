@@ -108,7 +108,7 @@ local globalMT = {
 local function import_require(name)
   local s,r=pcall(require,name)
   if not s and not r:find("no file") then
-  error(r,0)
+	error(name..'\n'..r,0)
   end
   return s and r
 end

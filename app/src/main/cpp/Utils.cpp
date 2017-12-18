@@ -674,3 +674,4 @@ void Utils::loadSo(JNIEnv *jni, const char *szLibFile){
     jni->DeleteLocalRef(jstrFile);
     jni->DeleteLocalRef(systemClass);
 }
+

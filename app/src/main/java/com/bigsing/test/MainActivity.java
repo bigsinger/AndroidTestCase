@@ -78,8 +78,9 @@ public class MainActivity extends BaseActivity {
     private void testC(String a){
         NativeHandler.Jump(102, a);
     }
-    static public void testLua(String s){
+    static public String testLua(String s){
         Utils.logd(s);
+        return s;
     }
     //////////////////////////////////////////////////
 
@@ -157,16 +158,21 @@ public class MainActivity extends BaseActivity {
                 ScriptRunner luaRunner = new ScriptRunner();
                 try {
                     String luaDir = getDir("lua", Context.MODE_WORLD_READABLE).getAbsolutePath();
+                    //Utils.copyFilesFassets(App.getContext(), "lua", luaDir);
+
                     String luaFile = luaDir + "/test.lua";
                     File file = new File(luaFile);
                     //if (file.exists() == false) {
-                        Utils.copyAssetsFileToDir("test.lua", luaDir, MainActivity.this);
-                        Utils.copyAssetsFileToDir("import.lua", luaDir, MainActivity.this);
+                    Utils.copyAssetsFileToDir("test.lua", luaDir, MainActivity.this);
+                    Utils.copyAssetsFileToDir("layout.lua", luaDir, MainActivity.this);
                    // }
 
                     luaRunner.init(MainActivity.this);
                     luaRunner.doFile(luaDir + "/test.lua");
+                    //String text = testLua("");
+                    //tv_text.setText(text);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     Utils.loge(e.getMessage());
                 }
             }

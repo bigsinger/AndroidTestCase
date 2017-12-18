@@ -3,6 +3,7 @@ package com.bigsing;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -105,6 +106,7 @@ public class ScriptRunner  implements LuaContext {
             }
             throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
         } catch (LuaException e) {
+            //todo 需要修改完善luajava.c的checkError函数（line:190）把异常的完整堆栈传递进来，否则仅仅一个java.lang.NullPointerException根本不知道是哪个类
 //            setTitle(errorReason(ok));
 //            setContentView(layout);
             Utils.loge(e.getMessage());
@@ -233,6 +235,7 @@ public class ScriptRunner  implements LuaContext {
 
     //初始化lua使用的Java函数
     public boolean initLua(Context context) throws LuaException {
+        this.mContext = context;
         L = LuaStateFactory.newLuaState();
         L.openLibs();
         L.pushJavaObject(this);//todo
@@ -537,6 +540,28 @@ public class ScriptRunner  implements LuaContext {
     public String getOdexDir() {
         // TODO: Implement this method
         return odexDir;
+    }
+
+    //todo 如果集成自Activity就不用单独声明了
+    public Object getSystemService(String name) {
+       return mContext.getSystemService(name);
+    }
+
+    public void loadResources(String path) {
+        mLuaDexLoader.loadResources(path);
+    }
+
+
+    public AssetManager getAssets() {
+        if (mLuaDexLoader != null && mLuaDexLoader.getAssets() != null)
+            return mLuaDexLoader.getAssets();
+        return mContext.getAssets();
+    }
+
+    public Resources getResources() {
+        if (mLuaDexLoader != null && mLuaDexLoader.getResources() != null)
+            return mLuaDexLoader.getResources();
+        return mContext.getResources();
     }
 
 }
