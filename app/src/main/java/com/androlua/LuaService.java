@@ -7,14 +7,13 @@ import android.util.*;
 import android.widget.*;
 import com.luajava.*;
 import java.io.*;
-import android.app.Notification.*;
-import android.os.IBinder.*;
+
 import android.net.*;
-import com.androlua.LuaService.*;
+
 import dalvik.system.*;
 import java.util.*;
 
-public class LuaService extends Service implements LuaContext,LuaBroadcastReceiver.OnReceiveListerer {
+public class LuaService extends Service implements ILuaContext,LuaBroadcastReceiver.OnReceiveListerer {
 
 	private LuaDexLoader mLuaDexLoader;
 	@Override

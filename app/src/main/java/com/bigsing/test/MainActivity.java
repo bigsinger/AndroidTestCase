@@ -21,18 +21,15 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.androlua.ILuaPrintListener;
+import com.androlua.LuaActivity;
 import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
 import com.bigsing.ScriptRunner;
 import com.bigsing.util.Utils;
-import com.bigsing.view.BaseActivity;
 
 import java.io.File;
-import java.lang.reflect.Method;
 
-import dalvik.system.DexClassLoader;
-
-public class MainActivity extends BaseActivity implements ILuaPrintListener{
+public class MainActivity extends LuaActivity implements ILuaPrintListener{
     public static final String TAG = "MainActivity";
 
     static {
@@ -86,14 +83,14 @@ public class MainActivity extends BaseActivity implements ILuaPrintListener{
     //////////////////////////////////////////////////
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         initView();
 
         m_nIndex = 2017;
-        String text = NativeHandler.getString(App.getContext(), NativeCommand.CMD_INIT, null);
+        String text = NativeHandler.getString(App.getContext1(), NativeCommand.CMD_INIT, null);
         //text += "\n" + methodWillBeNotNative();
         text += "\ntestA: " + testA(10, "testA", "testA", 1.0, new int[]{1,2}, (float) 2.0);
         text += "\ntestB: " + testB("testB");
@@ -110,7 +107,7 @@ public class MainActivity extends BaseActivity implements ILuaPrintListener{
         findViewById(R.id.btn_getstr_native2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = NativeHandler.getStr(App.getContext(), NativeCommand.CMD_GET_TEST_STR, null);
+                String text = NativeHandler.getStr(App.getContext1(), NativeCommand.CMD_GET_TEST_STR, null);
                 tv_text.setText(text);
             }
         });
@@ -158,7 +155,7 @@ public class MainActivity extends BaseActivity implements ILuaPrintListener{
             public void onClick(View view) {
                 ScriptRunner luaRunner = new ScriptRunner();
                 try {
-                    LuaTester.initLua(App.getContext());
+                    LuaTester.initLua(App.getContext1());
                     String luaDir = getDir("lua", Context.MODE_WORLD_READABLE).getAbsolutePath();
 
                     String luaFile = luaDir + "/test.lua";
@@ -268,7 +265,12 @@ public class MainActivity extends BaseActivity implements ILuaPrintListener{
 
     @Override
     public void onPrint(String msg){
-        tv_text.setText(msg);
+        if (msg != null) {
+            if (tv_text != null) {
+                tv_text.setText(msg);
+            }
+            Utils.logd(msg);
+        }
     }
 
 }

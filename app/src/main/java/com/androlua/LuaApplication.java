@@ -2,21 +2,17 @@ package com.androlua;
 
 import android.app.*;
 import android.content.*;
-import android.content.pm.*;
-import android.os.*;
 import android.widget.*;
 import com.luajava.*;
 import java.io.*;
 import java.util.*;
-import java.util.zip.*;
-import android.util.*;  
- 
-public class LuaApplication extends Application implements LuaContext
+
+public class LuaApplication extends Application implements ILuaContext
 {
 
 	private static LuaApplication mApp;
-	
-	public static LuaApplication getInstance(){
+
+	public static LuaApplication getInstance0(){
 		return mApp;
 	}
 	
@@ -91,8 +87,7 @@ public class LuaApplication extends Application implements LuaContext
     @Override  
     public void onCreate() {
 		super.onCreate();  
-		mApp=this;
-		
+
 		//初始化AndroLua工作目录
 //		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 //		{

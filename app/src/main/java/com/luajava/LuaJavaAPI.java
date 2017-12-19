@@ -452,8 +452,11 @@ public final class LuaJavaAPI {
 				clazz = Float.TYPE;
 			else if (className.equals("double"))
 				clazz = Double.TYPE;
-			else 
-				throw new LuaException("Class not found: " + className);
+			else {
+					//todo add
+					//throw new LuaException("Class not found: " + className);
+				clazz = null;
+			}
 		}
 		return clazz;
 	}

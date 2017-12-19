@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.androlua.LuaApplication;
 import com.bigsing.util.Constant;
 import com.bigsing.util.Utils;
 import com.getkeepsafe.relinker.ReLinker;
@@ -14,7 +15,7 @@ import com.getkeepsafe.relinker.ReLinker;
  * Created by sing on 2017/10/20.
  */
 
-public class App extends Application {
+public class App extends LuaApplication {
     public static Context mContext;
     private static Application mApp;
     //程序通用的配置文件
@@ -23,7 +24,8 @@ public class App extends Application {
     public static Application getInstance() {
         return mApp;
     }
-    public static Context getContext() {
+
+    public static Context getContext1() {
         return mApp;
     }
 

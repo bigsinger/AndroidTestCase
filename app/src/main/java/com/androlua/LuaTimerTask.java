@@ -9,7 +9,7 @@ public class LuaTimerTask extends TimerTaskX
 {
 	private LuaState L;
 	
-	private LuaContext mLuaContext;
+	private ILuaContext mILuaContext;
 
 	private String mSrc;
 
@@ -19,28 +19,28 @@ public class LuaTimerTask extends TimerTaskX
 
 	private byte[] mBuffer;
 
-	public LuaTimerTask(LuaContext luaContext, String src) throws LuaException
+	public LuaTimerTask(ILuaContext ILuaContext, String src) throws LuaException
 	{
-		this(luaContext, src, null);
+		this(ILuaContext, src, null);
 	}
 
-	public LuaTimerTask(LuaContext luaContext, String src, Object[] arg) throws LuaException
+	public LuaTimerTask(ILuaContext ILuaContext, String src, Object[] arg) throws LuaException
 	{
-		mLuaContext =luaContext;
+		mILuaContext = ILuaContext;
 		mSrc = src;
 		if (arg != null)
 			mArg = arg;
 	}
 
-	public LuaTimerTask(LuaContext luaContext, LuaObject func) throws LuaException
+	public LuaTimerTask(ILuaContext ILuaContext, LuaObject func) throws LuaException
 	{
-		this(luaContext, func, null);
+		this(ILuaContext, func, null);
 	}
 
-	public LuaTimerTask(LuaContext luaContext, LuaObject func, Object[] arg) throws LuaException
+	public LuaTimerTask(ILuaContext ILuaContext, LuaObject func, Object[] arg) throws LuaException
 	{
 
-		mLuaContext = luaContext;
+		mILuaContext = ILuaContext;
 		if (arg != null)
 			mArg = arg;
 
@@ -80,7 +80,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (LuaException e)
 		{
-			mLuaContext.onPrint(e.getMessage());
+			mILuaContext.onPrint(e.getMessage());
 		}
 		L.gc(LuaState.LUA_GCCOLLECT, 1);
 		System.gc();
@@ -151,28 +151,28 @@ public class LuaTimerTask extends TimerTaskX
 	{
 		L = LuaStateFactory.newLuaState();
 		L.openLibs();
-		L.pushJavaObject(mLuaContext);
-		if(mLuaContext instanceof LuaActivity)
+		L.pushJavaObject(mILuaContext);
+		if(mILuaContext instanceof LuaActivity)
 		{
 			L.setGlobal("activity");
 		}
-		else if(mLuaContext instanceof LuaService)
+		else if(mILuaContext instanceof LuaService)
 		{
 			L.setGlobal("service");
 		}
 		L.pushJavaObject(this);
 		L.setGlobal("this");
 		
-		L.pushContext(mLuaContext.getContext());
+		L.pushContext(mILuaContext.getContext());
 		
-		JavaFunction print = new LuaPrint(mLuaContext,L);
+		JavaFunction print = new LuaPrint(mILuaContext,L);
 		print.register("print");
 
 		L.getGlobal("package"); 
 		
-		L.pushString(mLuaContext.getLuaLpath());
+		L.pushString(mILuaContext.getLuaLpath());
 		L.setField(-2, "path");
-		L.pushString(mLuaContext.getLuaCpath());
+		L.pushString(mILuaContext.getLuaCpath());
 		L.setField(-2, "cpath");
 		L.pop(1);          
 
@@ -181,7 +181,7 @@ public class LuaTimerTask extends TimerTaskX
 			public int execute() throws LuaException
 			{
 
-				mLuaContext.set(L.toString(2), L.toJavaObject(3));
+				mILuaContext.set(L.toString(2), L.toJavaObject(3));
 				return 0;
 			}
 		};
@@ -200,11 +200,11 @@ public class LuaTimerTask extends TimerTaskX
 					{
 						args[i - 3] = L.toJavaObject(i);
 					}				
-					mLuaContext.call(L.toString(2), args);
+					mILuaContext.call(L.toString(2), args);
 				}
 				else if (top == 2)
 				{
-					mLuaContext.call(L.toString(2));
+					mILuaContext.call(L.toString(2));
 				}
 				return 0;
 			}
@@ -224,7 +224,7 @@ public class LuaTimerTask extends TimerTaskX
 			else if (Pattern.matches("^[\\w\\.\\_/]+$", str))
 			{
 				L.getGlobal("luajava");
-				L.pushString(mLuaContext.getLuaDir());
+				L.pushString(mILuaContext.getLuaDir());
 				L.setField(-2, "luadir"); 
 				L.pushString(str);
 				L.setField(-2, "luapath"); 
@@ -240,7 +240,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (Exception e)
 		{
-			mLuaContext.onPrint(this.toString() + " " + e.getMessage());
+			mILuaContext.onPrint(this.toString() + " " + e.getMessage());
 
 		}
 
@@ -301,7 +301,7 @@ public class LuaTimerTask extends TimerTaskX
 	public void doAsset(String name, Object...args) throws LuaException, IOException 
 	{
 		int ok = 0;
-		byte[] bytes = LuaUtil.readAsset(mLuaContext.getContext(),name);
+		byte[] bytes = LuaUtil.readAsset(mILuaContext.getContext(),name);
 		L.setTop(0);
 		ok = L.LloadBuffer(bytes, name);
 
@@ -381,7 +381,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (LuaException e)
 		{
-			mLuaContext.onPrint(funcName + " " + e.getMessage());
+			mILuaContext.onPrint(funcName + " " + e.getMessage());
 		}
 
 	}
@@ -395,7 +395,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (LuaException e)
 		{
-			mLuaContext.onPrint(e.getMessage());
+			mILuaContext.onPrint(e.getMessage());
 		}
 	}
 

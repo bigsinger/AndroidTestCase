@@ -15,9 +15,10 @@ public class LuaTester {
     public static boolean initLua(Context context){
         SharedPreferences sp = context.getSharedPreferences(Constant.TAG, Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
         boolean inited = sp.getBoolean("luainited", false);
+        //inited = false;
         if (inited == false) {
             String luaDir = context.getDir("lua", Context.MODE_WORLD_READABLE).getAbsolutePath();
-            Utils.copyFilesFassets(App.getContext(), "lua", luaDir);
+            Utils.copyFilesFassets(App.getContext1(), "lua", luaDir);
 
             SharedPreferences.Editor editor = sp.edit();
             editor.putBoolean("luainited", true);

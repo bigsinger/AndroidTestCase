@@ -5,7 +5,7 @@ package com.bigsing.util;
  */
 
 public class Constant {
-    public static final String TAG = "[BIGSING::TESTCASE]";
+    public static final String TAG = "[BIGSINGTEST]";
     public static final boolean DEBUG = true;
     public static final String PACKAGE_THIS = "com.bigsing.test";
 }

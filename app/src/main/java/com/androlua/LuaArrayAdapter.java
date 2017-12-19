@@ -13,7 +13,7 @@ import android.view.animation.*;
 
 public class LuaArrayAdapter extends ArrayListAdapter {
 
-	private LuaContext mContext;
+	private ILuaContext mContext;
 
 	private LuaState L;
 
@@ -24,11 +24,11 @@ public class LuaArrayAdapter extends ArrayListAdapter {
 	private Animation mAnimation;
 
 
-	public LuaArrayAdapter(LuaContext context, LuaObject resource) throws LuaException {
+	public LuaArrayAdapter(ILuaContext context, LuaObject resource) throws LuaException {
 		this(context, resource, new String[0]);
 	}
 
-	public LuaArrayAdapter(LuaContext context, LuaObject resource, Object[] objects) throws LuaException {
+	public LuaArrayAdapter(ILuaContext context, LuaObject resource, Object[] objects) throws LuaException {
 		super(context.getContext(), 0, objects);
 		mContext = context;
 		mResource = resource;
@@ -130,9 +130,9 @@ public class LuaArrayAdapter extends ArrayListAdapter {
 
 		private String mPath;
 
-		private LuaContext mContext;
+		private ILuaContext mContext;
 
-		public Bitmap getBitmap(LuaContext context, String path) throws IOException {
+		public Bitmap getBitmap(ILuaContext context, String path) throws IOException {
 			// TODO: Implement this method
 			mContext = context;
 			mPath = path;

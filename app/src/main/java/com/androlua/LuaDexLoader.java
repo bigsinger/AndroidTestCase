@@ -13,7 +13,7 @@ public class LuaDexLoader {
 	private ArrayList<ClassLoader> dexList=new ArrayList<ClassLoader>();
 	private HashMap<String,String> libCache=new HashMap<String,String>();
 	
-	private LuaContext mContext;
+	private ILuaContext mContext;
 
 	private String luaDir;
 
@@ -24,10 +24,10 @@ public class LuaDexLoader {
 	private Resources.Theme mTheme;
 
 	private String odexDir;
-	public LuaDexLoader(LuaContext context) {
+	public LuaDexLoader(ILuaContext context) {
 		mContext = context;
 		luaDir = context.getLuaDir();
-		//LuaApplication app=LuaApplication.getInstance();
+		//LuaApplication app=LuaApplication.getInstance0();
 		//localDir = app.getLocalDir();
 		odexDir = context.getOdexDir();
 	}
@@ -88,7 +88,7 @@ public class LuaDexLoader {
 					path += ".jar";
 				else
 					throw new LuaException(path + " not found");
-			dex = new LuaDexClassLoader(path, odexDir, LuaApplication.getInstance().getApplicationInfo().nativeLibraryDir, mContext.getContext().getClassLoader());
+			dex = new LuaDexClassLoader(path, odexDir, LuaApplication.getInstance0().getApplicationInfo().nativeLibraryDir, mContext.getContext().getClassLoader());
 			dexCache.put(name, dex);
 		}
 		

@@ -2,8 +2,6 @@ package com.androlua;
 
 import android.os.*;
 import com.luajava.*;
-import java.io.*;
-import android.view.Window.*;
 
 public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 
@@ -18,7 +16,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 	
 	private LuaState L;
 
-	private LuaContext mLuaContext;
+	private ILuaContext mILuaContext;
 
 	private byte[] mBuffer;
 
@@ -28,24 +26,24 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 
 	private LuaObject mUpdate;
 
-	public LuaAsyncTask(LuaContext luaContext, long delay, LuaObject callback) throws LuaException {
-		luaContext.regGc(this);
-		mLuaContext = luaContext;
+	public LuaAsyncTask(ILuaContext ILuaContext, long delay, LuaObject callback) throws LuaException {
+		ILuaContext.regGc(this);
+		mILuaContext = ILuaContext;
 		mDelay = delay;
 		mCallback = callback;
 	}
 
-	public LuaAsyncTask(LuaContext luaContext, String src, LuaObject callback) throws LuaException {
-		luaContext.regGc(this);
-		mLuaContext = luaContext;
+	public LuaAsyncTask(ILuaContext ILuaContext, String src, LuaObject callback) throws LuaException {
+		ILuaContext.regGc(this);
+		mILuaContext = ILuaContext;
 		mBuffer = src.getBytes();
 		mCallback = callback;
 	}
 
 
-	public LuaAsyncTask(LuaContext luaContext, LuaObject func, LuaObject callback) throws LuaException {
-		luaContext.regGc(this);
-		mLuaContext = luaContext;
+	public LuaAsyncTask(ILuaContext ILuaContext, LuaObject func, LuaObject callback) throws LuaException {
+		ILuaContext.regGc(this);
+		mILuaContext = ILuaContext;
 		mBuffer = func.dump();
 		mCallback = callback;
 		LuaState l=func.getLuaState();
@@ -56,9 +54,9 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 		}
 	}
 
-	public LuaAsyncTask(LuaContext luaContext, LuaObject func, LuaObject update, LuaObject callback) throws LuaException {
-		luaContext.regGc(this);
-		mLuaContext = luaContext;
+	public LuaAsyncTask(ILuaContext ILuaContext, LuaObject func, LuaObject update, LuaObject callback) throws LuaException {
+		ILuaContext.regGc(this);
+		mILuaContext = ILuaContext;
 		mBuffer = func.dump();
 		mUpdate = update;
 		mCallback = callback;
@@ -92,24 +90,24 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 		}
 		L = LuaStateFactory.newLuaState();
 		L.openLibs();
-		L.pushJavaObject(mLuaContext);
-		if (mLuaContext instanceof LuaActivity) {
+		L.pushJavaObject(mILuaContext);
+		if (mILuaContext instanceof LuaActivity) {
 			L.setGlobal("activity");
 		}
-		else if (mLuaContext instanceof LuaService) {
+		else if (mILuaContext instanceof LuaService) {
 			L.setGlobal("service");
 		}
 		L.pushJavaObject(this);
 		L.setGlobal("this");
-		L.pushContext(mLuaContext.getContext());
+		L.pushContext(mILuaContext.getContext());
 
 		L.getGlobal("luajava");
-		L.pushString(mLuaContext.getLuaDir());
+		L.pushString(mILuaContext.getLuaDir());
 		L.setField(-2, "luadir"); 
 		L.pop(1);
 
 		try {
-			JavaFunction print = new LuaPrint(null, L); //mLuaContext
+			JavaFunction print = new LuaPrint(null, L); //mILuaContext
 			print.register("print");
 
 			JavaFunction update = new JavaFunction(L){
@@ -126,14 +124,14 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 
 			L.getGlobal("package");       
 
-			L.pushString(mLuaContext.getLuaLpath());
+			L.pushString(mILuaContext.getLuaLpath());
 			L.setField(-2, "path");
-			L.pushString(mLuaContext.getLuaCpath());
+			L.pushString(mILuaContext.getLuaCpath());
 			L.setField(-2, "cpath");
 			L.pop(1); 
 		}
 		catch (LuaException e) {
-			mLuaContext.sendError("AsyncTask", e);
+			mILuaContext.sendError("AsyncTask", e);
 		}
 		
 		if(loadeds!=null){
@@ -174,7 +172,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
 		catch (LuaException e) {
-			mLuaContext.sendError("doInBackground", e);
+			mILuaContext.sendError("doInBackground", e);
 		}
 
 
@@ -192,7 +190,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 				mCallback.call((Object[])result);
 		}
 		catch (LuaException e) {
-			mLuaContext.sendError("onPostExecute", e);
+			mILuaContext.sendError("onPostExecute", e);
 		}
 		super.onPostExecute(result);
 		if(L!=null)
@@ -209,7 +207,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 				mUpdate.call(values);
 		}
 		catch (LuaException e) {
-			mLuaContext.sendError("onProgressUpdate", e);
+			mILuaContext.sendError("onProgressUpdate", e);
 		}
 		super.onProgressUpdate(values);
 	}

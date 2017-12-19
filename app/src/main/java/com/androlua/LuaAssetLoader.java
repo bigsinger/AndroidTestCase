@@ -12,11 +12,11 @@ public class LuaAssetLoader extends JavaFunction
 
 	private Context mContext;
 
-	public LuaAssetLoader(LuaContext luaContext,LuaState L)
+	public LuaAssetLoader(ILuaContext ILuaContext, LuaState L)
 	{
 		super(L);
 		this.L = L;
-		mContext=luaContext.getContext();
+		mContext= ILuaContext.getContext();
 	}
 
 	@Override

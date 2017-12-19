@@ -332,7 +332,7 @@ function print(...)
     table.insert(buf,tostring(select(n,...)))
   end
   local msg=table.concat(buf,"\t\t")
-  activity.sendMsg(msg)
+  activity.onPrint(msg)
 end
 end
 

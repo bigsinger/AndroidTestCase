@@ -8,7 +8,6 @@ import java.io.*;
 import java.lang.ref.*;
 import java.net.*;
 import java.util.*;
-import com.androlua.util.*;
 
 public class LuaBitmap
 {
@@ -16,7 +15,7 @@ public class LuaBitmap
 
 	private static int l;
 
-	public static boolean checkCache(LuaContext context, String url)
+	public static boolean checkCache(ILuaContext context, String url)
 	{
 		// TODO: Implement this method
 		String path=context.getLuaExtDir("cache") + "/" + url.hashCode();
@@ -33,7 +32,7 @@ public class LuaBitmap
 		return bitmap;
 	}
 
-	public static Bitmap getLoacalBitmap(LuaContext context, String url)
+	public static Bitmap getLoacalBitmap(ILuaContext context, String url)
 	{
 		return decodeScale(context.getWidth(), new File(url));
 	}
@@ -52,7 +51,7 @@ public class LuaBitmap
 		return bitmap;
 	}
 
-	public static Bitmap getHttpBitmap(LuaContext context, String url) throws IOException
+	public static Bitmap getHttpBitmap(ILuaContext context, String url) throws IOException
 	{
 		//Log.d(TAG, url);
 		String path=context.getLuaExtDir("cache") + "/" + url.hashCode();
@@ -98,7 +97,7 @@ public class LuaBitmap
 		return bitmap;
 	}
 
-    public static Bitmap getBitmap(LuaContext context, String path) throws IOException
+    public static Bitmap getBitmap(ILuaContext context, String path) throws IOException
 	{
 
 		WeakReference<Bitmap> wRef=cache.get(path);

@@ -1,17 +1,18 @@
 package com.bigsing;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
 import com.androlua.ILuaPrintListener;
-import com.androlua.LuaContext;
+import com.androlua.ILuaContext;
+import com.androlua.LuaBroadcastReceiver;
 import com.androlua.LuaDexLoader;
 import com.androlua.LuaGcable;
 import com.androlua.LuaPrint;
@@ -32,7 +33,7 @@ import java.util.Map;
  * Created by sing on 2017/12/15.
  */
 
-public class ScriptRunner  implements LuaContext {
+public class ScriptRunner  extends Activity implements LuaBroadcastReceiver.OnReceiveListerer, ILuaContext {
     private final static String DATA = "data";
     private final static String NAME = "name";
 
@@ -62,14 +63,15 @@ public class ScriptRunner  implements LuaContext {
     protected String luaExtDir;
     private LuaDexLoader mLuaDexLoader;
 
+    private LuaBroadcastReceiver mReceiver;
 
     private Context mContext;
     private boolean mDebug = true;
 
-    public void init(Context context, ILuaPrintListener printListener){
-        initPath(context);
+    public void init(Activity activity, ILuaPrintListener printListener){
+        initPath(activity.getApplicationContext());
         try {
-            initLua(context, printListener);
+            initLua(activity, printListener);
             mLuaDexLoader = new LuaDexLoader(this);
             mLuaDexLoader.loadLibs();
         } catch (Exception e) {
@@ -235,15 +237,15 @@ public class ScriptRunner  implements LuaContext {
     }
 
     //初始化lua使用的Java函数
-    public boolean initLua(Context context, ILuaPrintListener printListener) throws LuaException {
-        this.mContext = context;
+    public boolean initLua(Activity activity, ILuaPrintListener printListener) throws LuaException {
+        this.mContext = activity.getApplicationContext();
         L = LuaStateFactory.newLuaState();
         L.openLibs();
-        L.pushJavaObject(this);//todo
+        L.pushJavaObject(activity);//todo
         L.setGlobal("activity");
         L.getGlobal("activity");
         L.setGlobal("this");
-        L.pushContext(context);
+        L.pushContext(this.mContext);
         L.getGlobal("luajava");
         L.pushString(luaExtDir);
         L.setField(-2, "luaextdir");
@@ -545,6 +547,7 @@ public class ScriptRunner  implements LuaContext {
 
     @Override
     public void onPrint(String msg) {
+
         Utils.logd(msg);
     }
 
@@ -570,4 +573,57 @@ public class ScriptRunner  implements LuaContext {
         return mContext.getResources();
     }
 
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        // TODO: Implement this method
+        runFunc("onReceive", context, intent);
+    }
+
+
+    @Override
+    public void onContentChanged() {
+        // TODO: Implement this method
+        super.onContentChanged();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        runFunc("onStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        runFunc("onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        runFunc("onPause");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        runFunc("onStop");
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        if (mReceiver != null)
+            unregisterReceiver(mReceiver);
+
+        for (LuaGcable obj : gclist) {
+            obj.gc();
+        }
+
+        runFunc("onDestroy");
+        super.onDestroy();
+        System.gc();
+        L.gc(LuaState.LUA_GCCOLLECT, 1);
+        //L.close();
+    }
 }

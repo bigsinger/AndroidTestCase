@@ -5,20 +5,18 @@ import android.os.*;
 import android.view.*;
 import android.widget.*;
 import com.luajava.*;
-import java.lang.ref.*;
+
 import java.util.*;
 import java.io.*;
 import android.util.*;
 import android.view.animation.*;
-import android.content.*;
+
 import java.lang.reflect.*;
-import com.androlua.LuaAdapter.*;
-import com.luajava.LuaTable.*;
 
 public class LuaAdapter extends BaseAdapter {
 
 	private LuaState L;
-	private LuaContext mContext;
+	private ILuaContext mContext;
 
 
 	private LuaTable mLayout;
@@ -43,11 +41,11 @@ public class LuaAdapter extends BaseAdapter {
 	private boolean updateing;
 
 
-	public LuaAdapter(LuaContext context, LuaTable layout) throws LuaException {
+	public LuaAdapter(ILuaContext context, LuaTable layout) throws LuaException {
 		this(context, null, layout);
 	}
 
-	public LuaAdapter(LuaContext context, LuaTable<Integer,LuaTable<String,Object>> data, LuaTable layout) throws LuaException {
+	public LuaAdapter(ILuaContext context, LuaTable<Integer,LuaTable<String,Object>> data, LuaTable layout) throws LuaException {
 		mContext = context;
 		mLayout = layout;
 		L = context.getLuaState();
@@ -371,9 +369,9 @@ public class LuaAdapter extends BaseAdapter {
 
 		private String mPath;
 
-		private LuaContext mContext;
+		private ILuaContext mContext;
 
-		public Bitmap getBitmap(LuaContext context, String path) throws IOException {
+		public Bitmap getBitmap(ILuaContext context, String path) throws IOException {
 			// TODO: Implement this method
 			mContext = context;
 			mPath = path;

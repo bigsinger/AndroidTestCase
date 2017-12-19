@@ -1,7 +1,7 @@
 package com.androlua;
 
 import android.os.*;
-import com.androlua.util.*;
+
 import com.luajava.*;
 import java.io.*;
 import java.util.regex.*;
@@ -54,7 +54,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 	private LuaState L;
 	private Handler thandler;
 	public boolean isRun = false;
-	private LuaContext mLuaContext;
+	private ILuaContext mILuaContext;
 
 	private boolean mIsLoop;
 
@@ -64,38 +64,38 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 
 	private byte[] mBuffer;
 
-	public LuaThread(LuaContext luaContext, String src) throws LuaException {
-		this(luaContext, src, false, null);
+	public LuaThread(ILuaContext ILuaContext, String src) throws LuaException {
+		this(ILuaContext, src, false, null);
 	}
 
-	public LuaThread(LuaContext luaContext, String src, Object[] arg) throws LuaException {
-		this(luaContext, src, false, arg);
+	public LuaThread(ILuaContext ILuaContext, String src, Object[] arg) throws LuaException {
+		this(ILuaContext, src, false, arg);
 	}
 
-	public LuaThread(LuaContext luaContext, String src, boolean isLoop) throws LuaException {
-		this(luaContext, src, isLoop, null);
+	public LuaThread(ILuaContext ILuaContext, String src, boolean isLoop) throws LuaException {
+		this(ILuaContext, src, isLoop, null);
 	}
 
-	public LuaThread(LuaContext luaContext, String src, boolean isLoop, Object[] arg) throws LuaException {
-		luaContext.regGc(this);
-		mLuaContext = luaContext;
+	public LuaThread(ILuaContext ILuaContext, String src, boolean isLoop, Object[] arg) throws LuaException {
+		ILuaContext.regGc(this);
+		mILuaContext = ILuaContext;
 		mSrc = src;
 		mIsLoop = isLoop;
 		if (arg != null)
 			mArg = arg;
 	}
-	public LuaThread(LuaContext luaContext, LuaObject func) throws LuaException {
-		this(luaContext, func, false, null);
+	public LuaThread(ILuaContext ILuaContext, LuaObject func) throws LuaException {
+		this(ILuaContext, func, false, null);
 	}
-	public LuaThread(LuaContext luaContext, LuaObject func, Object[] arg) throws LuaException {
-		this(luaContext, func, false, arg);
+	public LuaThread(ILuaContext ILuaContext, LuaObject func, Object[] arg) throws LuaException {
+		this(ILuaContext, func, false, arg);
 	}
-	public LuaThread(LuaContext luaContext, LuaObject func, boolean isLoop) throws LuaException {
-		this(luaContext, func, isLoop, null);
+	public LuaThread(ILuaContext ILuaContext, LuaObject func, boolean isLoop) throws LuaException {
+		this(ILuaContext, func, isLoop, null);
 	}
 
-	public LuaThread(LuaContext luaContext, LuaObject func, boolean isLoop, Object[] arg) throws LuaException {
-		mLuaContext = luaContext;
+	public LuaThread(ILuaContext ILuaContext, LuaObject func, boolean isLoop, Object[] arg) throws LuaException {
+		mILuaContext = ILuaContext;
 		if (arg != null)
 			mArg = arg;
 		mIsLoop = isLoop;
@@ -116,7 +116,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			}
 		}
 		catch (LuaException e) {
-			mLuaContext.onPrint(e.getMessage());
+			mILuaContext.onPrint(e.getMessage());
 			return;
 		}
 		if (mIsLoop) {
@@ -166,7 +166,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 
 	public void push(int what, String s) {
 		if (!isRun) {
-			mLuaContext.onPrint("thread is not running");
+			mILuaContext.onPrint("thread is not running");
 			return;
 		}
 
@@ -182,7 +182,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 
 	public void push(int what, String s, Object[] args) {
 		if (!isRun) {
-			mLuaContext.onPrint("thread is not running");
+			mILuaContext.onPrint("thread is not running");
 			return;
 		}
 
@@ -219,25 +219,25 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 	private void initLua() throws LuaException {		
 		L = LuaStateFactory.newLuaState();
 		L.openLibs();
-		L.pushJavaObject(mLuaContext.getContext());
-		if (mLuaContext instanceof LuaActivity) {
+		L.pushJavaObject(mILuaContext.getContext());
+		if (mILuaContext instanceof LuaActivity) {
 			L.setGlobal("activity");
 		}
-		else if (mLuaContext instanceof LuaService) {
+		else if (mILuaContext instanceof LuaService) {
 			L.setGlobal("service");
 		}
 		L.pushJavaObject(this);
 		L.setGlobal("this");
-		L.pushContext(mLuaContext.getContext());
+		L.pushContext(mILuaContext.getContext());
 
-		JavaFunction print = new LuaPrint(mLuaContext, L);
+		JavaFunction print = new LuaPrint(mILuaContext, L);
 		print.register("print");
 
 		L.getGlobal("package"); 
 
-		L.pushString(mLuaContext.getLuaLpath());
+		L.pushString(mILuaContext.getLuaLpath());
 		L.setField(-2, "path");
-		L.pushString(mLuaContext.getLuaCpath());
+		L.pushString(mILuaContext.getLuaCpath());
 		L.setField(-2, "cpath");
 		L.pop(1);          
 
@@ -245,7 +245,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			@Override
 			public int execute() throws LuaException {
 
-				mLuaContext.set(L.toString(2), L.toJavaObject(3));
+				mILuaContext.set(L.toString(2), L.toJavaObject(3));
 				return 0;
 			}
 		};
@@ -261,10 +261,10 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 					for (int i=3;i <= top;i++) {
 						args[i - 3] = L.toJavaObject(i);
 					}				
-					mLuaContext.call(L.toString(2), args);
+					mILuaContext.call(L.toString(2), args);
 				}
 				else if (top == 2) {
-					mLuaContext.call(L.toString(2));
+					mILuaContext.call(L.toString(2));
 				}
 				return 0;
 			}
@@ -280,7 +280,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			}
 			else if (Pattern.matches("^[\\w\\.\\_/]+$", str)) {
 				L.getGlobal("luajava");
-				L.pushString(mLuaContext.getLuaDir());
+				L.pushString(mILuaContext.getLuaDir());
 				L.setField(-2, "luadir"); 
 				L.pushString(str);
 				L.setField(-2, "luapath"); 
@@ -294,7 +294,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 
 		}
 		catch (Exception e) {
-			mLuaContext.onPrint(this.toString() + " " + e.getMessage());
+			mILuaContext.onPrint(this.toString() + " " + e.getMessage());
 			quit();
 		}
 
@@ -323,7 +323,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		}
 		catch (Exception e) {
-			mLuaContext.onPrint(this.toString() + " " + e.getMessage());
+			mILuaContext.onPrint(this.toString() + " " + e.getMessage());
 			quit();
 		}
 	}
@@ -353,7 +353,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 
 	public void doAsset(String name, Object...args) throws LuaException, IOException {
 		int ok = 0;
-		byte[] bytes = LuaUtil.readAsset(mLuaContext.getContext(), name);
+		byte[] bytes = LuaUtil.readAsset(mILuaContext.getContext(), name);
 		L.setTop(0);
 		ok = L.LloadBuffer(bytes, name);
 
@@ -420,7 +420,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			}
 		}
 		catch (LuaException e) {
-			mLuaContext.onPrint(funcName + " " + e.getMessage());
+			mILuaContext.onPrint(funcName + " " + e.getMessage());
 		}
 
 	}
@@ -431,7 +431,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			L.setGlobal(key);
 		}
 		catch (LuaException e) {
-			mLuaContext.onPrint(e.getMessage());
+			mILuaContext.onPrint(e.getMessage());
 		}
 	}
 

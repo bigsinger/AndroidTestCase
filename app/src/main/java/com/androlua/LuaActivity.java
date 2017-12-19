@@ -11,7 +11,6 @@ import android.view.*;
 import android.view.ViewGroup.*;
 import android.widget.*;
 
-import com.androlua.util.*;
 import com.luajava.*;
 
 import dalvik.system.*;
@@ -20,7 +19,7 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 
-public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer, LuaContext {
+public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer, ILuaContext {
 
     private LuaDexLoader mLuaDexLoader;
     private static ArrayList<String> prjCache = new ArrayList<String>();
@@ -1161,12 +1160,12 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     //显示信息
     @Override
     public void onPrint(String msg) {
-        Message message = new Message();
-        Bundle bundle = new Bundle();
-        bundle.putString(DATA, msg);
-        message.setData(bundle);
-        message.what = 0;
-        handler.sendMessage(message);
+//        Message message = new Message();
+//        Bundle bundle = new Bundle();
+//        bundle.putString(DATA, msg);
+//        message.setData(bundle);
+//        message.what = 0;
+//        handler.sendMessage(message);
         Log.d("lua", msg);
     }
 

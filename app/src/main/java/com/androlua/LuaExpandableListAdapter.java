@@ -15,7 +15,7 @@ import java.util.*;
 public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 	
 	private LuaState L;
-	private LuaContext mContext;
+	private ILuaContext mContext;
 	
 	private LuaTable<Integer,LuaTable<String,Object>> mGroupData;
 	private LuaTable<Integer,LuaTable<Integer,LuaTable<String,Object>>> mChildData;
@@ -37,11 +37,11 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 
 	private boolean mNotifyOnChange;
 
-	public LuaExpandableListAdapter(LuaContext context,  LuaTable groupLayout, LuaTable childLayout) throws LuaException {
+	public LuaExpandableListAdapter(ILuaContext context, LuaTable groupLayout, LuaTable childLayout) throws LuaException {
 		this(context,null,null,groupLayout,childLayout);
 	}
 	
-	public LuaExpandableListAdapter(LuaContext context, LuaTable<Integer,LuaTable<String,Object>> groupData, LuaTable<Integer,LuaTable<Integer,LuaTable<String,Object>>> childData, LuaTable groupLayout, LuaTable childLayout) throws LuaException {
+	public LuaExpandableListAdapter(ILuaContext context, LuaTable<Integer,LuaTable<String,Object>> groupData, LuaTable<Integer,LuaTable<Integer,LuaTable<String,Object>>> childData, LuaTable groupLayout, LuaTable childLayout) throws LuaException {
 		mContext = context;
 		L = context.getLuaState();
 		
@@ -493,9 +493,9 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 
 		private String mPath;
 
-		private LuaContext mContext;
+		private ILuaContext mContext;
 
-		public Bitmap getBitmap(LuaContext context, String path) throws IOException {
+		public Bitmap getBitmap(ILuaContext context, String path) throws IOException {
 			// TODO: Implement this method
 			mContext = context;
 			mPath = path;

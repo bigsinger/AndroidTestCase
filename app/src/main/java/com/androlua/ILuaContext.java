@@ -4,7 +4,7 @@ import android.content.*;
 import com.luajava.*;
 import java.util.*;
 
-public interface LuaContext extends ILuaPrintListener{
+public interface ILuaContext extends ILuaPrintListener{
 
 	public ArrayList<ClassLoader> getClassLoaders();
 
