@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.androlua.ILuaPrintListener;
 import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
 import com.bigsing.ScriptRunner;
@@ -31,7 +32,7 @@ import java.lang.reflect.Method;
 
 import dalvik.system.DexClassLoader;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements ILuaPrintListener{
     public static final String TAG = "MainActivity";
 
     static {
@@ -157,8 +158,8 @@ public class MainActivity extends BaseActivity {
             public void onClick(View view) {
                 ScriptRunner luaRunner = new ScriptRunner();
                 try {
+                    LuaTester.initLua(App.getContext());
                     String luaDir = getDir("lua", Context.MODE_WORLD_READABLE).getAbsolutePath();
-                    //Utils.copyFilesFassets(App.getContext(), "lua", luaDir);
 
                     String luaFile = luaDir + "/test.lua";
                     File file = new File(luaFile);
@@ -167,7 +168,7 @@ public class MainActivity extends BaseActivity {
                     Utils.copyAssetsFileToDir("layout.lua", luaDir, MainActivity.this);
                    // }
 
-                    luaRunner.init(MainActivity.this);
+                    luaRunner.init(MainActivity.this, MainActivity.this);
                     luaRunner.doFile(luaDir + "/test.lua");
                     //String text = testLua("");
                     //tv_text.setText(text);
@@ -263,6 +264,11 @@ public class MainActivity extends BaseActivity {
         }
 
         return text;
+    }
+
+    @Override
+    public void onPrint(String msg){
+        tv_text.setText(msg);
     }
 
 }

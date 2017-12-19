@@ -194,7 +194,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
                 setContentView(layout);
             }
         } catch (Exception e) {
-            sendMsg(e.getMessage());
+            onPrint(e.getMessage());
             setContentView(layout);
             return;
         }
@@ -928,7 +928,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             }
             throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
         } catch (Exception e) {
-            sendMsg(e.getMessage());
+            onPrint(e.getMessage());
         }
     }
 
@@ -968,7 +968,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         } catch (LuaException e) {
             setTitle(errorReason(ok));
             setContentView(layout);
-            sendMsg(e.getMessage());
+            onPrint(e.getMessage());
             String s = e.getMessage();
             String p = "android.permission.";
             int i = s.indexOf(p);
@@ -984,7 +984,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
                     L.getField(-1, m);
                     if (L.isString(-1))
                         m = m + " (" + L.toString(-1) + ")";
-                    sendMsg("权限错误: " + m);
+                    onPrint("权限错误: " + m);
                     return null;
                 }
             }
@@ -995,7 +995,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 				 SharedPreferences.Editor edit=info.edit();
 				 edit.putLong("lastUpdateTime", 0);
 				 edit.commit();*/
-                //sendMsg("初始化错误，请清除数据后重新启动程序。。。");
+                //onPrint("初始化错误，请清除数据后重新启动程序。。。");
             }
 
         }
@@ -1028,7 +1028,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         } catch (Exception e) {
             setTitle(errorReason(ok));
             setContentView(layout);
-            sendMsg(e.getMessage());
+            onPrint(e.getMessage());
         }
 
         return null;
@@ -1093,7 +1093,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             }
             throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
         } catch (LuaException e) {
-            sendMsg(e.getMessage());
+            onPrint(e.getMessage());
         }
         return null;
     }
@@ -1159,7 +1159,8 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     }
 
     //显示信息
-    public void sendMsg(String msg) {
+    @Override
+    public void onPrint(String msg) {
         Message message = new Message();
         Bundle bundle = new Bundle();
         bundle.putString(DATA, msg);
@@ -1175,7 +1176,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         if (ret != null && ret.getClass() == Boolean.class && (Boolean) ret)
             return;
         else
-            sendMsg(title + ": " + msg.getMessage());
+            onPrint(title + ": " + msg.getMessage());
     }
 
     //显示toast

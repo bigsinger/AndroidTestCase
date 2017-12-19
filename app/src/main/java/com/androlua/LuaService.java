@@ -228,7 +228,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 
 			}
 			catch (Exception e) {
-				sendMsg(e.getMessage());
+				onPrint(e.getMessage());
 			}
 
 
@@ -298,7 +298,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 			@Override
 			public int execute() throws LuaException {
 				if (L.getTop() < 2) {
-					sendMsg("");
+					onPrint("");
 					return 0;
 				}
 				for (int i = 2; i <= L.getTop(); i++) {
@@ -322,7 +322,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 					output.append(val);
 					output.append("\t");
 				}
-				sendMsg(output.toString().substring(1, output.length() - 1));
+				onPrint(output.toString().substring(1, output.length() - 1));
 				output.setLength(0);
 				return 0;
 			}
@@ -403,7 +403,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
 		catch (LuaException e) {			
-			sendMsg(e.getMessage());
+			onPrint(e.getMessage());
 		}
 
 		return null;
@@ -435,7 +435,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
 		catch (Exception e) {			
-			sendMsg(e.getMessage());
+			onPrint(e.getMessage());
 		}
 
 		return null;
@@ -468,7 +468,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 				}
 			}
 			catch (LuaException e) {
-				sendMsg(funcName + " " + e.getMessage());
+				onPrint(funcName + " " + e.getMessage());
 			}
 		}	
 		return null;
@@ -503,7 +503,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1)) ;
 		}
 		catch (LuaException e) {
-			sendMsg(e.getMessage());
+			onPrint(e.getMessage());
 		}
 		return null;
 	}
@@ -563,7 +563,8 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 	}
 
 	//显示信息
-	public void sendMsg(String msg) {
+	@Override
+	public void onPrint(String msg) {
 		Message message = new Message();
 		Bundle bundle = new Bundle();  
 		bundle.putString("data", msg);  
@@ -644,7 +645,7 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 			L.setGlobal(key);
 		}
 		catch (LuaException e) {
-			sendMsg(e.getMessage());
+			onPrint(e.getMessage());
 		}
 	}
 
@@ -726,7 +727,6 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 			}
 		}
 	}
-
 
 	@Override
 	public String getOdexDir() {

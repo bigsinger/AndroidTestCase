@@ -4,7 +4,7 @@ import android.content.*;
 import com.luajava.*;
 import java.util.*;
 
-public interface LuaContext {
+public interface LuaContext extends ILuaPrintListener{
 
 	public ArrayList<ClassLoader> getClassLoaders();
 
@@ -29,8 +29,6 @@ public interface LuaContext {
 	public LuaState getLuaState();
 
 	public Object doFile(String path, Object... arg);
-
-	public void sendMsg(String msg);
 
 	public void sendError(String title, Exception msg);
 

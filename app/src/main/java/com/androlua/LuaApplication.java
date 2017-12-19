@@ -221,7 +221,7 @@ public class LuaApplication extends Application implements LuaContext
 	}
 
 	@Override
-	public void sendMsg(String msg)
+	public void onPrint(String msg)
 	{
 		// TODO: Implement this method
 		Toast.makeText(this,msg,500).show();

@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.androlua.ILuaPrintListener;
 import com.androlua.LuaContext;
 import com.androlua.LuaDexLoader;
 import com.androlua.LuaGcable;
@@ -65,10 +66,10 @@ public class ScriptRunner  implements LuaContext {
     private Context mContext;
     private boolean mDebug = true;
 
-    public void init(Context context){
+    public void init(Context context, ILuaPrintListener printListener){
         initPath(context);
         try {
-            initLua(context);
+            initLua(context, printListener);
             mLuaDexLoader = new LuaDexLoader(this);
             mLuaDexLoader.loadLibs();
         } catch (Exception e) {
@@ -234,7 +235,7 @@ public class ScriptRunner  implements LuaContext {
     }
 
     //初始化lua使用的Java函数
-    public boolean initLua(Context context) throws LuaException {
+    public boolean initLua(Context context, ILuaPrintListener printListener) throws LuaException {
         this.mContext = context;
         L = LuaStateFactory.newLuaState();
         L.openLibs();
@@ -253,7 +254,7 @@ public class ScriptRunner  implements LuaContext {
         L.pop(1);
         initENV();
 
-        JavaFunction print = new LuaPrint(mContext, L);
+        JavaFunction print = new LuaPrint(printListener, L);
         print.register("print");
 
         L.getGlobal("package");
@@ -540,6 +541,11 @@ public class ScriptRunner  implements LuaContext {
     public String getOdexDir() {
         // TODO: Implement this method
         return odexDir;
+    }
+
+    @Override
+    public void onPrint(String msg) {
+        Utils.logd(msg);
     }
 
     //todo 如果集成自Activity就不用单独声明了

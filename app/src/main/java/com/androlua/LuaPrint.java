@@ -1,62 +1,58 @@
 package com.androlua;
 
-import android.content.Context;
-
 import com.bigsing.util.Utils;
 import com.luajava.*;
 
-public class LuaPrint extends JavaFunction
-{
+public class LuaPrint extends JavaFunction {
 
 	private LuaState L;
-	private Context mLuaContext;
+	private ILuaPrintListener mPrintListener = null;
 	private StringBuilder output = new StringBuilder();
-	
-	public LuaPrint(Context context, LuaState L)
-	{
+
+	public LuaPrint(ILuaPrintListener luaContext, LuaState L) {
 		super(L);
 		this.L = L;
-		mLuaContext=context;
+		mPrintListener = luaContext;
 	}
 
 	@Override
-	public int execute() throws LuaException
-	{
-		if (L.getTop() < 2)
-		{
-			Utils.loge("");
-			//mLuaContext.sendMsg("");
+	public int execute() throws LuaException {
+		if (L.getTop() < 2) {
+			this.print("");
 			return 0;
 		}
-		for (int i = 2; i <= L.getTop(); i++)
-		{
+
+		for (int i = 2; i <= L.getTop(); i++) {
 			int type = L.type(i);
 			String val = null;
 			String stype = L.typeName(type);
-			if (stype.equals("userdata"))
-			{
+			if (stype.equals("userdata")) {
 				Object obj = L.toJavaObject(i);
-				if (obj != null)
+				if (obj != null) {
 					val = obj.toString();
-			}
-			else if (stype.equals("boolean"))
-			{
+				}
+			} else if (stype.equals("boolean")) {
 				val = L.toBoolean(i) ? "true" : "false";
-			}
-			else
-			{
+			} else {
 				val = L.toString(i);
 			}
-			if (val == null)
-				val = stype;						
-			output.append("\t");
+			if (val == null) {
+				val = stype;
+			}
 			output.append(val);
 			output.append("\t");
 		}
-		Utils.logd(output.toString().substring(1, output.length() - 1));
-		//mLuaContext.sendMsg(output.toString().substring(1, output.length() - 1));
+		this.print(output.toString());
 		output.setLength(0);
 		return 0;
+	}
+
+	private void print(String msg){
+		if (mPrintListener != null) {
+			mPrintListener.onPrint("");
+		}else{
+			Utils.logd(msg);
+		}
 	}
 
 

@@ -80,7 +80,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (LuaException e)
 		{
-			mLuaContext.sendMsg(e.getMessage());
+			mLuaContext.onPrint(e.getMessage());
 		}
 		L.gc(LuaState.LUA_GCCOLLECT, 1);
 		System.gc();
@@ -165,7 +165,7 @@ public class LuaTimerTask extends TimerTaskX
 		
 		L.pushContext(mLuaContext.getContext());
 		
-		JavaFunction print = new LuaPrint(null, L); //mLuaContext
+		JavaFunction print = new LuaPrint(mLuaContext,L);
 		print.register("print");
 
 		L.getGlobal("package"); 
@@ -240,7 +240,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (Exception e)
 		{
-			mLuaContext.sendMsg(this.toString() + " " + e.getMessage());
+			mLuaContext.onPrint(this.toString() + " " + e.getMessage());
 
 		}
 
@@ -381,7 +381,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (LuaException e)
 		{
-			mLuaContext.sendMsg(funcName + " " + e.getMessage());
+			mLuaContext.onPrint(funcName + " " + e.getMessage());
 		}
 
 	}
@@ -395,7 +395,7 @@ public class LuaTimerTask extends TimerTaskX
 		}
 		catch (LuaException e)
 		{
-			mLuaContext.sendMsg(e.getMessage());
+			mLuaContext.onPrint(e.getMessage());
 		}
 	}
 
