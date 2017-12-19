@@ -21,337 +21,42 @@ package com.androlua.util;
  * Timers schedule one-shot or recurring {@link TimerTask tasks} for execution.
  * Prefer {@link java.util.concurrent.ScheduledThreadPoolExecutor
  * ScheduledThreadPoolExecutor} for new code.
- *
+ * <p>
  * <p>Each timer has one thread on which tasks are executed sequentially. When
  * this thread is busy running a task, runnable tasks may be subject to delays.
- *
+ * <p>
  * <p>One-shot are scheduled to run at an absolute time or after a relative
  * delay.
- *
+ * <p>
  * <p>Recurring tasks are scheduled with either a fixed period or a fixed rate:
  * <ul>
- *   <li>With the default <strong>fixed-period execution</strong>, each
- *       successive run of a task is scheduled relative to the start time of
- *       the previous run, so two runs are never fired closer together in time
- *       than the specified {@code period}.
- *   <li>With <strong>fixed-rate execution</strong>, the start time of each
- *       successive run of a task is scheduled without regard for when the
- *       previous run took place. This may result in a series of bunched-up runs
- *       (one launched immediately after another) if delays prevent the timer
- *       from starting tasks on time.
+ * <li>With the default <strong>fixed-period execution</strong>, each
+ * successive run of a task is scheduled relative to the start time of
+ * the previous run, so two runs are never fired closer together in time
+ * than the specified {@code period}.
+ * <li>With <strong>fixed-rate execution</strong>, the start time of each
+ * successive run of a task is scheduled without regard for when the
+ * previous run took place. This may result in a series of bunched-up runs
+ * (one launched immediately after another) if delays prevent the timer
+ * from starting tasks on time.
  * </ul>
- *
+ * <p>
  * <p>When a timer is no longer needed, users should call {@link #cancel}, which
  * releases the timer's thread and other resources. Timers not explicitly
  * cancelled may hold resources indefinitely.
- *
+ * <p>
  * <p>This class does not offer guarantees about the real-time nature of task
  * scheduling. Multiple threads can share a single timer without
  * synchronization.
  */
-import java.util.*;
 
-public class TimerX
- {
+import java.util.Date;
 
-    private static final class TimerImpl extends Thread {
-
-        private static final class TimerHeap {
-            private int DEFAULT_HEAP_SIZE = 256;
-
-            private TimerTaskX[] timers = new TimerTaskX[DEFAULT_HEAP_SIZE];
-
-            private int size = 0;
-
-            private int deletedCancelledNumber = 0;
-
-            public TimerTaskX minimum() {
-                return timers[0];
-            }
-
-            public boolean isEmpty() {
-                return size == 0;
-            }
-
-            public void insert(TimerTaskX task) {
-                if (timers.length == size) {
-                    TimerTaskX[] appendedTimers = new TimerTaskX[size * 2];
-                    System.arraycopy(timers, 0, appendedTimers, 0, size);
-                    timers = appendedTimers;
-                }
-                timers[size++] = task;
-                upHeap();
-            }
-
-            public void delete(int pos) {
-                // posible to delete any position of the heap
-                if (pos >= 0 && pos < size) {
-                    timers[pos] = timers[--size];
-                    timers[size] = null;
-                    downHeap(pos);
-                }
-            }
-
-            private void upHeap() {
-                int current = size - 1;
-                int parent = (current - 1) / 2;
-
-                while (timers[current].when < timers[parent].when) {
-                    // swap the two
-                    TimerTaskX tmp = timers[current];
-                    timers[current] = timers[parent];
-                    timers[parent] = tmp;
-
-                    // update pos and current
-                    current = parent;
-                    parent = (current - 1) / 2;
-                }
-            }
-
-            private void downHeap(int pos) {
-                int current = pos;
-                int child = 2 * current + 1;
-
-                while (child < size && size > 0) {
-                    // compare the children if they exist
-                    if (child + 1 < size
-                            && timers[child + 1].when < timers[child].when) {
-                        child++;
-                    }
-
-                    // compare selected child with parent
-                    if (timers[current].when < timers[child].when) {
-                        break;
-                    }
-
-                    // swap the two
-                    TimerTaskX tmp = timers[current];
-                    timers[current] = timers[child];
-                    timers[child] = tmp;
-
-                    // update pos and current
-                    current = child;
-                    child = 2 * current + 1;
-                }
-            }
-
-            public void reset() {
-                timers = new TimerTaskX[DEFAULT_HEAP_SIZE];
-                size = 0;
-            }
-
-            public void adjustMinimum() {
-                downHeap(0);
-            }
-
-            public void deleteIfCancelled() {
-                for (int i = 0; i < size; i++) {
-                    if (timers[i].cancelled) {
-                        deletedCancelledNumber++;
-                        delete(i);
-                        // re-try this point
-                        i--;
-                    }
-                }
-            }
-
-            private int getTask(TimerTaskX task) {
-                for (int i = 0; i < timers.length; i++) {
-                    if (timers[i] == task) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-
-        }
-
-        /**
-         * True if the method cancel() of the Timer was called or the !!!stop()
-         * method was invoked
-         */
-        private boolean cancelled;
-
-        /**
-         * True if the Timer has become garbage
-         */
-        private boolean finished;
-
-        /**
-         * Contains scheduled events, sorted according to
-         * {@code when} field of TaskScheduled object.
-         */
-        private TimerHeap tasks = new TimerHeap();
-
-        /**
-         * Starts a new timer.
-         *
-         * @param name thread's name
-         * @param isDaemon daemon thread or not
-         */
-        TimerImpl(String name, boolean isDaemon) {
-            this.setName(name);
-            this.setDaemon(isDaemon);
-            this.start();
-        }
-
-        /**
-         * This method will be launched on separate thread for each Timer
-         * object.
-         */
-        @Override
-        public void run() {
-            while (true) {
-                TimerTaskX task;
-                synchronized (this) {
-                    // need to check cancelled inside the synchronized block
-                    if (cancelled) {
-                        return;
-                    }
-                    if (tasks.isEmpty()) {
-                        if (finished) {
-                            return;
-                        }
-                        // no tasks scheduled -- sleep until any task appear
-                        try {
-                            this.wait();
-                        } catch (InterruptedException ignored) {
-                        }
-                        continue;
-                    }
-
-                    long currentTime = System.currentTimeMillis();
-
-                    task = tasks.minimum();
-                    long timeToSleep;
-
-                    synchronized (task.lock) {
-                        if (task.cancelled) {
-                            tasks.delete(0);
-                            continue;
-                        }
-
-                        // check the time to sleep for the first task scheduled
-                        timeToSleep = task.when - currentTime;
-                    }
-
-                    if (timeToSleep > 0) {
-                        // sleep!
-                        try {
-                            this.wait(timeToSleep);
-                        } catch (InterruptedException ignored) {
-                        }
-                        continue;
-                    }
-
-                    // no sleep is necessary before launching the task
-
-                    synchronized (task.lock) {
-                        int pos = 0;
-                        if (tasks.minimum().when != task.when) {
-                            pos = tasks.getTask(task);
-                        }
-                        if (task.cancelled) {
-                            tasks.delete(tasks.getTask(task));
-                            continue;
-                        }
-
-                        // set time to schedule
-                        task.setScheduledTime(task.when);
-
-                        // remove task from queue
-                        tasks.delete(pos);
-
-                        // set when the next task should be launched
-                        if (task.period >= 0) {
-                            // this is a repeating task,
-                            if (task.fixedRate) {
-                                // task is scheduled at fixed rate
-                                task.when = task.when + task.period;
-                            } else {
-                                // task is scheduled at fixed delay
-                                task.when = System.currentTimeMillis()
-                                        + task.period;
-                            }
-
-                            // insert this task into queue
-                            insertTask(task);
-                        } else {
-                            task.when = 0;
-                        }
-                    }
-                }
-
-                boolean taskCompletedNormally = false;
-                try {
-					if (task.isEnabled())
-                    	task.run();
-                    taskCompletedNormally = true;
-                } finally {
-                    if (!taskCompletedNormally) {
-                        synchronized (this) {
-                            cancelled = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        private void insertTask(TimerTaskX newTask) {
-            // callers are synchronized
-            tasks.insert(newTask);
-            this.notify();
-        }
-
-        /**
-         * Cancels timer.
-         */
-        public synchronized void cancel() {
-            cancelled = true;
-            tasks.reset();
-            this.notify();
-        }
-
-        public int purge() {
-            if (tasks.isEmpty()) {
-                return 0;
-            }
-            // callers are synchronized
-            tasks.deletedCancelledNumber = 0;
-            tasks.deleteIfCancelled();
-            return tasks.deletedCancelledNumber;
-        }
-
-    }
-
-    private static final class FinalizerHelper {
-        private final TimerImpl impl;
-
-        FinalizerHelper(TimerImpl impl) {
-            this.impl = impl;
-        }
-
-        @Override protected void finalize() throws Throwable {
-            try {
-                synchronized (impl) {
-                    impl.finished = true;
-                    impl.notify();
-                }
-            } finally {
-                super.finalize();
-            }
-        }
-    }
+public class TimerX {
 
     private static long timerId;
-
-    private synchronized static long nextId() {
-        return timerId++;
-    }
-
     /* This object will be used in synchronization purposes */
     private final TimerImpl impl;
-
     // Used to finalize thread
     @SuppressWarnings("unused")
     private final FinalizerHelper finalizer;
@@ -396,6 +101,10 @@ public class TimerX
      */
     public TimerX() {
         this(false);
+    }
+
+    private synchronized static long nextId() {
+        return timerId++;
     }
 
     /**
@@ -587,6 +296,294 @@ public class TimerX
 
             // insert the newTask into queue
             impl.insertTask(task);
+        }
+    }
+
+    private static final class TimerImpl extends Thread {
+
+        /**
+         * True if the method cancel() of the Timer was called or the !!!stop()
+         * method was invoked
+         */
+        private boolean cancelled;
+        /**
+         * True if the Timer has become garbage
+         */
+        private boolean finished;
+        /**
+         * Contains scheduled events, sorted according to
+         * {@code when} field of TaskScheduled object.
+         */
+        private TimerHeap tasks = new TimerHeap();
+
+        /**
+         * Starts a new timer.
+         *
+         * @param name thread's name
+         * @param isDaemon daemon thread or not
+         */
+        TimerImpl(String name, boolean isDaemon) {
+            this.setName(name);
+            this.setDaemon(isDaemon);
+            this.start();
+        }
+
+        /**
+         * This method will be launched on separate thread for each Timer
+         * object.
+         */
+        @Override
+        public void run() {
+            while (true) {
+                TimerTaskX task;
+                synchronized (this) {
+                    // need to check cancelled inside the synchronized block
+                    if (cancelled) {
+                        return;
+                    }
+                    if (tasks.isEmpty()) {
+                        if (finished) {
+                            return;
+                        }
+                        // no tasks scheduled -- sleep until any task appear
+                        try {
+                            this.wait();
+                        } catch (InterruptedException ignored) {
+                        }
+                        continue;
+                    }
+
+                    long currentTime = System.currentTimeMillis();
+
+                    task = tasks.minimum();
+                    long timeToSleep;
+
+                    synchronized (task.lock) {
+                        if (task.cancelled) {
+                            tasks.delete(0);
+                            continue;
+                        }
+
+                        // check the time to sleep for the first task scheduled
+                        timeToSleep = task.when - currentTime;
+                    }
+
+                    if (timeToSleep > 0) {
+                        // sleep!
+                        try {
+                            this.wait(timeToSleep);
+                        } catch (InterruptedException ignored) {
+                        }
+                        continue;
+                    }
+
+                    // no sleep is necessary before launching the task
+
+                    synchronized (task.lock) {
+                        int pos = 0;
+                        if (tasks.minimum().when != task.when) {
+                            pos = tasks.getTask(task);
+                        }
+                        if (task.cancelled) {
+                            tasks.delete(tasks.getTask(task));
+                            continue;
+                        }
+
+                        // set time to schedule
+                        task.setScheduledTime(task.when);
+
+                        // remove task from queue
+                        tasks.delete(pos);
+
+                        // set when the next task should be launched
+                        if (task.period >= 0) {
+                            // this is a repeating task,
+                            if (task.fixedRate) {
+                                // task is scheduled at fixed rate
+                                task.when = task.when + task.period;
+                            } else {
+                                // task is scheduled at fixed delay
+                                task.when = System.currentTimeMillis()
+                                        + task.period;
+                            }
+
+                            // insert this task into queue
+                            insertTask(task);
+                        } else {
+                            task.when = 0;
+                        }
+                    }
+                }
+
+                boolean taskCompletedNormally = false;
+                try {
+                    if (task.isEnabled())
+                        task.run();
+                    taskCompletedNormally = true;
+                } finally {
+                    if (!taskCompletedNormally) {
+                        synchronized (this) {
+                            cancelled = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void insertTask(TimerTaskX newTask) {
+            // callers are synchronized
+            tasks.insert(newTask);
+            this.notify();
+        }
+
+        /**
+         * Cancels timer.
+         */
+        public synchronized void cancel() {
+            cancelled = true;
+            tasks.reset();
+            this.notify();
+        }
+
+        public int purge() {
+            if (tasks.isEmpty()) {
+                return 0;
+            }
+            // callers are synchronized
+            tasks.deletedCancelledNumber = 0;
+            tasks.deleteIfCancelled();
+            return tasks.deletedCancelledNumber;
+        }
+
+        private static final class TimerHeap {
+            private int DEFAULT_HEAP_SIZE = 256;
+
+            private TimerTaskX[] timers = new TimerTaskX[DEFAULT_HEAP_SIZE];
+
+            private int size = 0;
+
+            private int deletedCancelledNumber = 0;
+
+            public TimerTaskX minimum() {
+                return timers[0];
+            }
+
+            public boolean isEmpty() {
+                return size == 0;
+            }
+
+            public void insert(TimerTaskX task) {
+                if (timers.length == size) {
+                    TimerTaskX[] appendedTimers = new TimerTaskX[size * 2];
+                    System.arraycopy(timers, 0, appendedTimers, 0, size);
+                    timers = appendedTimers;
+                }
+                timers[size++] = task;
+                upHeap();
+            }
+
+            public void delete(int pos) {
+                // posible to delete any position of the heap
+                if (pos >= 0 && pos < size) {
+                    timers[pos] = timers[--size];
+                    timers[size] = null;
+                    downHeap(pos);
+                }
+            }
+
+            private void upHeap() {
+                int current = size - 1;
+                int parent = (current - 1) / 2;
+
+                while (timers[current].when < timers[parent].when) {
+                    // swap the two
+                    TimerTaskX tmp = timers[current];
+                    timers[current] = timers[parent];
+                    timers[parent] = tmp;
+
+                    // update pos and current
+                    current = parent;
+                    parent = (current - 1) / 2;
+                }
+            }
+
+            private void downHeap(int pos) {
+                int current = pos;
+                int child = 2 * current + 1;
+
+                while (child < size && size > 0) {
+                    // compare the children if they exist
+                    if (child + 1 < size
+                            && timers[child + 1].when < timers[child].when) {
+                        child++;
+                    }
+
+                    // compare selected child with parent
+                    if (timers[current].when < timers[child].when) {
+                        break;
+                    }
+
+                    // swap the two
+                    TimerTaskX tmp = timers[current];
+                    timers[current] = timers[child];
+                    timers[child] = tmp;
+
+                    // update pos and current
+                    current = child;
+                    child = 2 * current + 1;
+                }
+            }
+
+            public void reset() {
+                timers = new TimerTaskX[DEFAULT_HEAP_SIZE];
+                size = 0;
+            }
+
+            public void adjustMinimum() {
+                downHeap(0);
+            }
+
+            public void deleteIfCancelled() {
+                for (int i = 0; i < size; i++) {
+                    if (timers[i].cancelled) {
+                        deletedCancelledNumber++;
+                        delete(i);
+                        // re-try this point
+                        i--;
+                    }
+                }
+            }
+
+            private int getTask(TimerTaskX task) {
+                for (int i = 0; i < timers.length; i++) {
+                    if (timers[i] == task) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+        }
+
+    }
+
+    private static final class FinalizerHelper {
+        private final TimerImpl impl;
+
+        FinalizerHelper(TimerImpl impl) {
+            this.impl = impl;
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            try {
+                synchronized (impl) {
+                    impl.finished = true;
+                    impl.notify();
+                }
+            } finally {
+                super.finalize();
+            }
         }
     }
 }

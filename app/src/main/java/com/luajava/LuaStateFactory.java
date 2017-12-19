@@ -24,9 +24,8 @@
 
 package com.luajava;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class is responsible for instantiating new LuaStates.
@@ -34,72 +33,70 @@ import java.util.*;
  * and an index is returned. This index is registred in Lua
  * and it is used to find the right LuaState when lua calls
  * a Java Function.
- * 
+ *
  * @author Thiago Ponte
  */
-public final class LuaStateFactory
-{
-	/**
-	 * Array with all luaState's instances
-	 */
-	private static final Map<Long,LuaState> states = new HashMap<Long,LuaState>();
-	
-	/**
-	 * Non-public constructor. 
-	 */
-	private LuaStateFactory()
-	{}
-	
-	/**
-	 * Method that creates a new instance of LuaState
-	 * @return LuaState
-	 */
-	public synchronized static LuaState newLuaState()
-	{
-		LuaState L = new LuaState();
-		
-		states.put(L.getPointer(), L);
-		
-		return L;
-	}
-	
-	/**
-	 * Returns a existing instance of LuaState
-	 * @param index
-	 * @return LuaState
-	 */
-	public synchronized static LuaState getExistingState(long index)
-	{
-		LuaState l= states.get(index);
-		if(l==null)
-		{
-			l=new LuaState(index);
-			states.put(index,l);
-		}
-		return l;
-	}
+public final class LuaStateFactory {
+    /**
+     * Array with all luaState's instances
+     */
+    private static final Map<Long, LuaState> states = new HashMap<Long, LuaState>();
 
-	/**
-	 * Receives a existing LuaState and checks if it exists in the states list.
-	 * If it doesn't exist adds it to the list.
-	 * @param L
-	 * @return int
-	 */
-	public synchronized static long insertLuaState(LuaState L)
-	{
-		states.put(L.getPointer(), L);
-		
-		return L.getPointer();
-	}
-	
-	/**
-	 * removes the luaState from the states list
-	 * @param idx
-	 */
-	public synchronized static void removeLuaState(long idx)
-	{
-		states.put(idx, null);
-	}
-	
+    /**
+     * Non-public constructor.
+     */
+    private LuaStateFactory() {
+    }
+
+    /**
+     * Method that creates a new instance of LuaState
+     *
+     * @return LuaState
+     */
+    public synchronized static LuaState newLuaState() {
+        LuaState L = new LuaState();
+
+        states.put(L.getPointer(), L);
+
+        return L;
+    }
+
+    /**
+     * Returns a existing instance of LuaState
+     *
+     * @param index
+     * @return LuaState
+     */
+    public synchronized static LuaState getExistingState(long index) {
+        LuaState l = states.get(index);
+        if (l == null) {
+            l = new LuaState(index);
+            states.put(index, l);
+        }
+        return l;
+    }
+
+    /**
+     * Receives a existing LuaState and checks if it exists in the states list.
+     * If it doesn't exist adds it to the list.
+     *
+     * @param L
+     * @return int
+     */
+    public synchronized static long insertLuaState(LuaState L) {
+        states.put(L.getPointer(), L);
+
+        return L.getPointer();
+    }
+
+    /**
+     * removes the luaState from the states list
+     *
+     * @param idx
+     */
+    public synchronized static void removeLuaState(long idx) {
+        states.put(idx, null);
+    }
+
 
 }

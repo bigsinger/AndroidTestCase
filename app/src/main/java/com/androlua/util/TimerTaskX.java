@@ -44,17 +44,21 @@ public abstract class TimerTaskX implements Runnable {
      */
     private long scheduledTime;
 
-	private boolean mEnabled;
+    private boolean mEnabled;
 
-	public void setPeriod(long period)
-	{
-		this.period = period;
-	}
+    /**
+     * Creates a new {@code TimerTask}.
+     */
+    protected TimerTaskX() {
+    }
 
-	public long getPeriod()
-	{
-		return period;
-	}
+    public long getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(long period) {
+        this.period = period;
+    }
 
     /*
      * Method called from the Timer for synchronized getting of when field.
@@ -68,7 +72,7 @@ public abstract class TimerTaskX implements Runnable {
     /*
      * Method called from the Timer object when scheduling an event @param time
      */
-   public  void setScheduledTime(long time) {
+    public void setScheduledTime(long time) {
         synchronized (lock) {
             scheduledTime = time;
         }
@@ -87,18 +91,12 @@ public abstract class TimerTaskX implements Runnable {
     }
 
     /**
-     * Creates a new {@code TimerTask}.
-     */
-    protected TimerTaskX() {
-    }
-
-    /**
      * Cancels the {@code TimerTask} and removes it from the {@code Timer}'s queue. Generally, it
      * returns {@code false} if the call did not prevent a {@code TimerTask} from running at
      * least once. Subsequent calls have no effect.
      *
      * @return {@code true} if the call prevented a scheduled execution
-     *         from taking place, {@code false} otherwise.
+     * from taking place, {@code false} otherwise.
      */
     public boolean cancel() {
         synchronized (lock) {
@@ -127,15 +125,12 @@ public abstract class TimerTaskX implements Runnable {
      */
     public abstract void run();
 
-	
-	public void setEnabled(boolean enabled)
-	{
-		mEnabled = enabled;
-	}
+    public boolean isEnabled() {
+        return mEnabled;
+    }
 
-	public boolean isEnabled()
-	{
-		return mEnabled;
-	}
-	
+    public void setEnabled(boolean enabled) {
+        mEnabled = enabled;
+    }
+
 }

@@ -138,6 +138,13 @@ public class ScriptRunner  extends Activity implements LuaBroadcastReceiver.OnRe
         return null;
     }
 
+    /*
+    注册基本函数
+     */
+    public static void registerJavaFunction(LuaState L, ILuaPrintListener printListener) throws Exception {
+        JavaFunction print = new LuaPrint(printListener, L);
+        print.register("print");
+    }
 
     public Object doAsset(String name, Object... args) {
         int ok = 0;

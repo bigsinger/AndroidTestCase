@@ -1,35 +1,40 @@
 package com.androlua;
 
-import android.app.*;
-import android.view.*;
-import android.os.*;
-import com.luajava.*;
+import android.app.Fragment;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-public class LuaFragment extends Fragment
-{
+import com.luajava.LuaException;
+import com.luajava.LuaObject;
+import com.luajava.LuaTable;
 
-	private LuaTable mLayout=null;
+public class LuaFragment extends Fragment {
 
-	private LuaObject mLoadLayout=null;
-	public LuaFragment(){
+    private LuaTable mLayout = null;
 
-	}
-/*
-	public LuaFragment(LuaTable layout){
-		mLoadLayout=layout.getLuaState().getLuaObject("loadlayout");
-		mLayout=layout;
-	}*/
-	public void setLayout(LuaTable layout){
-		mLayout=layout;
-	}
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-	{
-		try {
-			return (View)mLoadLayout.call(mLayout);
-		}
-		catch (LuaException e) {
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
+    private LuaObject mLoadLayout = null;
+
+    public LuaFragment() {
+
+    }
+
+    /*
+        public LuaFragment(LuaTable layout){
+            mLoadLayout=layout.getLuaState().getLuaObject("loadlayout");
+            mLayout=layout;
+        }*/
+    public void setLayout(LuaTable layout) {
+        mLayout = layout;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        try {
+            return (View) mLoadLayout.call(mLayout);
+        } catch (LuaException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+    }
 }

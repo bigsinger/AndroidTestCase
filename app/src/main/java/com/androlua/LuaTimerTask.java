@@ -1,402 +1,338 @@
 package com.androlua;
 
-import com.androlua.util.*;
-import com.luajava.*;
-import java.io.*;
-import java.util.regex.*;
+import com.androlua.util.TimerTaskX;
+import com.luajava.JavaFunction;
+import com.luajava.LuaException;
+import com.luajava.LuaObject;
+import com.luajava.LuaState;
+import com.luajava.LuaStateFactory;
 
-public class LuaTimerTask extends TimerTaskX
-{
-	private LuaState L;
-	
-	private ILuaContext mILuaContext;
+import java.io.IOException;
+import java.util.regex.Pattern;
 
-	private String mSrc;
+public class LuaTimerTask extends TimerTaskX {
+    private LuaState L;
 
-	private Object[] mArg=new Object[0];
+    private ILuaContext mILuaContext;
 
-	private boolean mEnabled=true;
+    private String mSrc;
 
-	private byte[] mBuffer;
+    private Object[] mArg = new Object[0];
 
-	public LuaTimerTask(ILuaContext ILuaContext, String src) throws LuaException
-	{
-		this(ILuaContext, src, null);
-	}
+    private boolean mEnabled = true;
 
-	public LuaTimerTask(ILuaContext ILuaContext, String src, Object[] arg) throws LuaException
-	{
-		mILuaContext = ILuaContext;
-		mSrc = src;
-		if (arg != null)
-			mArg = arg;
-	}
+    private byte[] mBuffer;
 
-	public LuaTimerTask(ILuaContext ILuaContext, LuaObject func) throws LuaException
-	{
-		this(ILuaContext, func, null);
-	}
+    public LuaTimerTask(ILuaContext ILuaContext, String src) throws LuaException {
+        this(ILuaContext, src, null);
+    }
 
-	public LuaTimerTask(ILuaContext ILuaContext, LuaObject func, Object[] arg) throws LuaException
-	{
+    public LuaTimerTask(ILuaContext ILuaContext, String src, Object[] arg) throws LuaException {
+        mILuaContext = ILuaContext;
+        mSrc = src;
+        if (arg != null)
+            mArg = arg;
+    }
 
-		mILuaContext = ILuaContext;
-		if (arg != null)
-			mArg = arg;
+    public LuaTimerTask(ILuaContext ILuaContext, LuaObject func) throws LuaException {
+        this(ILuaContext, func, null);
+    }
 
-		mBuffer = func.dump();
-	}
-	
+    public LuaTimerTask(ILuaContext ILuaContext, LuaObject func, Object[] arg) throws LuaException {
 
-	@Override
-	public void run()
-	{
-		if (mEnabled == false)
-			return;
-		try
-		{
-			if (L == null)
-			{
-				initLua();
+        mILuaContext = ILuaContext;
+        if (arg != null)
+            mArg = arg;
 
-				if (mBuffer != null)
-					newLuaThread(mBuffer, mArg);
-				else
-					newLuaThread(mSrc, mArg);
-			}
-			else
-			{
-				L.getGlobal("run");
-				if (!L.isNil(-1))
-					runFunc("run");
-				else
-				{
-					if (mBuffer != null)
-						newLuaThread(mBuffer, mArg);
-					else
-						newLuaThread(mSrc, mArg);
-				}
-			}
-		}
-		catch (LuaException e)
-		{
-			mILuaContext.onPrint(e.getMessage());
-		}
-		L.gc(LuaState.LUA_GCCOLLECT, 1);
-		System.gc();
-		
-	}
-
-	@Override
-	public boolean cancel()
-	{
-		// TODO: Implement this method
-		return super.cancel();
-	}
-
-	public void setArg(Object[] arg)
-	{
-		mArg=arg;
-	}
-	
-	public void setArg(LuaObject arg) throws ArrayIndexOutOfBoundsException, LuaException, IllegalArgumentException
-	{
-		mArg=arg.asArray();
-	}
-	
-	public void setEnabled(boolean enabled)
-	{
-		mEnabled = enabled;
-	}
-
-	public boolean isEnabled()
-	{
-		return mEnabled;
-	}
+        mBuffer = func.dump();
+    }
 
 
-	public void set(String key, Object value) throws LuaException
-	{
-		L.pushObjectValue(value);
-		L.setGlobal(key);
-	}
+    @Override
+    public void run() {
+        if (mEnabled == false)
+            return;
+        try {
+            if (L == null) {
+                initLua();
 
-	public Object get(String key) throws LuaException
-	{
-		L.getGlobal(key);
-		return L.toJavaObject(-1);
-	}
+                if (mBuffer != null)
+                    newLuaThread(mBuffer, mArg);
+                else
+                    newLuaThread(mSrc, mArg);
+            } else {
+                L.getGlobal("run");
+                if (!L.isNil(-1))
+                    runFunc("run");
+                else {
+                    if (mBuffer != null)
+                        newLuaThread(mBuffer, mArg);
+                    else
+                        newLuaThread(mSrc, mArg);
+                }
+            }
+        } catch (LuaException e) {
+            mILuaContext.onPrint(e.getMessage());
+        }
+        L.gc(LuaState.LUA_GCCOLLECT, 1);
+        System.gc();
 
-	private String errorReason(int error)
-	{
-		switch (error)
-		{
-			case 6:
-				return "error error";
-			case 5:
-				return "GC error";
-			case 4:
-				return "Out of memory";
-			case 3:
-				return "Syntax error";
-			case 2:
-				return "Runtime error";
-			case 1:
-				return "Yield error";
-		}
-		return "Unknown error " + error;
-	}
-	
-	private void initLua() throws LuaException
-	{
-		L = LuaStateFactory.newLuaState();
-		L.openLibs();
-		L.pushJavaObject(mILuaContext);
-		if(mILuaContext instanceof LuaActivity)
-		{
-			L.setGlobal("activity");
-		}
-		else if(mILuaContext instanceof LuaService)
-		{
-			L.setGlobal("service");
-		}
-		L.pushJavaObject(this);
-		L.setGlobal("this");
-		
-		L.pushContext(mILuaContext.getContext());
-		
-		JavaFunction print = new LuaPrint(mILuaContext,L);
-		print.register("print");
+    }
 
-		L.getGlobal("package"); 
-		
-		L.pushString(mILuaContext.getLuaLpath());
-		L.setField(-2, "path");
-		L.pushString(mILuaContext.getLuaCpath());
-		L.setField(-2, "cpath");
-		L.pop(1);          
+    @Override
+    public boolean cancel() {
+        // TODO: Implement this method
+        return super.cancel();
+    }
 
-		JavaFunction set = new JavaFunction(L) {
-			@Override
-			public int execute() throws LuaException
-			{
+    public void setArg(Object[] arg) {
+        mArg = arg;
+    }
 
-				mILuaContext.set(L.toString(2), L.toJavaObject(3));
-				return 0;
-			}
-		};
-		set.register("set");
+    public void setArg(LuaObject arg) throws ArrayIndexOutOfBoundsException, LuaException, IllegalArgumentException {
+        mArg = arg.asArray();
+    }
 
-		JavaFunction call = new JavaFunction(L) {
-			@Override
-			public int execute() throws LuaException
-			{
+    public boolean isEnabled() {
+        return mEnabled;
+    }
 
-				int top=L.getTop();
-				if (top > 2)
-				{
-					Object[] args = new Object[top - 2];
-					for (int i=3;i <= top;i++)
-					{
-						args[i - 3] = L.toJavaObject(i);
-					}				
-					mILuaContext.call(L.toString(2), args);
-				}
-				else if (top == 2)
-				{
-					mILuaContext.call(L.toString(2));
-				}
-				return 0;
-			}
-		};
-		call.register("call");
-	}
+    public void setEnabled(boolean enabled) {
+        mEnabled = enabled;
+    }
 
-	private void newLuaThread(String str, Object...args)
-	{
-		try
-		{
+    public void set(String key, Object value) throws LuaException {
+        L.pushObjectValue(value);
+        L.setGlobal(key);
+    }
 
-			if (Pattern.matches("^\\w+$", str))
-			{
-				doAsset(str + ".lua", args);
-			}
-			else if (Pattern.matches("^[\\w\\.\\_/]+$", str))
-			{
-				L.getGlobal("luajava");
-				L.pushString(mILuaContext.getLuaDir());
-				L.setField(-2, "luadir"); 
-				L.pushString(str);
-				L.setField(-2, "luapath"); 
-				L.pop(1);
+    public Object get(String key) throws LuaException {
+        L.getGlobal(key);
+        return L.toJavaObject(-1);
+    }
 
-				doFile(str, args);
-			}
-			else
-			{
-				doString(str, args);
-			}
+    private String errorReason(int error) {
+        switch (error) {
+            case 6:
+                return "error error";
+            case 5:
+                return "GC error";
+            case 4:
+                return "Out of memory";
+            case 3:
+                return "Syntax error";
+            case 2:
+                return "Runtime error";
+            case 1:
+                return "Yield error";
+        }
+        return "Unknown error " + error;
+    }
 
-		}
-		catch (Exception e)
-		{
-			mILuaContext.onPrint(this.toString() + " " + e.getMessage());
+    private void initLua() throws LuaException {
+        L = LuaStateFactory.newLuaState();
+        L.openLibs();
+        L.pushJavaObject(mILuaContext);
+        if (mILuaContext instanceof LuaActivity) {
+            L.setGlobal("activity");
+        } else if (mILuaContext instanceof LuaService) {
+            L.setGlobal("service");
+        }
+        L.pushJavaObject(this);
+        L.setGlobal("this");
 
-		}
+        L.pushContext(mILuaContext.getContext());
 
-	}
-	
-	private void newLuaThread(byte[] buf, Object...args) throws LuaException 
-	{
-		int ok = 0;
-		L.setTop(0);
-		ok = L.LloadBuffer(buf, "TimerTask");
+        JavaFunction print = new LuaPrint(mILuaContext, L);
+        print.register("print");
 
-		if (ok == 0)
-		{
-			L.getGlobal("debug");
-			L.getField(-1, "traceback");
-			L.remove(-2);
-			L.insert(-2);
-			int l=args.length;
-			for (int i=0;i < l;i++)
-			{
-				L.pushObjectValue(args[i]);
-			}
-			ok = L.pcall(l, 0, -2 - l);
-			if (ok == 0)
-			{				
-				return;
-			}
-		}
-		throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
-	}
+        L.getGlobal("package");
 
-	private void doFile(String filePath, Object...args) throws LuaException 
-	{
-		int ok = 0;
-		L.setTop(0);
-		ok = L.LloadFile(filePath);
+        L.pushString(mILuaContext.getLuaLpath());
+        L.setField(-2, "path");
+        L.pushString(mILuaContext.getLuaCpath());
+        L.setField(-2, "cpath");
+        L.pop(1);
 
-		if (ok == 0)
-		{
-			L.getGlobal("debug");
-			L.getField(-1, "traceback");
-			L.remove(-2);
-			L.insert(-2);
-			int l=args.length;
-			for (int i=0;i < l;i++)
-			{
-				L.pushObjectValue(args[i]);
-			}
-			ok = L.pcall(l, 0, -2 - l);
-			if (ok == 0)
-			{				
-				return;
-			}
-		}
-		throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
-	}
+        JavaFunction set = new JavaFunction(L) {
+            @Override
+            public int execute() throws LuaException {
 
-	public void doAsset(String name, Object...args) throws LuaException, IOException 
-	{
-		int ok = 0;
-		byte[] bytes = LuaUtil.readAsset(mILuaContext.getContext(),name);
-		L.setTop(0);
-		ok = L.LloadBuffer(bytes, name);
+                mILuaContext.set(L.toString(2), L.toJavaObject(3));
+                return 0;
+            }
+        };
+        set.register("set");
 
-		if (ok == 0)
-		{
-			L.getGlobal("debug");
-			L.getField(-1, "traceback");
-			L.remove(-2);
-			L.insert(-2);
-			int l=args.length;
-			for (int i=0;i < l;i++)
-			{
-				L.pushObjectValue(args[i]);
-			}
-			ok = L.pcall(l, 0, -2 - l);
-			if (ok == 0)
-			{				
-				return;
-			}
-		}
-		throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
-	}
+        JavaFunction call = new JavaFunction(L) {
+            @Override
+            public int execute() throws LuaException {
 
-	private void doString(String src, Object...args) throws LuaException
-	{			
-		L.setTop(0);
-		int ok = L.LloadString(src);
+                int top = L.getTop();
+                if (top > 2) {
+                    Object[] args = new Object[top - 2];
+                    for (int i = 3; i <= top; i++) {
+                        args[i - 3] = L.toJavaObject(i);
+                    }
+                    mILuaContext.call(L.toString(2), args);
+                } else if (top == 2) {
+                    mILuaContext.call(L.toString(2));
+                }
+                return 0;
+            }
+        };
+        call.register("call");
+    }
 
-		if (ok == 0)
-		{
-			L.getGlobal("debug");
-			L.getField(-1, "traceback");
-			L.remove(-2);
-			L.insert(-2);
-			int l=args.length;
-			for (int i=0;i < l;i++)
-			{
-				L.pushObjectValue(args[i]);
-			}
-			ok = L.pcall(l, 0, -2 - l);
-			if (ok == 0)
-			{				
+    private void newLuaThread(String str, Object... args) {
+        try {
 
-				return;
-			}
-		}
-		throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
-	}
+            if (Pattern.matches("^\\w+$", str)) {
+                doAsset(str + ".lua", args);
+            } else if (Pattern.matches("^[\\w\\.\\_/]+$", str)) {
+                L.getGlobal("luajava");
+                L.pushString(mILuaContext.getLuaDir());
+                L.setField(-2, "luadir");
+                L.pushString(str);
+                L.setField(-2, "luapath");
+                L.pop(1);
+
+                doFile(str, args);
+            } else {
+                doString(str, args);
+            }
+
+        } catch (Exception e) {
+            mILuaContext.onPrint(this.toString() + " " + e.getMessage());
+
+        }
+
+    }
+
+    private void newLuaThread(byte[] buf, Object... args) throws LuaException {
+        int ok = 0;
+        L.setTop(0);
+        ok = L.LloadBuffer(buf, "TimerTask");
+
+        if (ok == 0) {
+            L.getGlobal("debug");
+            L.getField(-1, "traceback");
+            L.remove(-2);
+            L.insert(-2);
+            int l = args.length;
+            for (int i = 0; i < l; i++) {
+                L.pushObjectValue(args[i]);
+            }
+            ok = L.pcall(l, 0, -2 - l);
+            if (ok == 0) {
+                return;
+            }
+        }
+        throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
+    }
+
+    private void doFile(String filePath, Object... args) throws LuaException {
+        int ok = 0;
+        L.setTop(0);
+        ok = L.LloadFile(filePath);
+
+        if (ok == 0) {
+            L.getGlobal("debug");
+            L.getField(-1, "traceback");
+            L.remove(-2);
+            L.insert(-2);
+            int l = args.length;
+            for (int i = 0; i < l; i++) {
+                L.pushObjectValue(args[i]);
+            }
+            ok = L.pcall(l, 0, -2 - l);
+            if (ok == 0) {
+                return;
+            }
+        }
+        throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
+    }
+
+    public void doAsset(String name, Object... args) throws LuaException, IOException {
+        int ok = 0;
+        byte[] bytes = LuaUtil.readAsset(mILuaContext.getContext(), name);
+        L.setTop(0);
+        ok = L.LloadBuffer(bytes, name);
+
+        if (ok == 0) {
+            L.getGlobal("debug");
+            L.getField(-1, "traceback");
+            L.remove(-2);
+            L.insert(-2);
+            int l = args.length;
+            for (int i = 0; i < l; i++) {
+                L.pushObjectValue(args[i]);
+            }
+            ok = L.pcall(l, 0, -2 - l);
+            if (ok == 0) {
+                return;
+            }
+        }
+        throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
+    }
+
+    private void doString(String src, Object... args) throws LuaException {
+        L.setTop(0);
+        int ok = L.LloadString(src);
+
+        if (ok == 0) {
+            L.getGlobal("debug");
+            L.getField(-1, "traceback");
+            L.remove(-2);
+            L.insert(-2);
+            int l = args.length;
+            for (int i = 0; i < l; i++) {
+                L.pushObjectValue(args[i]);
+            }
+            ok = L.pcall(l, 0, -2 - l);
+            if (ok == 0) {
+
+                return;
+            }
+        }
+        throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
+    }
 
 
-	private void runFunc(String funcName, Object...args)
-	{
-		try
-		{
-			L.setTop(0);
-			L.getGlobal(funcName);
-			if (L.isFunction(-1))
-			{
-				L.getGlobal("debug");
-				L.getField(-1, "traceback");
-				L.remove(-2);
-				L.insert(-2);
+    private void runFunc(String funcName, Object... args) {
+        try {
+            L.setTop(0);
+            L.getGlobal(funcName);
+            if (L.isFunction(-1)) {
+                L.getGlobal("debug");
+                L.getField(-1, "traceback");
+                L.remove(-2);
+                L.insert(-2);
 
-				int l=args.length;
-				for (int i=0;i < l;i++)
-				{
-					L.pushObjectValue(args[i]);
-				}
+                int l = args.length;
+                for (int i = 0; i < l; i++) {
+                    L.pushObjectValue(args[i]);
+                }
 
-				int ok = L.pcall(l, 1, -2 - l);
-				if (ok == 0)
-				{				
-					return ;
-				}
-				throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
-			}
-		}
-		catch (LuaException e)
-		{
-			mILuaContext.onPrint(funcName + " " + e.getMessage());
-		}
+                int ok = L.pcall(l, 1, -2 - l);
+                if (ok == 0) {
+                    return;
+                }
+                throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
+            }
+        } catch (LuaException e) {
+            mILuaContext.onPrint(funcName + " " + e.getMessage());
+        }
 
-	}
+    }
 
-	private void setField(String key, Object value)
-	{
-		try
-		{
-			L.pushObjectValue(value);
-			L.setGlobal(key);
-		}
-		catch (LuaException e)
-		{
-			mILuaContext.onPrint(e.getMessage());
-		}
-	}
+    private void setField(String key, Object value) {
+        try {
+            L.pushObjectValue(value);
+            L.setGlobal(key);
+        } catch (LuaException e) {
+            mILuaContext.onPrint(e.getMessage());
+        }
+    }
 
 };

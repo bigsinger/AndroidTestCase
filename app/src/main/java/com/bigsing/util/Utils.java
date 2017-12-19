@@ -198,6 +198,34 @@ public class Utils {
         }
     }
 
+    public static Boolean copyAssetsFileToDirTemp(String srcFileName, String dstFileName, Context context) {
+        byte[] array = new byte[4096];
+        File fileDest = new File(dstFileName);
+        if (fileDest.exists()) {
+            fileDest.delete();
+        }
+        try {
+            InputStream open = context.getResources().getAssets().open(srcFileName);
+            FileOutputStream fileOutputStream = new FileOutputStream(fileDest);
+            while (true) {
+                int read = open.read(array);
+                if (read == -1) {
+                    break;
+                }
+                fileOutputStream.write(array, 0, read);
+            }
+            fileOutputStream.flush();
+            fileOutputStream.close();
+            fileDest.setReadable(true);
+            fileDest.setWritable(true);
+            fileDest.setExecutable(true);
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
     //读取asset文件
 
     public static byte[] readAsset(Context context, String name) throws IOException {

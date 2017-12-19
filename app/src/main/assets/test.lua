@@ -20,6 +20,9 @@ local MainActivity = luajava.bindClass("com.bigsing.test.MainActivity")
 print(MainActivity)
 Build = bindClass("android.os.Build")
 print(Build)
+LinearLayout = bindClass("android.widget.LinearLayout")
+EditText = bindClass("android.widget.EditText")
+Button = bindClass("android.widget.Button")
 
 -- 调用 的Java 方法名
 local method = 'testLua'
@@ -51,8 +54,9 @@ layout={
 };
 
 local ver = Build.VERSION.SDK_INT
+loadlayout(layout)
 print(ver)
---ac.setContentView(loadlayout(layout))
+--ac.setContentView()
 --this.setContentView(loadlayout(layout))
 --btn.onClick = function() print('Button Click') end
 --[[

@@ -1,35 +1,35 @@
 package com.luajava;
 
-public class LuaFunction <T extends java.lang.Object>extends LuaObject implements LuaMetaTable {
+public class LuaFunction<T extends java.lang.Object> extends LuaObject implements LuaMetaTable {
 
-	@Override
-	public T __call(Object[] arg) throws LuaException {
-		// TODO: Implement this method
-		return (T)super.call(arg);
-	}
+    protected LuaFunction(LuaState L, String globalName) {
+        super(L, globalName);
+    }
 
-	@Override
-	public Object __index(String key) {
-		// TODO: Implement this method
-		return null;
-	}
+    protected LuaFunction(LuaState L, int index) {
+        super(L, index);
+    }
 
-	@Override
-	public void __newIndex(String key, Object value) {
-		// TODO: Implement this method
-	}
+    @Override
+    public T __call(Object[] arg) throws LuaException {
+        // TODO: Implement this method
+        return (T) super.call(arg);
+    }
 
-	@Override
-	public T call(Object...args) throws LuaException {
-		// TODO: Implement this method
-		return (T)super.call(args);
-	}
-	
-	protected LuaFunction(LuaState L, String globalName) {
-		super(L, globalName);
-	}
+    @Override
+    public Object __index(String key) {
+        // TODO: Implement this method
+        return null;
+    }
 
-	protected LuaFunction(LuaState L, int index) {
-		super(L, index);
-	}
+    @Override
+    public void __newIndex(String key, Object value) {
+        // TODO: Implement this method
+    }
+
+    @Override
+    public T call(Object... args) throws LuaException {
+        // TODO: Implement this method
+        return (T) super.call(args);
+    }
 }

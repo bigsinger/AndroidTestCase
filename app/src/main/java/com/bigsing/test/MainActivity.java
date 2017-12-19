@@ -18,6 +18,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.androlua.ILuaPrintListener;
@@ -163,6 +164,7 @@ public class MainActivity extends LuaActivity implements ILuaPrintListener{
                     //if (file.exists() == false) {
                     Utils.copyAssetsFileToDir("test.lua", luaDir, MainActivity.this);
                     Utils.copyAssetsFileToDir("layout.lua", luaDir, MainActivity.this);
+                    Utils.copyAssetsFileToDirTemp("lua/loadlayout.lua", luaDir + "/loadlayout.lua", MainActivity.this);
                    // }
 
                     luaRunner.init(MainActivity.this, MainActivity.this);

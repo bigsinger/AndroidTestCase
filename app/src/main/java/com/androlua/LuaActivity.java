@@ -1,76 +1,91 @@
 package com.androlua;
 
-import android.app.*;
-import android.content.*;
-import android.content.res.*;
-import android.graphics.*;
-import android.net.*;
-import android.os.*;
-import android.util.*;
-import android.view.*;
-import android.view.ViewGroup.*;
-import android.widget.*;
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.res.AssetManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.StrictMode;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
+import android.widget.ArrayListAdapter;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.luajava.*;
+import com.bigsing.ScriptRunner;
+import com.luajava.JavaFunction;
+import com.luajava.LuaException;
+import com.luajava.LuaObject;
+import com.luajava.LuaState;
+import com.luajava.LuaStateFactory;
 
-import dalvik.system.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-import java.io.*;
-import java.util.*;
-import java.util.zip.*;
+import dalvik.system.DexClassLoader;
 
 public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer, ILuaContext {
 
-    private LuaDexLoader mLuaDexLoader;
+    private final static String DATA = "data";
+    private final static String NAME = "name";
     private static ArrayList<String> prjCache = new ArrayList<String>();
-
+    public String luaDir;
+    public Handler handler;
+    public TextView status;
+    public String luaCpath;
+    private LuaDexLoader mLuaDexLoader;
     private int mWidth;
-
     private int mHeight;
-
     private ListView list;
-
     private ArrayListAdapter<String> adapter;
-
-    @Override
-    public ArrayList<ClassLoader> getClassLoaders() {
-        // TODO: Implement this method
-        return mLuaDexLoader.getClassLoaders();
-    }
-
-    public HashMap<String, String> getLibrarys() {
-        return mLuaDexLoader.getLibrarys();
-    }
-
     private LuaState L;
     private String luaPath;
-    public String luaDir;
-
     private StringBuilder toastbuilder = new StringBuilder();
     private Boolean isCreate = false;
-
-    public Handler handler;
-
     private Toast toast;
-    public TextView status;
     private LinearLayout layout;
-
     private boolean isSetViewed;
-
     private long lastShow;
-
     private Menu optionsMenu;
-
     private LuaObject mOnKeyDown;
-
     private LuaObject mOnKeyUp;
-
     private LuaObject mOnKeyLongPress;
-
     private LuaObject mOnTouchEvent;
-
-    public String luaCpath;
-
     private String localDir;
 
     private String odexDir;
@@ -88,25 +103,39 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     private boolean isUpdata;
 
     private boolean mDebug = true;
-
-    private final static String DATA = "data";
-
-    private final static String NAME = "name";
-
     private AssetManager mAssetManager;
-
     private Resources mResources;
-
     private Resources.Theme mTheme;
-
     private ArrayList<LuaGcable> gclist = new ArrayList<LuaGcable>();
+
+    private static byte[] readAll(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream(4096);
+        byte[] buffer = new byte[4096];
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+        }
+        byte[] ret = output.toByteArray();
+        output.close();
+        return ret;
+    }
+
+    @Override
+    public ArrayList<ClassLoader> getClassLoaders() {
+        // TODO: Implement this method
+        return mLuaDexLoader.getClassLoaders();
+    }
+
+    public HashMap<String, String> getLibrarys() {
+        return mLuaDexLoader.getLibrarys();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
         //设置主题
-//		Intent intent=getIntent();
-//		int theme=intent.getIntExtra("theme", android.R.style.Theme_Holo_Light_NoActionBar);
+        //Intent intent=getIntent();
+        //int theme=intent.getIntExtra("theme", android.R.style.Theme_Holo_Light_NoActionBar);
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -213,7 +242,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
     }
 
-
     @Override
     public void regGc(LuaGcable obj) {
         // TODO: Implement this method
@@ -273,7 +301,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return getWindow().getDecorView();
     }
 
-
     public String getLocalDir() {
         return localDir;
     }
@@ -305,7 +332,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
                 return null;
         return dir.getAbsolutePath();
     }
-
 
     /**
      * 解压Assets中的文件
@@ -367,7 +393,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return mLuaDexLoader.loadDex(path);
     }
 
-
     public void loadResources(String path) {
         mLuaDexLoader.loadResources(path);
     }
@@ -402,7 +427,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return require.call(name);
     }
 
-
     public Intent registerReceiver(LuaBroadcastReceiver receiver, IntentFilter filter) {
         // TODO: Implement this method
         return super.registerReceiver(receiver, filter);
@@ -427,7 +451,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         // TODO: Implement this method
         runFunc("onReceive", context, intent);
     }
-
 
     @Override
     public void onContentChanged() {
@@ -459,7 +482,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         super.onStop();
         runFunc("onStop");
     }
-
 
     @Override
     protected void onDestroy() {
@@ -588,7 +610,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return super.onMenuItemSelected(featureId, item);
     }
 
-
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         // TODO: Implement this method
@@ -616,7 +637,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         runFunc("onConfigurationChanged", newConfig);
     }
 
-
     public int getWidth() {
         return mWidth;
     }
@@ -629,7 +649,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     public Map getGlobalData() {
         return ((LuaApplication) getApplication()).getGlobalData();
     }
-
 
     public boolean bindService(int flag) {
         ServiceConnection conn = new ServiceConnection() {
@@ -686,7 +705,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return super.startService(intent);
     }
 
-
     public void newActivity(String path) throws FileNotFoundException {
         newActivity(1, path, null);
     }
@@ -720,7 +738,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         //overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-
     public void newActivity(String path, int in, int out) throws FileNotFoundException {
         newActivity(1, path, in, out, null);
     }
@@ -732,7 +749,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     public void newActivity(int req, String path, int in, int out) throws FileNotFoundException {
         newActivity(req, path, in, out, null);
     }
-
 
     public void newActivity(int req, String path, int in, int out, Object[] arg) throws FileNotFoundException {
         Intent intent = new Intent(this, LuaActivity.class);
@@ -783,7 +799,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return new LuaTimer(this, func, arg);
     }
 
-
     public Bitmap loadBitmap(String path) throws IOException {
         return LuaBitmap.getBitmap(this, path);
     }
@@ -798,7 +813,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         View view = (View) loadlayout.call(layout, env);
         super.setContentView(view);
     }
-
 
     public void setContentView(LuaObject layout) throws LuaException {
         setContentView(layout, null);
@@ -844,8 +858,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         L.pop(1);
         initENV();
 
-        JavaFunction print = new LuaPrint(this, L);
-        print.register("print");
+        ScriptRunner.registerJavaFunction(L, this);
 
         L.getGlobal("package");
         L.pushString(luaLpath);
@@ -894,7 +907,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         mDebug = isDebug;
     }
 
-
     private void initENV() throws LuaException {
         if (!new File(luaDir + "/init.lua").exists())
             return;
@@ -930,7 +942,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             onPrint(e.getMessage());
         }
     }
-
 
     //运行lua脚本
     public Object doFile(String filePath) {
@@ -989,7 +1000,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             }
             if (isUpdata) {
                 /*LuaUtil.rmDir(new File(extDir));
-				 LuaUtil.rmDir(new File(luaMdDir));
+                 LuaUtil.rmDir(new File(luaMdDir));
 				 SharedPreferences info=getSharedPreferences("appInfo", 0);
 				 SharedPreferences.Editor edit=info.edit();
 				 edit.putLong("lastUpdateTime", 0);
@@ -1067,7 +1078,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return null;
     }
 
-
     //运行lua代码
     public Object doString(String funcSrc, Object... args) {
         try {
@@ -1097,6 +1107,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return null;
     }
 
+//读取asset文件
 
     //生成错误信息
     private String errorReason(int error) {
@@ -1117,26 +1128,12 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         return "Unknown error " + error;
     }
 
-//读取asset文件
-
     public byte[] readAsset(String name) throws IOException {
         AssetManager am = getAssets();
         InputStream is = am.open(name);
         byte[] ret = readAll(is);
         is.close();
         //am.close();
-        return ret;
-    }
-
-    private static byte[] readAll(InputStream input) throws IOException {
-        ByteArrayOutputStream output = new ByteArrayOutputStream(4096);
-        byte[] buffer = new byte[4096];
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-        }
-        byte[] ret = output.toByteArray();
-        output.close();
         return ret;
     }
 
@@ -1252,6 +1249,11 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
     }
 
+    @Override
+    public String getOdexDir() {
+        // TODO: Implement this method
+        return odexDir;
+    }
 
     public class MainHandler extends Handler {
 
@@ -1285,11 +1287,5 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
                 }
             }
         }
-    }
-
-    @Override
-    public String getOdexDir() {
-        // TODO: Implement this method
-        return odexDir;
     }
 }

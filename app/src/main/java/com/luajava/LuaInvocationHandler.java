@@ -32,64 +32,63 @@ import java.lang.reflect.Method;
  * This class is used in the LuaJava's proxy system.
  * When a proxy object is accessed, the method invoked is
  * called from Lua
+ *
  * @author Rizzato
  * @author Thiago Ponte
  */
 public class LuaInvocationHandler implements InvocationHandler {
-	private LuaObject obj;
+    private LuaObject obj;
 
-	private LuaState L;
+    private LuaState L;
 
-	private LuaObject print;
+    private LuaObject print;
 
 
-	public LuaInvocationHandler(LuaObject obj) {
-		this.obj = obj;
-		L = obj.L;
-		print = L.getLuaObject("print");
-	}
+    public LuaInvocationHandler(LuaObject obj) {
+        this.obj = obj;
+        L = obj.L;
+        print = L.getLuaObject("print");
+    }
 
-	/**
-	 * Function called when a proxy object function is invoked.
-	 */
-	public Object invoke(Object proxy, Method method, Object[] args) throws LuaException {
-		synchronized (obj.L) {
-			String methodName = method.getName();
-			LuaObject func    = obj.getField(methodName);
-			Class<?> retType = method.getReturnType();
+    /**
+     * Function called when a proxy object function is invoked.
+     */
+    public Object invoke(Object proxy, Method method, Object[] args) throws LuaException {
+        synchronized (obj.L) {
+            String methodName = method.getName();
+            LuaObject func = obj.getField(methodName);
+            Class<?> retType = method.getReturnType();
 
-			if (func.isNil()) {
-				if (retType.equals(boolean.class) || retType.equals(Boolean.class))
-					return false;
-				else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
-					return 0;
-				else
-					return null;
-			}
+            if (func.isNil()) {
+                if (retType.equals(boolean.class) || retType.equals(Boolean.class))
+                    return false;
+                else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
+                    return 0;
+                else
+                    return null;
+            }
 
-			Object ret = null;
-			try {
-				// Checks if returned type is void. if it is returns null.
-				if (retType.equals(Void.class) || retType.equals(void.class)) {
-					func.call(args);
-					ret = null;
-				}
-				else {
-					ret = func.call(args);
-					if (ret != null && ret instanceof Double) {
-						ret = LuaState.convertLuaNumber((Double) ret, retType);
-					}
-				}
-			}
-			catch (LuaException e) {
-				print.call(methodName + " " + e.getMessage());
-			}  	
-			if (ret == null)
-				if (retType.equals(boolean.class) || retType.equals(Boolean.class))
-					return false;
-				else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
-					return 0;
-			return ret;
-		}
-	}
+            Object ret = null;
+            try {
+                // Checks if returned type is void. if it is returns null.
+                if (retType.equals(Void.class) || retType.equals(void.class)) {
+                    func.call(args);
+                    ret = null;
+                } else {
+                    ret = func.call(args);
+                    if (ret != null && ret instanceof Double) {
+                        ret = LuaState.convertLuaNumber((Double) ret, retType);
+                    }
+                }
+            } catch (LuaException e) {
+                print.call(methodName + " " + e.getMessage());
+            }
+            if (ret == null)
+                if (retType.equals(boolean.class) || retType.equals(Boolean.class))
+                    return false;
+                else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
+                    return 0;
+            return ret;
+        }
+    }
 }

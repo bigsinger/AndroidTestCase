@@ -1,45 +1,48 @@
 package com.androlua;
 
-import android.content.*;
-import com.luajava.*;
-import java.util.*;
+import android.content.Context;
 
-public interface ILuaContext extends ILuaPrintListener{
+import com.luajava.LuaState;
 
-	public ArrayList<ClassLoader> getClassLoaders();
+import java.util.ArrayList;
+import java.util.Map;
 
-	public void call(String func, Object... args);
+public interface ILuaContext extends ILuaPrintListener {
 
-	public void set(String name, Object value);
+    public ArrayList<ClassLoader> getClassLoaders();
 
-	public String getLuaDir();
+    public void call(String func, Object... args);
 
-	public String getLuaDir(String dir);
+    public void set(String name, Object value);
 
-	public String getLuaExtDir();
+    public String getLuaDir();
 
-	public String getLuaExtDir(String dir);
+    public String getLuaDir(String dir);
 
-	public String getLuaLpath();
+    public String getLuaExtDir();
 
-	public String getLuaCpath();
+    public String getLuaExtDir(String dir);
 
-	public Context getContext();
+    public String getLuaLpath();
 
-	public LuaState getLuaState();
+    public String getLuaCpath();
 
-	public Object doFile(String path, Object... arg);
+    public Context getContext();
 
-	public void sendError(String title, Exception msg);
+    public LuaState getLuaState();
 
-	public int getWidth();
+    public Object doFile(String path, Object... arg);
 
-	public int getHeight();
+    public void sendError(String title, Exception msg);
 
-	public Map getGlobalData();
+    public int getWidth();
 
-	public void regGc(LuaGcable obj);
+    public int getHeight();
 
-	public String getOdexDir();
+    public Map getGlobalData();
+
+    public void regGc(LuaGcable obj);
+
+    public String getOdexDir();
 
 }

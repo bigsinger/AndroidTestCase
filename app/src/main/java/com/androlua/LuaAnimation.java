@@ -14,15 +14,15 @@ public class LuaAnimation extends Animation {
 
     private LuaFunction mAnimation;
 
-    public LuaAnimation(LuaFunction animation){
-        mAnimation=animation;
+    public LuaAnimation(LuaFunction animation) {
+        mAnimation = animation;
     }
 
     @Override
     protected void applyTransformation(float interpolatedTime, Transformation t) {
         super.applyTransformation(interpolatedTime, t);
         try {
-            mAnimation.call(interpolatedTime,t);
+            mAnimation.call(interpolatedTime, t);
         } catch (LuaException e) {
             e.printStackTrace();
         }
