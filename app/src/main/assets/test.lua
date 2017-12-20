@@ -1,4 +1,4 @@
-require "import"
+ï»¿require "import"
 import "console"
 import "android.app.*"
 import "android.os.*"
@@ -15,28 +15,24 @@ require "layout"
 
 bindClass = luajava.bindClass
 
--- Java ÀàµÄÃû³Æ
+-- Java ç±»çš„åç§°
 local MainActivity = luajava.bindClass("com.bigsing.test.MainActivity")
-print(MainActivity)
 Build = bindClass("android.os.Build")
-print(Build)
 LinearLayout = bindClass("android.widget.LinearLayout")
 EditText = bindClass("android.widget.EditText")
 Button = bindClass("android.widget.Button")
+Toast = bindClass("android.widget.Toast")
 
--- µ÷ÓÃ µÄJava ·½·¨Ãû
+-- è°ƒç”¨ çš„Java æ–¹æ³•å
 local method = 'testLua'
--- µ÷ÓÃ Java ·½·¨ĞèÒªµÄ²ÎÊı
+-- è°ƒç”¨ Java æ–¹æ³•éœ€è¦çš„å‚æ•°
 local n = 10
 local args = {
      n
 }
--- µ÷ÓÃ Java ·½·¨
+-- è°ƒç”¨ Java æ–¹æ³•
 local msg = MainActivity.testLua('hello from Lua script file')
-print(msg)
-print(activity)
 ac = luajava.newInstance("com.androlua.LuaActivity")
-print(ac)
 layout={
 	LinearLayout;
 	orientation = "vertical";
@@ -48,17 +44,21 @@ layout={
 	{
 		Button;
 		id = 'btn';
-		text = '°´Å¥';
+		text = 'æŒ‰é’®';
 		layout_width = "fill";
 	};
 };
 
 local ver = Build.VERSION.SDK_INT
-loadlayout(layout)
 print(ver)
+l = loadlayout(layout)
 --ac.setContentView()
---this.setContentView(loadlayout(layout))
---btn.onClick = function() print('Button Click') end
+this.setContentView(l)
+btn.onClick = function()
+	msg = 'Button Click'
+	print(msg)
+	Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+end
 --[[
 MainActivity.testLua = function()
 	return 'MainActivity.testLua Changed by Lua'
