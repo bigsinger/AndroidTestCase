@@ -67,8 +67,6 @@ end--]]
 btn_enumui = this.findViewById(R.id.btn_enumui)
 print(btn_enumui)
 
---以下代码不能正常执行，设计上没考虑到
---orign_onClick = btn_enumui:onClick
 
 --以下代码可以正常执行，但是设计上不符合Lua语法，应该设计成btn_enumui:setOnClickListener
 btn_enumui.setOnClickListener(View.OnClickListener {onClick = function(v) 
