@@ -73,7 +73,7 @@ static void newMethod(JNIEnv *jni,...) {
 //todo 不定参数的处理不对，但是BEGIN有输出，说明这个方法可以，日后参考MSJavaHookMethod的实现再看。
 void hookJavaMethod(JNIEnv *jni, jclass cls, jobject methodObj) {
     Method *method = (Method *) jni->FromReflectedMethod(methodObj);
-    MSJavaHookMethod(jni, cls, (jmethodID) method, (void *)&newMethod, reinterpret_cast<void **>(&oldMethod));
+    XXJavaHookMethod(jni, cls, (jmethodID) method, (void *)&newMethod, reinterpret_cast<void **>(&oldMethod));
 }
 ////////////////////////////////////////////////////////////////
 
@@ -410,7 +410,7 @@ void hook_loadClass(JNIEnv *jni,jclass clazz) {
                  "java/lang/ClassLoader");
         } else {
             orign_loadClass = NULL;
-            MSJavaHookMethod(jni, clazz, loadClassMethod, (void *) (&OnCall_loadClass),
+            XXJavaHookMethod(jni, clazz, loadClassMethod, (void *) (&OnCall_loadClass),
                              (void **) (&orign_loadClass));
             ASSERT(orign_loadClass);
         }
@@ -421,7 +421,7 @@ void hook_loadClass(JNIEnv *jni,jclass clazz) {
         LOGE("[%s] loadClass not found in class: %s", __FUNCTION__, "java/lang/ClassLoader");
     } else {
         orign_loadClassBool = NULL;
-        MSJavaHookMethod(jni, clazz, loadClassBoolMethod, (void *)(&OnCall_loadClassBool), (void **)(&orign_loadClassBool));
+        XXJavaHookMethod(jni, clazz, loadClassBoolMethod, (void *)(&OnCall_loadClassBool), (void **)(&orign_loadClassBool));
         ASSERT(orign_loadClassBool);
     }
 }
@@ -444,7 +444,7 @@ void CMethodLogger::hookByloadClass(JNIEnv *jni) {
         //找不到会有异常，处理一下
         Utils::exceptionClear(jni);
         //LOGD("java/lang/ClassLoader NOT FOUND, HOOK IT ON CLASSLOAD");
-        MSJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
+        XXJavaHookClassLoad(NULL, "java/lang/ClassLoader", &OnClassLoad_ClassLoader, NULL);
     }
 }
 
@@ -457,7 +457,7 @@ void CMethodLogger::hookByforName(JNIEnv *jni){
             LOGE("[%s] \"forName(String name, boolean initialize, ClassLoader loader)\" not found in class: %s", __FUNCTION__, "java/lang/Class");
         } else {
             orign_forName = NULL;
-            MSJavaHookMethod(jni, clazz, forNameMethod, (void *)(&OnCall_forName), (void **)(&orign_forName));
+            XXJavaHookMethod(jni, clazz, forNameMethod, (void *)(&OnCall_forName), (void **)(&orign_forName));
             ASSERT(orign_forName);
         }
     }else{

@@ -15,7 +15,8 @@ void art_dispatch_6_0(JNIEnv *env, jobject src, jobject dest, bool javaBridge) {
     art_6_0::mirror::ArtMethod *dmeth =
             (art_6_0::mirror::ArtMethod *) env->FromReflectedMethod(dest);
 
-    smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
+    //todo to add
+    //smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
 
 }
 
@@ -41,7 +42,8 @@ void art_dispatch_5_1(JNIEnv *env, jobject src, jobject dest, bool javaBridge) {
     art_5_1::mirror::ArtMethod *dmeth =
             (art_5_1::mirror::ArtMethod *) env->FromReflectedMethod(dest);
 
-    smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
+    //todo to add
+    //smeth->ptr_sized_fields_.entry_point_from_quick_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
 
 }
 
@@ -67,7 +69,8 @@ void art_dispatch_5_0(JNIEnv *env, jobject src, jobject dest, bool javaBridge) {
     art_5_0::mirror::ArtMethod *dmeth =
             (art_5_0::mirror::ArtMethod *) env->FromReflectedMethod(dest);
 
-    smeth->entry_point_from_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
+    //todo to add
+    //smeth->entry_point_from_compiled_code_ = reinterpret_cast<void *>(art_quick_dexposed_invoke_handler);
 
 }
 

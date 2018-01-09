@@ -380,7 +380,7 @@ static void dispatcher_java(const u4 *args, jvalue *pResult, const Method *metho
         argArray = dvmBoxMethodArgs(dstMeth, args + 1);
         if (dvmCheckException_fnPtr(self))
             goto bail;
-        dvmCallMethod_fnPtr(self, bridgeHandleMethod, NULL, &result, NULL, (int) info->srcCopy,
+        dvmCallMethod_fnPtr(self, bridgeHandleMethod, NULL, &result, NULL, info->srcCopy,
                             dstMeth, thisObj, argArray);
         thisObj->clazz = tmp;
     } else {
@@ -388,7 +388,7 @@ static void dispatcher_java(const u4 *args, jvalue *pResult, const Method *metho
         if (dvmCheckException_fnPtr(self))
             goto bail;
 
-        dvmCallMethod_fnPtr(self, bridgeHandleMethod, NULL, &result, NULL, (int) info->srcCopy,
+        dvmCallMethod_fnPtr(self, bridgeHandleMethod, NULL, &result, NULL, info->srcCopy,
                             dstMeth, NULL, argArray);
     }
 

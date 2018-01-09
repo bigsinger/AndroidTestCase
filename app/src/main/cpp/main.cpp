@@ -58,7 +58,7 @@ bool Hook_handleBindApplication(JNIEnv *jni) {
     }
 
     old_handleBindApplication = NULL;
-    MSJavaHookMethod(jni, ActivityThread, handleBindApplication,
+    XXJavaHookMethod(jni, ActivityThread, handleBindApplication,
                      (void *) (&OnCallback_handleBindApplicaton),
                      (void **) (&old_handleBindApplication));
     if (old_handleBindApplication == NULL) {
@@ -83,7 +83,7 @@ static void newApplicationOnCreate(JNIEnv *jni, jobject thiz) {
 void HookApplicationOnCreate(JNIEnv *jni){
     jclass cls = jni->FindClass("android/app/Application");
     jmethodID method = jni->GetMethodID(cls, "onCreate",  "()V" );
-    MSJavaHookMethod(jni, cls, method, &newApplicationOnCreate, &oldApplicationOnCreate);
+    XXJavaHookMethod(jni, cls, method, &newApplicationOnCreate, &oldApplicationOnCreate);
     jni->DeleteLocalRef(cls);
 }
 /*

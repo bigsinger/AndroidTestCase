@@ -74,10 +74,10 @@ void MSHookMessageEx(Class _class, SEL sel, IMP imp, IMP *result);
 
 #ifdef __ANDROID__
 #include <jni.h>
-void MSJavaHookClassLoad(JNIEnv *jni, const char *name, void (*callback)(JNIEnv *, jclass, void *),
+void* XXJavaHookClassLoad(JNIEnv *jni, const char *name, void (*callback)(JNIEnv *, jclass, void *),
                          void *data _default(NULL));
 void
-MSJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID methodID, void *function, void **result);
+XXJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID methodID, void *function, void **result);
 void MSJavaBlessClassLoader(JNIEnv *jni, jobject loader);
 
 typedef struct MSJavaObjectKey_ *MSJavaObjectKey;
@@ -320,10 +320,10 @@ MSHookFunction(MSImageRef image, const char *name, Type_ *replace, Type_ **resul
 #ifdef __cplusplus
 
 template<typename Type_, typename Kind_, typename ...Args_>
-static inline void MSJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID method,
+static inline void XXJavaHookMethod(JNIEnv *jni, jclass _class, jmethodID method,
                                     Type_ (*replace)(JNIEnv *, Kind_, Args_...),
                                     Type_ (**result)(JNIEnv *, Kind_, ...)) {
-    return MSJavaHookMethod(
+    return XXJavaHookMethod(
             jni, _class, method,
             reinterpret_cast<void *>(replace),
             reinterpret_cast<void **>(result)

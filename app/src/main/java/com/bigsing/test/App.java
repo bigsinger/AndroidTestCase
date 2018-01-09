@@ -34,8 +34,9 @@ public class App extends LuaApplication {
     }
 
     static {
-        System.loadLibrary("substrate-dvm");
+		//System.loadLibrary("substratedvm");
         System.loadLibrary("substrate");
+        System.loadLibrary("xxdvm");
         System.loadLibrary("hooktest");
         Utils.log("System.loadLibrary");
     }
@@ -46,7 +47,7 @@ public class App extends LuaApplication {
         super.onCreate();
         mApp = this;
         mContext = this;
-        mSP = getSharedPreferences(Constant.PACKAGE_THIS, Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
+        mSP = getSharedPreferences(Constant.PACKAGE_THIS, Context.MODE_PRIVATE);    //Context.MODE_WORLD_WRITEABLE
 //        ReLinker.loadLibrary(getApplicationContext(), "substrate-dvm");
 //        ReLinker.loadLibrary(getApplicationContext(), "substrate");
 //        ReLinker.loadLibrary(getApplicationContext(), "hooktest");

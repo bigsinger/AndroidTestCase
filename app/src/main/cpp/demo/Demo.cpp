@@ -90,7 +90,12 @@ static void OnCallback_JavaClassLoad(JNIEnv *jni, jclass _class, void *arg) {
 }
 
 void testDemo(JNIEnv *jni) {
-    MSJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
+    void* pResult = XXJavaHookClassLoad(NULL, "com/bigsing/test/MainActivity", &OnCallback_JavaClassLoad, NULL);
+    if(pResult != NULL ){
+        LOGD("XXJavaHookClassLoad OK result: %p", pResult);
+    }else{
+        LOGD("XXJavaHookClassLoad failed: maybe in art(XXJavaHookClassLoad not supported); maybe class name was wrong");
+    }
     Utils::loadSo(jni, "/data/data/com.xxx.xx/lib/libtest.so");
 }
 
@@ -125,8 +130,8 @@ getStr(JNIEnv *jni, jclass clsJavaJNI, jobject jCtxObj, jint paramInt, jstring p
             Utils::setJavaJNIClass((jclass) jni->NewGlobalRef(clsJavaJNI));
 
             LOGD("newThread begin");
-            pthread_t pt;
-            pthread_create(&pt, NULL, &thread_fun, (void *) paramStr);
+            //pthread_t pt;
+            //pthread_create(&pt, NULL, &thread_fun, (void *) paramStr);
             std::string s = Utils::fmt("jni: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", jni, jCtxObj,
                                        Utils::getJavaVM(), Utils::getContext());
             jstrResult = jni->NewStringUTF(s.c_str());
@@ -313,7 +318,7 @@ void *thread_fun(void *arg) {
         LOGD("find Method formJni: %p just call it", mid);
     }
 
-    env->CallStaticVoidMethod(cls, mid, (int) arg, Utils::str2jstr(env, "testabc123"));
+    env->CallStaticVoidMethod(cls, mid, arg, Utils::str2jstr(env, "testabc123"));
 
 #if 0
     //注意这里的NativeHandler并没有对象指针使用，所以掉不了非静态成员函数

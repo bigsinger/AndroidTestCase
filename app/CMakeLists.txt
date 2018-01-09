@@ -10,8 +10,14 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
+set(CMAKE_VERBOSE_MAKEFILE on)
+
+# set(can_use_assembler TRUE)
+# enable_language(ASM)
+# add_definitions(-DANDROID -DNDEBUG -DOC_ARM_ASM)
+
 # 设置其他后缀文件为源文件
-set_property(SOURCE src/main/cpp/art/art_quick_dexposed_invoke_handler.S PROPERTY LANGUAGE C)
+# set_property(SOURCE src/main/cpp/art/art_quick_dexposed_invoke_handler.S PROPERTY LANGUAGE C)
 
 # 设置源码文件列表
 file(GLOB NATIVE_SRC "src/main/cpp/*.cpp" "src/main/cpp/dalvik/*.cpp" "src/main/cpp/demo/*.cpp" "src/main/cpp/art/*.cpp" "src/main/cpp/libcutils/*.c" "src/main/cpp/art/*.S")
@@ -44,7 +50,7 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 # 设置链接的库文件列表
-file(GLOB libs src/main/cpp/3rd/libsubstrate.so src/main/cpp/3rd/libsubstratedvm.so)
+file(GLOB libs src/main/cpp/3rd/libsubstrate.so src/main/cpp/3rd/libxxdvm.so)
 target_link_libraries( # Specifies the target library.
                        hooktest
 
