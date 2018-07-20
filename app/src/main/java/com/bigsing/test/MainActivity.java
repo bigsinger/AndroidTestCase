@@ -26,6 +26,7 @@ import com.androlua.LuaActivity;
 import com.bigsing.NativeCommand;
 import com.bigsing.NativeHandler;
 import com.bigsing.ScriptRunner;
+import com.bigsing.util.Constant;
 import com.bigsing.util.Utils;
 
 import java.io.File;
@@ -68,15 +69,13 @@ public class MainActivity extends LuaActivity implements ILuaPrintListener{
 
     //////////////////////////////////////////////////
    static private int testA(int a, String b, Object c, double d, int[] arr, float f){
-        int[]ret = (int[]) NativeHandler.Jump(100, a, b, c, d, arr, f);
+       int[] ret = (int[]) NativeHandler.Jump(100, Constant.RETURN_TYPE_INT, 6, new Object[]{a, b, c, d, arr, f});
         return ret[0];
     }
     private String testB(String a){
-        return (String)NativeHandler.Jump(101, a);
+        return (String)NativeHandler.Jump(101, Constant.RETURN_TYPE_STRING, 1, new Object[]{a});
     }
-    private void testC(String a){
-        NativeHandler.Jump(102, a);
-    }
+    private void testC(String a){ NativeHandler.Jump(102, Constant.RETURN_TYPE_VOID, 1, new Object[]{a}); }
     static public String testLua(String s){
         Utils.logd(s);
         return s;

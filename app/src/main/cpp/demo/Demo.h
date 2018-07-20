@@ -22,7 +22,7 @@ extern "C" {
     JNIEXPORT jint      JNICALL getInt(JNIEnv *, jclass, jobject, jint, jstring);
     JNIEXPORT jstring   JNICALL
     Java_com_bigsing_NativeHandler_getString(JNIEnv *, jclass, jobject, jint, jstring);
-    JNIEXPORT jobject    JNICALL Jump(JNIEnv *, jclass, jint nMethodId, jobject objArgs...);
+    JNIEXPORT jobject    JNICALL Jump(JNIEnv *, jclass, jint nMethodId, jint nRetType, jint nArgCount, jobjectArray arrArgs);
 }
 
 void dalvik_replace(Method *pSrc, Method *pDst);

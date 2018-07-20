@@ -94,8 +94,10 @@ void testDemo(JNIEnv *jni) {
     if(pResult != NULL ){
         LOGD("XXJavaHookClassLoad OK result: %p", pResult);
     }else{
-        LOGD("XXJavaHookClassLoad failed: maybe in art(XXJavaHookClassLoad not supported); maybe class name was wrong");
+        LOGE("XXJavaHookClassLoad failed: maybe in art(XXJavaHookClassLoad not supported); maybe class name was wrong");
     }
+
+    //you can load any DLL file to app, if file not exists, it will not crash
     Utils::loadSo(jni, "/data/data/com.xxx.xx/lib/libtest.so");
 }
 
@@ -129,7 +131,7 @@ getStr(JNIEnv *jni, jclass clsJavaJNI, jobject jCtxObj, jint paramInt, jstring p
             Utils::setContext(jni->NewGlobalRef(jCtxObj));
             Utils::setJavaJNIClass((jclass) jni->NewGlobalRef(clsJavaJNI));
 
-            LOGD("newThread begin");
+            //LOGD("newThread begin");
             //pthread_t pt;
             //pthread_create(&pt, NULL, &thread_fun, (void *) paramStr);
             std::string s = Utils::fmt("jni: %p, jCtxObj: %p, g_jvm: %p, g_obj: %p", jni, jCtxObj,
@@ -189,29 +191,59 @@ getInt(JNIEnv *env, jclass arg, jobject jCtxObj, jint paramInt, jstring paramStr
     return result;
 }
 
-JNIEXPORT jobject    JNICALL Jump(JNIEnv *jni, jclass, jint nMethodId, jobject objArgs...) {
+int getIntFromObject(JNIEnv *jni, jobject data){
+    int nResult = -1;
+    jclass peerCls = jni->GetObjectClass(data); //"java/lang/Integer"
+    jmethodID getVal = jni->GetMethodID(peerCls, "intValue", "()I");
+    if(getVal == NULL){
+        LOGE("Could not find Int getValue()");
+    } else {
+        nResult = jni->CallIntMethod(data, getVal);
+    }
+    jni->DeleteLocalRef(peerCls);
+    return nResult;
+}
+
+int getFloatFromObject(JNIEnv *jni, jobject data){
+    float nResult = -1;
+    jclass peerCls = jni->GetObjectClass(data); //"java/lang/Float"
+    jmethodID getVal = jni->GetMethodID(peerCls, "floatValue", "()F");
+    if(getVal == NULL){
+        LOGE("Could not find Float floatValue()");
+    } else {
+        nResult = jni->CallFloatMethod(data, getVal);
+    }
+    jni->DeleteLocalRef(peerCls);
+    return nResult;
+}
+
+JNIEXPORT jobject JNICALL Jump(JNIEnv *jni, jclass, jint nMethodId, jint nRetType, jint nArgCount, jobjectArray arrArgs) {
     LOGTIME;
     LOGD("[%s] MethodId: %d", __FUNCTION__, nMethodId);
     jobject result = NULL;
-    va_list args;
-    va_start(args, objArgs);
 
     switch (int(nMethodId)) {
         case 100: {
-            //jobject dummy = va_arg(args, jobject);
-            jint a = va_arg(args, jint);
-            LOGD("[%s] a: %d", __FUNCTION__, a);
-            jstring b = va_arg(args, jstring);
-            LOGD("[%s] 2", __FUNCTION__);
-            jobject c = va_arg(args, jobject);
-            LOGD("[%s] 3", __FUNCTION__);
-            jdouble d = va_arg(args, jdouble);
-            LOGD("[%s] 4", __FUNCTION__);
-            jarray arr = va_arg(args, jarray);
-            LOGD("[%s] 5", __FUNCTION__);
-            jdouble f = va_arg(args, jdouble);
-            LOGD("[%s] 6", __FUNCTION__);
-            //call origin
+            int sizeArr = jni->GetArrayLength(arrArgs);
+            jobject obj = jni->GetObjectArrayElement(arrArgs, 0);
+            int a = getIntFromObject(jni, obj);
+            LOGD("[%s] arg 1 obj: %d", __FUNCTION__,  a);
+            jni->DeleteLocalRef(obj);
+
+            obj = jni->GetObjectArrayElement(arrArgs, 1);
+            std::string s = Utils::jstr2str(jni, (jstring)obj);
+            LOGD("[%s] arg 2 obj: %s", __FUNCTION__,  s.c_str());
+            jni->DeleteLocalRef(obj);
+
+            obj = jni->GetObjectArrayElement(arrArgs, 2);
+            s = Utils::jstr2str(jni, (jstring)obj);
+            LOGD("[%s] arg 3 obj: %s", __FUNCTION__,  s.c_str());
+            jni->DeleteLocalRef(obj);
+
+            obj = jni->GetObjectArrayElement(arrArgs, 3);
+            float f = getFloatFromObject(jni, obj);
+            LOGD("[%s] arg 4 obj: %f", __FUNCTION__,  f);
+            jni->DeleteLocalRef(obj);
 
             //新建一个长度为len的jintArray数组
             jintArray array = jni->NewIntArray(1);
@@ -223,21 +255,21 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *jni, jclass, jint nMethodId, jobject o
             break;
         case 101: {
             LOGD("[%s] 11", __FUNCTION__);
-            jobject dummy = va_arg(args, jobject);
-            dummy = va_arg(args, jobject);
-            LOGD("[%s] 22", __FUNCTION__);
-            //std::string s = Utils::jstr2str(jni, a);
-            //LOGD("param a is %s", s.c_str());
+            int sizeArr = jni->GetArrayLength(arrArgs);
+            for (int i = 0; i < sizeArr; ++i) {
+                jobject obj = jni->GetObjectArrayElement(arrArgs, i);
+
+                LOGD("[%s] arg %d obj: %p", __FUNCTION__, i + 1, obj);
+                std::string s = Utils::jstr2str(jni, (jstring)obj);
+                LOGD("param a is %s", s.c_str());
+            }
+
             //s = Utils::fmt("from jni: %s", s.c_str());
             result = jni->NewStringUTF("101 is testB ");
         }
             break;
         case 102: {
             //对应testC函数，没有返回值
-            jobject a = va_arg(args, jobject);
-            LOGD("[%s] 44", __FUNCTION__);
-            //std::string s = Utils::jstr2str(jni, (jstring)a);
-            LOGD("[%s] 33", __FUNCTION__);
             //LOGD("param a is %s", s.c_str());
             result = NULL;
         }
@@ -247,7 +279,6 @@ JNIEXPORT jobject    JNICALL Jump(JNIEnv *jni, jclass, jint nMethodId, jobject o
             break;
     }
 
-    va_end(args);
     return result;
 }
 

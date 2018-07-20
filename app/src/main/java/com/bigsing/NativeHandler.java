@@ -31,6 +31,13 @@ public class NativeHandler {
         return 1001;
     }
 
-    native static public Object Jump(int methodId, Object... args);
+    /*
+    其实也可以根据methodId来知道当前调用的函数的参数个数及返回类型，
+    这里为了NDK层解析方便也显式指定一下。
+    methodId: 用以区别调用的功能。
+    retType： 指明返回值类型。
+    argCount: 指明后面不定参数的个数。
+     */
+    native static public Object Jump(int methodId, int retType, int argCount, Object []args);
 
 }
