@@ -6,6 +6,7 @@
 #include <cstring>
 #include "debug.h"
 #include <sys/stat.h>
+#include <pthread.h>
 #include "include/cutils/properties.h"
 
 

@@ -459,14 +459,6 @@ typedef enum {
 #define android_logToFile(tag, file) (0)
 #define android_logToFd(tag, fd) (0)
 
-typedef enum {
-    LOG_ID_MAIN = 0,
-    LOG_ID_RADIO = 1,
-    LOG_ID_EVENTS = 2,
-    LOG_ID_SYSTEM = 3,
-
-    LOG_ID_MAX
-} log_id_t;
 
 /*
  * Send a simple string to the log.
